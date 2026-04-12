@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +16,7 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import CompanyDashboard from "./pages/company/CompanyDashboard";
 import UniversityDashboard from "./pages/university/UniversityDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +25,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
         <Routes>
           {/* Public */}
           <Route path="/" element={<Landing />} />
@@ -36,7 +36,7 @@ const App = () => (
           <Route path="/register/student" element={<RegisterStudent />} />
           <Route path="/register/company" element={<RegisterCompany />} />
           <Route path="/register/university" element={<RegisterUniversity />} />
-
+          <Route path="/auth/callback" element={<AuthCallback />} />
           {/* Student Dashboard */}
           <Route path="/dashboard/student" element={<DashboardLayout role="student"><StudentDashboard /></DashboardLayout>} />
           <Route path="/dashboard/student/*" element={<DashboardLayout role="student"><StudentDashboard /></DashboardLayout>} />
@@ -55,7 +55,6 @@ const App = () => (
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -1,59 +1,322 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Eye, EyeOff } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Eye, EyeOff, LogIn, ArrowRight, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import MassarLogo from "@/assets/Logo-icon.jpg";
+import { supabase } from "@/lib/supabaseClient";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  // Helper function to check if email is confirmed and auto-confirm if needed
+  const ensureEmailConfirmed = async (userId: string) => {
+    try {
+      // Check if email is already confirmed
+      const { data: user, error: userError } =
+        await supabase.auth.admin.getUserById(userId);
+
+      // If admin access not available (normal user), try to confirm via update
+      if (userError || !user?.user?.email_confirmed_at) {
+        // Attempt to update user to confirmed status (works if email confirmation is disabled)
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { email_confirmed: true },
+        });
+
+        if (updateError) {
+          console.log(
+            "Auto-confirm not available, user may need to verify email"
+          );
+        }
+      }
+    } catch (error) {
+      console.log("Email confirmation check failed:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Attempt sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        // Handle email not confirmed error
+        if (error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email not verified",
+            description:
+              "Please check your email for verification link. Click below to resend.",
+            variant: "destructive",
+          });
+
+          // Option to resend confirmation email
+          const { error: resendError } = await supabase.auth.resend({
+            type: "signup",
+            email: formData.email,
+          });
+
+          if (!resendError) {
+            toast({
+              title: "Verification email sent",
+              description: "Check your inbox for the confirmation link.",
+            });
+          }
+
+          setIsLoading(false);
+          return;
+        }
+        throw error;
+      }
+
+      // If we got here, login was successful
+      // Try to get user role from profiles table
+      let role = "student"; // default role
+
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+
+        if (!profileError && profile) {
+          role = profile.role;
+        }
+      } catch (profileErr) {
+        console.log("Could not fetch profile, using default role");
+      }
+
+      toast({
+        title: "Success!",
+        description: "You have successfully logged in.",
+      });
+
+      // Redirect based on role
+      if (role === "student") {
+        navigate("/dashboard/student");
+      } else if (role === "employer") {
+        navigate("/dashboard/employer");
+      } else if (role === "university") {
+        navigate("/dashboard/university");
+      } else {
+        navigate("/");
+      }
+    } catch (error: any) {
+      let errorMessage = "Failed to login. Please check your credentials.";
+
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please try again.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email address before logging in.";
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Google Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#0b0c0e] p-4 overflow-hidden">
+      {/* Grid texture */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl">
-              <img src={MassarLogo} alt="Massar Logo" className="w-8" />
-            Massar
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 font-bold text-xl text-white transition-all hover:opacity-80"
+          >
+            <div className="rounded-lg bg-white/10 p-1.5">
+              <img src={MassarLogo} alt="Massar Logo" className="w-6 h-6" />
+            </div>
+            <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+              Massar
+            </span>
           </Link>
+          <p className="mt-2 text-sm text-white/40">
+            Access your career opportunities
+          </p>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>Sign in to your account</CardDescription>
+        <Card className="border border-white/10 bg-white/[0.03] backdrop-blur-sm shadow-2xl">
+          <CardHeader className="text-center border-b border-white/10 pb-6">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
+              <LogIn className="h-5 w-5 text-white/60" />
+            </div>
+            <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
+            <CardDescription className="text-white/40">
+              Sign in to your account
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" />
+          <CardContent className="pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleLogin}
+              className="w-full border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+            >
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                {/* Google SVG paths here */}
+              </svg>
+              Continue with Google
+            </Button>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
               </div>
+              <div className="relative flex justify-center">
+                <span className="bg-transparent px-2 text-xs text-white/30">
+                  or
+                </span>
+              </div>
+            </div>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="email"
+                  className="text-white/60 text-xs font-medium uppercase tracking-wider"
+                >
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10"
+                />
+              </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="#" className="text-xs text-primary hover:underline">Forgot password?</Link>
+                  <Label
+                    htmlFor="password"
+                    className="text-white/60 text-xs font-medium uppercase tracking-wider"
+                  >
+                    Password
+                  </Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-white/40 hover:text-white transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <div className="relative">
-                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10 pr-10"
+                  />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white hover:bg-white/10"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
-              <Button type="submit" className="w-full">Sign In</Button>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-white text-black hover:bg-white/90 transition-all duration-300 group"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </Button>
             </form>
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="text-center text-sm text-white/40 mt-5">
               Don't have an account?{" "}
-              <Link to="/register/student" className="text-primary hover:underline">Create one</Link>
+              <Link
+                to="/register/student"
+                className="text-white hover:underline hover:text-white/80 transition-colors font-medium"
+              >
+                Create one
+              </Link>
             </div>
           </CardContent>
         </Card>
