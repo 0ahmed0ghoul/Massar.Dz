@@ -14,10 +14,8 @@ const RegisterUniversity = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl">
-            <div className="gradient-primary rounded-lg p-1.5">
-              <Briefcase className="h-5 w-5 text-primary-foreground" />
-            </div>
-            RecruitHub
+                        <img src={MassarLogo} alt="Massar Logo" className="w-8" />
+            Massar
           </Link>
         </div>
 

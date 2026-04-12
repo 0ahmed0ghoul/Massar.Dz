@@ -65,11 +65,14 @@ const Landing = () => {
             <Star className="h-3.5 w-3.5 text-primary" />
             The smarter way to recruit
           </Badge>
+          <div className="flex flex-col items-start gap-6 lg:flex-row lg:gap-12">
+          <img src="src/assets/Logo.png" alt="" className="h-42 w-42"/>
+          <div className="container flex flex-col items-center py-24 text-center lg:py-32">
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Where <span className="text-gradient">talent meets opportunity</span> — powered by data
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-            RecruitHub connects students, employers, and universities on a single platform.
+            Massar connects students, employers, and universities on a single platform.
             Smarter matching, transparent outcomes, and better career decisions.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -81,6 +84,8 @@ const Landing = () => {
             <Button size="lg" variant="outline" asChild>
               <Link to="/jobs">Browse Jobs</Link>
             </Button>
+            </div>
+          </div>
           </div>
         </div>
       </section>
@@ -163,7 +168,7 @@ const Landing = () => {
           <Shield className="mx-auto mb-4 h-10 w-10 opacity-80" />
           <h2 className="text-3xl font-bold">Ready to transform your recruitment?</h2>
           <p className="mx-auto mt-4 max-w-lg opacity-90">
-            Join thousands of students, companies, and universities already using RecruitHub.
+            Join thousands of students, companies, and universities already using Massar.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button size="lg" variant="secondary" asChild>

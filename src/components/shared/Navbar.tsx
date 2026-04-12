@@ -10,10 +10,10 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-          <div className="gradient-primary rounded-lg p-1.5">
-            <Briefcase className="h-5 w-5 text-primary-foreground" />
+          <div className=" rounded-lg p-1.5">
+            <img src="src/assets/Logo-icon.jpg" alt="Massar Logo" className="w-8" />
           </div>
-          <span>RecruitHub</span>
+          <span>Massar</span>
         </Link>
 
         {/* Desktop nav */}

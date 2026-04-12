@@ -10,7 +10,7 @@ const Footer = () => (
             <div className="gradient-primary rounded-lg p-1.5">
               <Briefcase className="h-4 w-4 text-primary-foreground" />
             </div>
-            RecruitHub
+            Massar
           </Link>
           <p className="mt-3 text-sm text-muted-foreground">
             Connecting students, universities, and employers on one platform.
@@ -39,7 +39,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="mt-8 border-t pt-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} RecruitHub. All rights reserved.
+        © {new Date().getFullYear()} Massar. All rights reserved.
       </div>
     </div>
   </footer>

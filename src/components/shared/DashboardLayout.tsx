@@ -94,7 +94,7 @@ function AppSidebar({ role }: { role: UserRole }) {
                 <div className="gradient-primary rounded p-1">
                   <Briefcase className="h-3.5 w-3.5 text-primary-foreground" />
                 </div>
-                RecruitHub
+                Massar
               </Link>
             )}
           </SidebarGroupLabel>

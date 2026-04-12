@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Briefcase, Eye, EyeOff } from "lucide-react";
+import MassarLogo from "@/assets/Logo-icon.jpg";
 
 const RegisterCompany = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,10 +16,8 @@ const RegisterCompany = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl">
-            <div className="gradient-primary rounded-lg p-1.5">
-              <Briefcase className="h-5 w-5 text-primary-foreground" />
-            </div>
-            RecruitHub
+              <img src={MassarLogo} alt="Massar Logo" className="w-8" />
+            Massar
           </Link>
         </div>
 
