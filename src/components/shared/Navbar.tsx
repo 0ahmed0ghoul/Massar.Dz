@@ -1,139 +1,226 @@
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Sparkles, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROLES } from "@/constants/roles";
 
 const Navbar = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, profile, role, isLoading, signOut } = useAuth();
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+
+  const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // -------------------------
+  // CLOSE DROPDOWN OUTSIDE CLICK
+  // -------------------------
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // -------------------------
+  // LOGOUT
+  // -------------------------
+  const handleLogout = async () => {
+    await signOut();
+    setOpenMenu(false);
+    setMobileOpen(false);
+    navigate("/login");
+  };
+
+  // -------------------------
+  // LOADING STATE (IMPORTANT FIX)
+  // -------------------------
+  if (isLoading) {
+    return (
+      <header className="h-16 border-b border-white/10 bg-[#0b0c0e]/80" />
+    );
+  }
+
+  // -------------------------
+  // ROLE DASHBOARD ROUTING
+  // -------------------------
+  const getDashboard = () => {
+    switch (role) {
+      case ROLES.STUDENT:
+        return "/dashboard/student";
+      case ROLES.COMPANY:
+        return "/dashboard/company";
+      case ROLES.UNIVERSITY:
+        return "/dashboard/university";
+      case ROLES.ADMIN:
+        return "/dashboard/admin";
+      default:
+        return "/";
+    }
+  };
+
+  // -------------------------
+  // USER INITIALS
+  // -------------------------
+  const initials =
+    (profile?.first_name?.[0] ?? "") +
+    (profile?.last_name?.[0] ?? "");
+
+  // -------------------------
+  // UI
+  // -------------------------
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0c0e]/80 backdrop-blur-md">
-      {/* Subtle grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px)",
-          backgroundSize: "50px 50px",
-        }}
-      />
+      <div className="container flex h-16 items-center justify-between">
 
-      <div className="container relative z-10 flex h-16 items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-white transition-all hover:opacity-80">
-            <img src="src/assets/Logo-icon.jpg" alt="Massar Logo" className="h-5 w-5" />
-          <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
-            Massar
-          </span>
+        {/* LOGO */}
+        <Link to="/" className="font-bold text-white">
+          Massar
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link 
-            to="/jobs" 
-            className="group relative text-sm font-medium text-white/60 transition-all hover:text-white"
-          >
-            Browse Jobs
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-gradient-to-r from-white to-green-700 transition-all group-hover:w-full" />
-          </Link>
-          <Link 
-            to="/register/company" 
-            className="group relative text-sm font-medium text-white/60 transition-all hover:text-white"
-          >
-            For Employers
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-gradient-to-r from-white to-green-700 transition-all group-hover:w-full" />
-          </Link>
-          <Link 
-            to="/register/university" 
-            className="group relative text-sm font-medium text-white/60 transition-all hover:text-white"
-          >
-            For Universities
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-gradient-to-r from-white to-green-700 transition-all group-hover:w-full" />
-          </Link>
+        {/* DESKTOP NAV */}
+        <nav className="hidden md:flex gap-6 text-white/70">
+          <Link to="/jobs">Jobs</Link>
+
+          {user && (
+            <Link to={getDashboard()} className="text-white">
+              Dashboard
+            </Link>
+          )}
         </nav>
 
-        {/* Desktop buttons */}
-        <div className="hidden items-center gap-3 md:flex">
-          <Button 
-            variant="ghost" 
-            asChild 
-            className="text-white/60 hover:bg-white/10 hover:text-white transition-all duration-300"
-          >
-            <Link to="/login">Sign In</Link>
-          </Button>
-          <Button 
-            asChild 
-            className="relative overflow-hidden text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-          >
-            <Link to="/register/student">
-              <Sparkles className="mr-2 h-3.5 w-3.5" />
-              Get Started
-            </Link>
-          </Button>
+        {/* AUTH AREA */}
+        <div className="hidden md:flex items-center gap-3">
+
+          {!user ? (
+            <>
+              <Button asChild variant="ghost">
+                <Link to="/login">Login</Link>
+              </Button>
+
+              <Button asChild className="bg-[#639922]">
+                <Link to="/register/student">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Get Started
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <div className="relative" ref={menuRef}>
+
+              {/* AVATAR */}
+              <button
+                onClick={() => setOpenMenu((prev) => !prev)}
+                className="h-9 w-9 rounded-full bg-[#639922] text-white font-bold flex items-center justify-center"
+              >
+                {initials || "U"}
+              </button>
+
+              {/* DROPDOWN */}
+              {openMenu && (
+                <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/10 bg-[#0b0c0e] text-white overflow-hidden shadow-lg">
+
+                  {/* USER INFO */}
+                  <div className="px-3 py-2 border-b border-white/10">
+                    <p className="text-sm font-medium">
+                      {profile?.first_name} {profile?.last_name}
+                    </p>
+                    <p className="text-xs text-white/40">
+                      {profile?.email}
+                    </p>
+                    <p className="text-xs text-[#639922] capitalize">
+                      {role ?? "user"}
+                    </p>
+                  </div>
+
+                  {/* ACTIONS */}
+                  <button
+                    onClick={() => {
+                      setOpenMenu(false);
+                      navigate(getDashboard());
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-white/10"
+                  >
+                    Dashboard
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setOpenMenu(false);
+                      navigate(getDashboard() + "/profile");
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-white/10"
+                  >
+                    Profile
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Mobile toggle */}
+        {/* MOBILE BUTTON */}
         <Button
+          className="md:hidden"
           variant="ghost"
-          size="icon"
-          className="md:hidden text-white/60 hover:bg-white/10 hover:text-white"
-          onClick={() => setMobileOpen(!mobileOpen)}
+          onClick={() => setMobileOpen((p) => !p)}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X /> : <Menu />}
         </Button>
       </div>
 
-      {/* Mobile menu */}
+      {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="relative border-t border-white/10 bg-[#0b0c0e] p-4 backdrop-blur-md md:hidden">
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px)",
-              backgroundSize: "50px 50px",
-            }}
-          />
-          <nav className="relative z-10 flex flex-col gap-4">
-            <Link 
-              to="/jobs" 
-              className="text-sm font-medium text-white/60 transition-all hover:text-white"
+        <div className="md:hidden border-t border-white/10 p-4 text-white/70 space-y-3">
+
+          <Link to="/jobs" onClick={() => setMobileOpen(false)}>
+            Jobs
+          </Link>
+
+          {user && (
+            <Link
+              to={getDashboard()}
               onClick={() => setMobileOpen(false)}
             >
-              Browse Jobs
+              Dashboard
             </Link>
-            <Link 
-              to="/register/company" 
-              className="text-sm font-medium text-white/60 transition-all hover:text-white"
-              onClick={() => setMobileOpen(false)}
+          )}
+
+          {user ? (
+            <button
+              onClick={handleLogout}
+              className="text-red-400 block"
             >
-              For Employers
-            </Link>
-            <Link 
-              to="/register/university" 
-              className="text-sm font-medium text-white/60 transition-all hover:text-white"
-              onClick={() => setMobileOpen(false)}
-            >
-              For Universities
-            </Link>
-            <hr className="border-white/10" />
-            <Button 
-              variant="ghost" 
-              asChild 
-              className="justify-start text-white/60 hover:bg-white/10 hover:text-white"
-            >
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button 
-              asChild 
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-            >
-              <Link to="/register/student">
-                <Sparkles className="mr-2 h-3.5 w-3.5" />
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setMobileOpen(false)}>
+                Login
+              </Link>
+
+              <Link
+                to="/register/student"
+                onClick={() => setMobileOpen(false)}
+              >
                 Get Started
               </Link>
-            </Button>
-          </nav>
+            </>
+          )}
         </div>
       )}
     </header>

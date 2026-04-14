@@ -1,11 +1,11 @@
-export type UserRole = 'student' | 'employer' | 'university'
+import { Role } from "@/constants/roles"
 
 export interface Profile {
   id: string
   first_name: string | null
   last_name: string | null
   email: string | null
-  role: UserRole | null
+  role: Role | null
   degree_level: string | null
   company_name: string | null
   university_name: string | null

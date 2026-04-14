@@ -1,102 +1,162 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { supabaseAuth } from '@/lib/supabaseAuth'
-import type { Profile } from '@/types/supabase'
-import type { User } from '@supabase/supabase-js'
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { supabaseAuth } from "@/lib/supabaseAuth";
+import type { User } from "@supabase/supabase-js";
+import type { Profile } from "@/types/supabase";
+import type { Role } from "@/constants/roles";
 
 interface AuthContextType {
-  user: User | null
-  profile: Profile | null
-  isLoading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, userData: Partial<Profile>) => Promise<void>
-  signOut: () => Promise<void>
-  updateProfile: (updates: Partial<Profile>) => Promise<void>
+  user: User | null;
+  profile: Profile | null;
+  role: Role | null;
+
+  isLoading: boolean;
+  isAuthenticated: boolean;
+
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData: Partial<Profile>) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setIsLoading(false)
-      }
-    })
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
-        setProfile(null)
-        setIsLoading(false)
-      }
-    })
+  // Derived role (SAFE)
+  const role = useMemo<Role | null>(() => {
+    return (profile?.role as Role) ?? null;
+  }, [profile]);
 
-    return () => subscription.unsubscribe()
-  }, [])
+  const isLoading = authLoading || profileLoading;
+  const isAuthenticated = !!user;
 
+  // -----------------------------
+  // FETCH PROFILE
+  // -----------------------------
   const fetchProfile = async (userId: string) => {
+    setProfileLoading(true);
+  
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) throw error
-      setProfile(data)
-    } catch (error) {
-      console.error('Error fetching profile:', error)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle(); // 🔥 FIX: prevents hard crash
+  
+      if (error) throw error;
+  
+      setProfile(data ?? null);
+    } catch (err) {
+      console.error("fetchProfile error:", err);
+      setProfile(null);
     } finally {
-      setIsLoading(false)
+      setProfileLoading(false);
     }
-  }
+  };
 
+  // -----------------------------
+  // INIT AUTH (SENIOR PATTERN)
+  // -----------------------------
+  useEffect(() => {
+    let mounted = true;
+
+    const init = async () => {
+      setAuthLoading(true);
+
+      const { data } = await supabase.auth.getSession();
+      const sessionUser = data.session?.user ?? null;
+
+      if (!mounted) return;
+
+      setUser(sessionUser);
+
+      if (sessionUser) {
+        await fetchProfile(sessionUser.id);
+      } else {
+        setProfile(null);
+      }
+
+      if (mounted) setAuthLoading(false);
+      };
+
+    init();
+
+    // 🔥 REALTIME AUTH LISTENER (SOURCE OF TRUTH)
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        const sessionUser = session?.user ?? null;
+
+        setUser(sessionUser);
+
+        if (sessionUser) {
+          await fetchProfile(sessionUser.id);
+        } else {
+          setProfile(null);
+        }
+
+        setAuthLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // -----------------------------
+  // AUTH ACTIONS
+  // -----------------------------
   const signIn = async (email: string, password: string) => {
-    await supabaseAuth.signIn(email, password)
-  }
+    await supabaseAuth.signIn(email, password);
+  };
 
-  const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
-    await supabaseAuth.signUp(email, password, userData)
-  }
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: Partial<Profile>
+  ) => {
+    await supabaseAuth.signUp(email, password, userData);
+  };
 
   const signOut = async () => {
-    await supabaseAuth.signOut()
-  }
+    await supabaseAuth.signOut();
+    setUser(null);
+    setProfile(null);
+  };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    const updatedProfile = await supabaseAuth.updateProfile(updates)
-    setProfile(updatedProfile)
-  }
+    const updated = await supabaseAuth.updateProfile(updates);
+    setProfile(updated);
+  };
 
-  const value = {
+  // -----------------------------
+  // CONTEXT VALUE
+  // -----------------------------
+  const value: AuthContextType = {
     user,
     profile,
+    role,
+
     isLoading,
+    isAuthenticated,
+
     signIn,
     signUp,
     signOut,
     updateProfile,
-  }
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
