@@ -18,14 +18,11 @@ import { useLogin } from "../hooks/useLogin";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [setIsLoading] = useState(false);
   const { login, loginWithGoogle, isLoading } = useLogin();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -194,7 +191,7 @@ const Login = () => {
             <div className="text-center text-sm text-white/40 mt-5">
               Don't have an account?{" "}
               <Link
-                to="/register/student"
+                to="/register"
                 className="text-white hover:underline hover:text-white/80 transition-colors font-medium"
               >
                 Create one

@@ -3,6 +3,11 @@
 -- Run this in Supabase SQL editor (Dashboard → SQL Editor → New Query)
 -- ═══════════════════════════════════════════════════════════════════════════
 
+// UPDATE public.profiles
+// SET role = 'super_admin', status = 'active'
+// WHERE email = 'your-admin-email@example.com';
+
+
 -- 1. PROFILES TABLE
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.profiles (

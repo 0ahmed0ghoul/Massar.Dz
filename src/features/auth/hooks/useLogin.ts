@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { authCoreService } from "../service";
+import { authService } from "../service/auth.service";
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -16,62 +16,40 @@ export const useLogin = () => {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-
+  
     try {
-      // 1. Sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
+      
       if (error) {
-        // Email not confirmed
-        if (error.message.includes("Email not confirmed")) {
-          await supabase.auth.resend({
-            type: "signup",
-            email,
-          });
-
-          throw new Error(
-            "Email not verified. We sent you a new confirmation email."
-          );
-        }
-
+        console.log("LOGIN ERROR:", error);
         throw error;
       }
-
+  
       const user = data.user;
       if (!user) throw new Error("No user returned");
-
-      // 2. Fetch profile (important)
-      const profile = await authCoreService.fetchProfile(user.id);
-
+  
+      let profile = await authService.fetchProfile(user.id);
+  
       if (!profile) {
-        // profile not ready yet → small delay retry
-        await new Promise((res) => setTimeout(res, 500));
-
-        const retryProfile = await authCoreService.fetchProfile(user.id);
-
-        if (!retryProfile) {
-          throw new Error("Profile not ready. Please try again.");
-        }
-
-        handleRedirect(retryProfile.role);
-        return;
+        await new Promise((r) => setTimeout(r, 1000));
+        profile = await authService.fetchProfile(user.id);
       }
-
-      // 3. Redirect based on role
-      handleRedirect(profile.role);
-
+  
+      if (!profile) throw new Error("Profile not found");
+  
       toast({
-        title: "Success!",
+        title: "Success",
         description: "Logged in successfully",
       });
+  
+      handleRedirect(profile.role); // ✅ now correct
     } catch (err: any) {
       toast({
         title: "Login failed",
-        description:
-          err.message || "Invalid email or password. Please try again.",
+        description: err.message,
         variant: "destructive",
       });
     } finally {

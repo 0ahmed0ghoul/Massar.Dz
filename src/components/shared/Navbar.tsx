@@ -61,11 +61,11 @@ const Navbar = () => {
     switch (role) {
       case ROLES.STUDENT:
         return "/dashboard/student";
-      case ROLES.COMPANY:
+      case ROLES.COMPANY_ADMIN:
         return "/dashboard/company";
-      case ROLES.UNIVERSITY:
+      case ROLES.UNIVERSITY_ADMIN:
         return "/dashboard/university";
-      case ROLES.ADMIN:
+      case ROLES.SUPER_ADMIN:
         return "/dashboard/admin";
       default:
         return "/";
@@ -108,7 +108,7 @@ const Navbar = () => {
               </Button>
 
               <Button asChild className="bg-[#639922]">
-                <Link to="/register/student">
+                <Link to="/register">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Get Started
                 </Link>

@@ -4,6 +4,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 import DashboardLayout from "@/components/shared/DashboardLayout";
 
+// ADMIN
+
 // PUBLIC
 import Landing from "@/pages/Landing";
 
@@ -14,14 +16,17 @@ import JobsPage from "@/features/student/pages/JobsPage";
 import ApplicationsPage from "@/features/student/pages/ApplicationsPage";
 
 // OTHER ROLES
-import CompanyDashboard from "@/pages/company/CompanyDashboard";
-import UniversityDashboard from "@/pages/university/UniversityDashboard";
-import AdminDashboard from "@/features/admin/AdminDashboard";
+import CompanyDashboard from "@/features/employer/pages/CompanyDashboard";
+import UniversityDashboard from "@/features/student copy/pages/UniversityDashboard";
 
 import Login from "@/features/auth/pages/Login";
 import NotificationsPage from "@/features/student/pages/NotificationsPage";
 import Register from "@/features/auth/pages/Register";
 import PendingApproval from "@/features/auth/pages/PendingApproval";
+import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
+import { AdminPendingPage } from "@/features/admin/pages/AdminPendingPage";
+import { AdminAccountsPage } from "@/features/admin/pages/AdminAccountsPage";
+
 
 const AppRoutes = () => {
   return (
@@ -29,10 +34,9 @@ const AppRoutes = () => {
       {/* ================= PUBLIC ================= */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/admin" element={<AdminDashboard/>} />
 
       {/* 🔥 ADD REGISTER ROUTES HERE */}
-      <Route path="/register" element={<Register/>} />
+      <Route path="/register" element={<Register />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
 
       {/* ================= PROTECTED ================= */}
@@ -83,10 +87,10 @@ const AppRoutes = () => {
         </Route>
 
         {/* ================= ADMIN ================= */}
-        <Route element={<RoleRoute allowedRoles={["super_admin"]} />}>
-          <Route element={<DashboardLayout role="super_admin" />}>
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
-          </Route>
+        <Route element={<DashboardLayout role="super_admin" />}>
+          <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
+          <Route path="/dashboard/admin/pending" element={<AdminPendingPage />} />
+          <Route path="/dashboard/admin/accounts" element={<AdminAccountsPage />} />
         </Route>
       </Route>
     </Routes>

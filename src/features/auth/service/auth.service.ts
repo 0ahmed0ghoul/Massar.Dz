@@ -2,7 +2,9 @@ import { Profile } from "@/domain/profile.types";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 
-// ─── Types ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────
 
 export interface StudentFormData {
   firstName: string;
@@ -29,6 +31,15 @@ export interface UniversityFormData {
   password: string;
   city: string;
 }
+
+type RegisterRole =
+  | "student"
+  | "company_admin"
+  | "university_admin"
+  | "super_admin";
+
+  
+
 // ─────────────────────────────────────────────
 // SERVICE
 // ─────────────────────────────────────────────
@@ -37,11 +48,14 @@ class AuthService {
   // ── AUTH ───────────────────────────────────
 
   async signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     if (error) throw error;
+
+    return data.user;
   }
 
   async signUp(email: string, password: string, meta?: any) {
@@ -52,6 +66,7 @@ class AuthService {
         data: meta,
       },
     });
+
     if (error) throw error;
   }
 
@@ -60,13 +75,10 @@ class AuthService {
     if (error) throw error;
   }
 
-  // ✅ SINGLE SOURCE OF TRUTH (FIXED)
   async getCurrentUser(): Promise<User | null> {
     const { data } = await supabase.auth.getUser();
     return data.user ?? null;
   }
-
-  // ── AUTH LISTENER (FIXED) ───────────────────
 
   onAuthStateChange(callback: (user: User | null) => void) {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -76,7 +88,9 @@ class AuthService {
     return data.subscription;
   }
 
-  // ── PROFILE ─────────────────────────────────
+  // ─────────────────────────────────────────────
+  // PROFILE (READ ONLY SOURCE OF TRUTH)
+  // ─────────────────────────────────────────────
 
   async fetchProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
@@ -84,12 +98,12 @@ class AuthService {
       .select("*")
       .eq("id", userId)
       .maybeSingle();
-  
+
     if (error) {
-      console.warn("Profile not ready yet:", error.message);
+      console.warn("Profile not ready:", error.message);
       return null;
     }
-  
+
     return data ?? null;
   }
 
@@ -105,59 +119,35 @@ class AuthService {
     return data;
   }
 
-  // ── REGISTER FLOWS ─────────────────────────
+  // ─────────────────────────────────────────────
+  // REGISTER
+  // ─────────────────────────────────────────────
 
-  async registerStudent(data: any) {
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
+  async registerUser(params: {
+    email: string;
+    password: string;
+    role: RegisterRole;
+    profile: any;
+  }) {
+    const { data, error } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
       options: {
         data: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          degree_level: data.degreeLevel,
+          role: params.role,
+          ...params.profile,
         },
       },
     });
-
+  
     if (error) throw error;
+  
+    return data.user;
   }
 
-  async registerCompany(data: any) {
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          company_name: data.companyName,
-          industry: data.industry,
-        },
-      },
-    });
-
-    if (error) throw error;
-  }
-
-  async registerUniversity(data: any) {
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          university_name: data.universityName,
-          city: data.city,
-        },
-      },
-    });
-
-    if (error) throw error;
-  }
-
-  // ── UTILITIES ──────────────────────────────
+  // ─────────────────────────────────────────────
+  // UTILS
+  // ─────────────────────────────────────────────
 
   async checkEmailExists(email: string): Promise<boolean> {
     const { data } = await supabase

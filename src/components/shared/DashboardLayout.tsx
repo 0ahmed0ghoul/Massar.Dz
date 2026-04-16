@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { Menu, X, ChevronLeft } from "lucide-react";
+import { Menu, X, ChevronLeft, Clock } from "lucide-react";
 
 import {
   LayoutDashboard,
@@ -25,7 +25,7 @@ import {
 type UserRole =
   | "student"
   | "company_admin"
-  | "pending_university"
+  | "university_admin"
   | "super_admin";
 
 /* ---------------- NAV CONFIG ---------------- */
@@ -44,28 +44,28 @@ const navMap: Record<UserRole, any[]> = {
     { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
     { title: "Candidates", url: "/dashboard/company/candidates", icon: Search },
   ],
-  pending_university: [
+  university_admin: [
     { title: "Dashboard", url: "/dashboard/university", icon: LayoutDashboard },
     { title: "Students", url: "/dashboard/university/students", icon: Users },
   ],
   super_admin: [
-    { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
-    { title: "Users", url: "/dashboard/admin/users", icon: Users },
-    { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
+    { title: "Dashboard",    url: "/dashboard/admin",          icon: LayoutDashboard },
+    { title: "Pending",      url: "/dashboard/admin/pending",  icon: Clock           },
+    { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users           },
   ],
 };
 
 const roleLabels: Record<UserRole, string> = {
   student: "Student",
   company_admin: "Employer",
-  pending_university: "University",
+  university_admin: "University",
   super_admin: "Admin",
 };
 
 const roleColors: Record<UserRole, string> = {
   student: "#639922",
   company_admin: "#8B5CF6",
-  pending_university: "#10B981",
+  university_admin: "#10B981",
   super_admin: "#EF4444",
 };
 

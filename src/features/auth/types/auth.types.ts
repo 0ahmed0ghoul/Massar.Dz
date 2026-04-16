@@ -1,12 +1,12 @@
 // types/auth.types.ts
+import { Profile, ProfileDB, UserRole } from "@/domain/profile.types";
 import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/types/supabase";
-import type { Role } from "@/constants/roles";
+
 
 export interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
-  role: Role | null;
+  profile: Profile| null;
+  role: UserRole | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;

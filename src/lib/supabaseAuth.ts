@@ -1,5 +1,5 @@
+import { Profile } from '@/domain/profile.types'
 import { supabase } from './supabaseClient'
-import type { UserRole, Profile } from '@/types/supabase'
 
 export const supabaseAuth = {
   // Sign up user

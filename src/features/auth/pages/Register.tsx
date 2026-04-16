@@ -63,13 +63,9 @@ const META: Record<UserRole, { title: string; description: string }> = {
     title: "Company Admin",
     description: "Post jobs and manage candidates",
   },
-  pending_university: {
+  university_admin: {
     title: "University (Pending)",
     description: "Awaiting verification",
-  },
-  university_admin: {
-    title: "University Admin",
-    description: "Manage students and programs",
   },
   super_admin: {
     title: "Super Admin",
@@ -192,11 +188,30 @@ const Register = () => {
 
       // 2. Create account based on role
       if (role === "student") {
-        await authService.registerStudent(studentData);
+        await authService.registerUser({
+          email: studentData.email,
+          password: studentData.password,
+          role: "student",
+          profile: {
+            firstName: studentData.firstName,
+            lastName: studentData.lastName,
+            degreeLevel: studentData.degreeLevel,
+          },
+        });
         toast({ title: "Welcome!", description: "Your account is ready." });
         navigate("/student/dashboard");
       } else if (role === "company_admin") {
-        await authService.registerCompany(companyData);
+        await authService.registerUser({
+          email: companyData.email,
+          password: companyData.password,
+          role: "company_admin",
+          profile: {
+            companyName: companyData.companyName,
+            firstName: companyData.firstName,
+            lastName: companyData.lastName,
+            industry: companyData.industry,
+          },
+        });
         toast({
           title: "Application Submitted",
           description: "We'll review your request and notify you by email.",
@@ -204,7 +219,17 @@ const Register = () => {
         navigate("/pending-approval");
       } else {
         // pending_university → pending approval page
-        await authService.registerUniversity(universityData);
+        await authService.registerUser({
+          email: universityData.email,
+          password: universityData.password,
+          role: "university_admin",
+          profile: {
+            universityName: universityData.universityName,
+            firstName: universityData.firstName,
+            lastName: universityData.lastName,
+            city: universityData.city,
+          },
+        });
         toast({
           title: "Application Submitted",
           description: "We'll review your request and notify you by email.",
@@ -349,7 +374,7 @@ const Register = () => {
               )}
 
               {/* ── University form ─────────────────────────────────────── */}
-              {step === "form" && role === "pending_university" && (
+              {step === "form" && role === "university_admin" && (
                 <UniversityForm
                   data={universityData}
                   isLoading={isLoading}
