@@ -6,12 +6,6 @@ import DashboardLayout from "@/components/shared/DashboardLayout";
 
 // PUBLIC
 import Landing from "@/pages/Landing";
-import Login from "@/pages/auth/Login";
-
-// REGISTER PAGES (MISSING BEFORE)
-import RegisterStudent from "@/pages/auth/RegisterStudent";
-import RegisterCompany from "@/pages/auth/RegisterCompany";
-import RegisterUniversity from "@/pages/auth/RegisterUniversity";
 
 // STUDENT
 import StudentDashboard from "@/features/student/pages/DashboardPage";
@@ -24,24 +18,28 @@ import CompanyDashboard from "@/pages/company/CompanyDashboard";
 import UniversityDashboard from "@/pages/university/UniversityDashboard";
 import AdminDashboard from "@/features/admin/AdminDashboard";
 
+import Login from "@/features/auth/pages/Login";
+import NotificationsPage from "@/features/student/pages/NotificationsPage";
+import Register from "@/features/auth/pages/Register";
+import PendingApproval from "@/features/auth/pages/PendingApproval";
+
 const AppRoutes = () => {
   return (
     <Routes>
       {/* ================= PUBLIC ================= */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/admin" element={<AdminDashboard/>} />
 
       {/* 🔥 ADD REGISTER ROUTES HERE */}
-      <Route path="/register/student" element={<RegisterStudent />} />
-      <Route path="/register/company" element={<RegisterCompany />} />
-      <Route path="/register/university" element={<RegisterUniversity />} />
+      <Route path="/register" element={<Register/>} />
+      <Route path="/pending-approval" element={<PendingApproval />} />
 
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
-
         {/* ============= OAuth callback ==================== */}
         <Route path="/auth/callback" element={<AuthCallback />} />
-        
+
         {/* ================= STUDENT ================= */}
         <Route element={<RoleRoute allowedRoles={["student"]} />}>
           <Route element={<DashboardLayout role="student" />}>
@@ -55,6 +53,15 @@ const AppRoutes = () => {
               path="/dashboard/student/applications"
               element={<ApplicationsPage />}
             />
+            {/* Example of duplicate route - consider removing or changing path */}
+            <Route
+              path="/dashboard/student/saved"
+              element={<ApplicationsPage />}
+            />
+            <Route
+              path="/dashboard/student/notifications"
+              element={<NotificationsPage />}
+            />
           </Route>
         </Route>
 
@@ -66,8 +73,8 @@ const AppRoutes = () => {
         </Route>
 
         {/* ================= UNIVERSITY ================= */}
-        <Route element={<RoleRoute allowedRoles={["university_admin"]} />}>
-          <Route element={<DashboardLayout role="university_admin" />}>
+        <Route element={<RoleRoute allowedRoles={["pending_university"]} />}>
+          <Route element={<DashboardLayout role="pending_university" />}>
             <Route
               path="/dashboard/university"
               element={<UniversityDashboard />}

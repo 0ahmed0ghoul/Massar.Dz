@@ -10,7 +10,7 @@ const features = [
       "Build your profile, discover opportunities, and track your applications — all in one place.",
     benefits: ["Smart job matching", "Application tracker", "Profile completeness guide"],
     cta: "Create profile",
-    href: "/register/student",
+    href: "/register",
     featured: false,
   },
   {
@@ -21,7 +21,7 @@ const features = [
       "Post jobs, search candidates, and manage applications with a powerful Kanban pipeline.",
     benefits: ["Candidate search & filters", "Application Kanban board", "Analytics dashboard"],
     cta: "Start hiring",
-    href: "/register/company",
+    href: "/register",
     featured: true,
   },
   {
@@ -32,7 +32,7 @@ const features = [
       "Import students, track employment outcomes, and boost your program's ranking score.",
     benefits: ["CSV student import", "Outcomes tracking", "Ranking analytics"],
     cta: "Get started",
-    href: "/register/university",
+    href: "/register",
     featured: false,
   },
 ];

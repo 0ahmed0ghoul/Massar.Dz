@@ -14,10 +14,12 @@ import { Eye, EyeOff, LogIn, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import MassarLogo from "@/assets/Logo-icon.jpg";
 import { supabase } from "@/lib/supabaseClient";
+import { useLogin } from "../hooks/useLogin";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [setIsLoading] = useState(false);
+  const { login, loginWithGoogle, isLoading } = useLogin();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -59,117 +61,11 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Attempt sign in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        // Handle email not confirmed error
-        if (error.message.includes("Email not confirmed")) {
-          toast({
-            title: "Email not verified",
-            description:
-              "Please check your email for verification link. Click below to resend.",
-            variant: "destructive",
-          });
-
-          // Option to resend confirmation email
-          const { error: resendError } = await supabase.auth.resend({
-            type: "signup",
-            email: formData.email,
-          });
-
-          if (!resendError) {
-            toast({
-              title: "Verification email sent",
-              description: "Check your inbox for the confirmation link.",
-            });
-          }
-
-          setIsLoading(false);
-          return;
-        }
-        throw error;
-      }
-
-      // If we got here, login was successful
-      // Try to get user role from profiles table
-      let role = "student"; // default role
-
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
-
-        if (!profileError && profile) {
-          role = profile.role;
-        }
-      } catch (profileErr) {
-        console.log("Could not fetch profile, using default role");
-      }
-
-      toast({
-        title: "Success!",
-        description: "You have successfully logged in.",
-      });
-
-      // Redirect based on role
-      if (role === "student") {
-        navigate("/dashboard/student");
-      } else if (role === "employer") {
-        navigate("/dashboard/employer");
-      } else if (role === "university") {
-        navigate("/dashboard/university");
-      } else {
-        navigate("/");
-      }
-    } catch (error: any) {
-      let errorMessage = "Failed to login. Please check your credentials.";
-
-      if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please try again.";
-      } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Please verify your email address before logging in.";
-      } else {
-        errorMessage = error.message || errorMessage;
-      }
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await login(formData.email, formData.password);
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        title: "Google Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+    await loginWithGoogle();
   };
 
   return (
@@ -185,27 +81,13 @@ const Login = () => {
       />
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 font-bold text-xl text-white transition-all hover:opacity-80"
-          >
-            <div className="rounded-lg bg-white/10 p-1.5">
-              <img src={MassarLogo} alt="Massar Logo" className="w-6 h-6" />
-            </div>
-            <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
-              Massar
-            </span>
-          </Link>
-          <p className="mt-2 text-sm text-white/40">
-            Access your career opportunities
-          </p>
-        </div>
 
         <Card className="border border-white/10 bg-white/[0.03] backdrop-blur-sm shadow-2xl">
           <CardHeader className="text-center border-b border-white/10 pb-6">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
-              <LogIn className="h-5 w-5 text-white/60" />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
+            <Link to="/" >
+            <img src={MassarLogo} alt="Massar Logo" className="w-11 h-11 rounded-full" />
+            </Link>
             </div>
             <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
             <CardDescription className="text-white/40">

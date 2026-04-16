@@ -81,8 +81,8 @@ const Footer = () => {
             <h4 className="mb-4 text-sm font-semibold text-white">For Employers</h4>
             <nav className="flex flex-col gap-3">
               {[
-                { name: "Post a Job", href: "/register/company" },
-                { name: "Find Candidates", href: "/register/company" },
+                { name: "Post a Job", href: "/register" },
+                { name: "Find Candidates", href: "/register" },
                 { name: "Pricing", href: "/pricing" },
                 { name: "Success Stories", href: "/stories" },
               ].map((item) => (

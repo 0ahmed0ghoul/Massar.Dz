@@ -2,21 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { ROLES } from "@/constants/roles";
+import LogoIcon from "@/assets/Logo-icon.jpg";
 
 const Navbar = () => {
+  // ✅ ALL HOOKS at the top level (before any conditional returns)
   const { user, profile, role, isLoading, signOut } = useAuth();
-
+  const [forceShow, setForceShow] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
-
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // -------------------------
-  // CLOSE DROPDOWN OUTSIDE CLICK
-  // -------------------------
+  // ✅ Close dropdown outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -28,9 +27,19 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // -------------------------
-  // LOGOUT
-  // -------------------------
+  // ✅ Loading timeout fallback
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Auth loading timeout - forcing navbar render");
+        setForceShow(true);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // ✅ Logout handler
   const handleLogout = async () => {
     await signOut();
     setOpenMenu(false);
@@ -38,10 +47,8 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  // -------------------------
-  // LOADING STATE (IMPORTANT FIX)
-  // -------------------------
-  if (isLoading) {
+  // ✅ Conditional return after all hooks
+  if (isLoading && !forceShow) {
     return (
       <header className="h-16 border-b border-white/10 bg-[#0b0c0e]/80" />
     );
@@ -66,7 +73,7 @@ const Navbar = () => {
   };
 
   // -------------------------
-  // USER INITIALS
+  // USER INITIALS (fallback)
   // -------------------------
   const initials =
     (profile?.first_name?.[0] ?? "") +
@@ -80,19 +87,15 @@ const Navbar = () => {
       <div className="container flex h-16 items-center justify-between">
 
         {/* LOGO */}
-        <Link to="/" className="font-bold text-white">
+        <Link to="/" className="font-bold text-white flex items-center gap-4 text-lg">
+          <img src={LogoIcon} className="h-10 w-10 rounded-full" />
           Massar
         </Link>
 
         {/* DESKTOP NAV */}
         <nav className="hidden md:flex gap-6 text-white/70">
           <Link to="/jobs">Jobs</Link>
-
-          {user && (
-            <Link to={getDashboard()} className="text-white">
-              Dashboard
-            </Link>
-          )}
+          <Link to="/internships">Internships</Link>
         </nav>
 
         {/* AUTH AREA */}
@@ -114,12 +117,20 @@ const Navbar = () => {
           ) : (
             <div className="relative" ref={menuRef}>
 
-              {/* AVATAR */}
+              {/* AVATAR with image fallback */}
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
-                className="h-9 w-9 rounded-full bg-[#639922] text-white font-bold flex items-center justify-center"
+                className="h-9 w-9 rounded-full bg-[#639922] text-white font-bold flex items-center justify-center overflow-hidden"
               >
-                {initials || "U"}
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span>{initials || "U"}</span>
+                )}
               </button>
 
               {/* DROPDOWN */}

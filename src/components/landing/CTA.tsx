@@ -49,7 +49,7 @@ const CTA = () => {
               size="lg"
               className="group bg-white text-black hover:bg-white/90 transition-all duration-300"
             >
-              <Link to="/register/student">
+              <Link to="/register">
                 <GraduationCap className="mr-2 h-4 w-4" />
                 I'm a Student
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -62,7 +62,7 @@ const CTA = () => {
               variant="outline"
               className="group border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
             >
-              <Link to="/register/company">
+              <Link to="/register">
                 <Building2 className="mr-2 h-4 w-4" />
                 I'm an Employer
               </Link>
@@ -74,7 +74,7 @@ const CTA = () => {
               variant="outline"
               className="group border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
             >
-              <Link to="/register/university">
+              <Link to="/register">
                 <School className="mr-2 h-4 w-4" />
                 I'm a University
               </Link>
