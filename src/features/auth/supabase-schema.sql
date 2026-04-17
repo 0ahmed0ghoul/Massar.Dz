@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role            text NOT NULL CHECK (role IN (
                     'student',
                     'company_admin',
-                    'pending_university',
+                    'university_admin',
                     'university_admin'   -- set only by admin approval
                   )),
   first_name      text,
@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   degree_level    text,                 -- student
   company_name    text,                 -- company_admin
   industry        text,                 -- company_admin
-  university_name text,                 -- pending_university / university_admin
-  city            text                  -- pending_university / university_admin
+  university_name text,                 -- university_admin / university_admin
+  city            text                  -- university_admin / university_admin
 );
 
 -- Automatically update updated_at on row change
@@ -105,7 +105,7 @@ SET search_path = public
 AS $$
 BEGIN
   -- Validate allowed roles (prevent injecting university_admin directly)
-  IF p_role NOT IN ('student', 'company_admin', 'pending_university') THEN
+  IF p_role NOT IN ('student', 'company_admin', 'university_admin') THEN
     RAISE EXCEPTION 'Invalid role: %', p_role;
   END IF;
 
@@ -118,7 +118,7 @@ BEGIN
     p_id, p_email, p_role, p_first_name, p_last_name,
     p_degree_level, p_company_name, p_industry,
     p_university_name, p_city,
-    CASE WHEN p_role = 'pending_university' THEN 'pending' ELSE 'active' END
+    CASE WHEN p_role = 'university_admin' THEN 'pending' ELSE 'active' END
   );
 END;
 $$;
@@ -139,7 +139,7 @@ BEGIN
   SET role   = 'university_admin',
       status = 'active'
   WHERE id   = p_user_id
-    AND role = 'pending_university';
+    AND role = 'university_admin';
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'User % is not a pending university', p_user_id;
@@ -158,14 +158,14 @@ BEGIN
   UPDATE public.profiles
   SET status = 'rejected'
   WHERE id   = p_user_id
-    AND role = 'pending_university';
+    AND role = 'university_admin';
 END;
 $$;
 
 
 -- 5. ADMIN VIEW — pending universities (use service_role in admin panel)
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW public.pending_universities AS
+CREATE OR REPLACE VIEW public.university_admin AS
   SELECT
     id,
     email,
@@ -175,6 +175,6 @@ CREATE OR REPLACE VIEW public.pending_universities AS
     city,
     created_at
   FROM public.profiles
-  WHERE role   = 'pending_university'
+  WHERE role   = 'university_admin'
     AND status = 'pending'
   ORDER BY created_at DESC;

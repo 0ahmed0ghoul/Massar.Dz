@@ -60,7 +60,7 @@ const Navbar = () => {
   const getDashboard = () => {
     switch (role) {
       case ROLES.STUDENT:
-        return "/dashboard/student";
+        return "/student/dashboard";
       case ROLES.COMPANY_ADMIN:
         return "/dashboard/company";
       case ROLES.UNIVERSITY_ADMIN:

@@ -1,8 +1,8 @@
 // features/student/hooks/useStudentDashboard.ts
 import { useEffect, useState } from "react";
-import { studentService } from "../services/student.service";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Tables } from "@/types/database";
+import { studentService } from "@/features/student copy/services/student.service";
 
 type Application = Tables<"applications">;
 type Job = Tables<"jobs">;

@@ -1,7 +1,6 @@
 // hooks/useNotifications.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { studentService } from "@/features/student/services/student.service";
 
 export interface Notification {
   id: string;
@@ -27,18 +26,18 @@ export const useNotifications = () => {
 
       // Define required fields based on role
       const commonFields = [
-        { field: "first_name", label: "First name", link: "/dashboard/student/profile" },
-        { field: "last_name", label: "Last name", link: "/dashboard/student/profile" },
-        { field: "email", label: "Email address", link: "/dashboard/student/profile" },
-        { field: "wilaya", label: "Wilaya (State)", link: "/dashboard/student/profile" },
+        { field: "first_name", label: "First name", link: "/student/dashboard/profile" },
+        { field: "last_name", label: "Last name", link: "/student/dashboard/profile" },
+        { field: "email", label: "Email address", link: "/student/dashboard/profile" },
+        { field: "wilaya", label: "Wilaya (State)", link: "/student/dashboard/profile" },
       ];
 
       const studentFields = [
-        { field: "degree_level", label: "Degree level", link: "/dashboard/student/profile" },
-        { field: "university_name", label: "University name", link: "/dashboard/student/profile" },
-        { field: "specialty", label: "Specialty / Major", link: "/dashboard/student/profile" },
-        { field: "avatar_url", label: "Profile picture", link: "/dashboard/student/profile" },
-        { field: "resume_url", label: "CV / Resume", link: "/dashboard/student/profile" },
+        { field: "degree_level", label: "Degree level", link: "/student/dashboard/profile" },
+        { field: "university_name", label: "University name", link: "/student/dashboard/profile" },
+        { field: "specialty", label: "Specialty / Major", link: "/student/dashboard/profile" },
+        { field: "avatar_url", label: "Profile picture", link: "/student/dashboard/profile" },
+        { field: "resume_url", label: "CV / Resume", link: "/student/dashboard/profile" },
       ];
 
       const employerFields = [
@@ -57,7 +56,7 @@ export const useNotifications = () => {
         fieldsToCheck.push(...studentFields);
       } else if (profile.role === "company_admin") {
         fieldsToCheck.push(...employerFields);
-      } else if (profile.role === "pending_university") {
+      } else if (profile.role === "university_admin") {
         fieldsToCheck.push(...universityFields);
       }
 
@@ -88,7 +87,7 @@ export const useNotifications = () => {
           id: "low-completeness",
           title: "Profile almost empty!",
           description: `Your profile is only ${completeness}% complete. Complete it to get better job matches.`,
-          actionLink: "/dashboard/student/profile",
+          actionLink: "/student/dashboard/profile",
           type: "info",
         });
       }

@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import AuthCallback from "@/pages/AuthCallback";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 import DashboardLayout from "@/components/shared/DashboardLayout";
@@ -41,29 +40,27 @@ const AppRoutes = () => {
 
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
-        {/* ============= OAuth callback ==================== */}
-        <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* ================= STUDENT ================= */}
         <Route element={<RoleRoute allowedRoles={["student"]} />}>
           <Route element={<DashboardLayout role="student" />}>
-            <Route path="/dashboard/student" element={<StudentDashboard />} />
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route
-              path="/dashboard/student/profile"
+              path="/student/dashboard/profile"
               element={<ProfilePage />}
             />
-            <Route path="/dashboard/student/jobs" element={<JobsPage />} />
+            <Route path="/student/dashboard/jobs" element={<JobsPage />} />
             <Route
-              path="/dashboard/student/applications"
+              path="/student/dashboard/applications"
               element={<ApplicationsPage />}
             />
             {/* Example of duplicate route - consider removing or changing path */}
             <Route
-              path="/dashboard/student/saved"
+              path="/student/dashboard/saved"
               element={<ApplicationsPage />}
             />
             <Route
-              path="/dashboard/student/notifications"
+              path="/student/dashboard/notifications"
               element={<NotificationsPage />}
             />
           </Route>
@@ -77,8 +74,8 @@ const AppRoutes = () => {
         </Route>
 
         {/* ================= UNIVERSITY ================= */}
-        <Route element={<RoleRoute allowedRoles={["pending_university"]} />}>
-          <Route element={<DashboardLayout role="pending_university" />}>
+        <Route element={<RoleRoute allowedRoles={["university_admin="]} />}>
+          <Route element={<DashboardLayout role="university_admin" />}>
             <Route
               path="/dashboard/university"
               element={<UniversityDashboard />}

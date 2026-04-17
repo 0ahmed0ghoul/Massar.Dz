@@ -37,13 +37,13 @@ export const adminService = {
     return data as Profile[];
   },
 
-  // Fetch pending profiles (status = pending and role in pending_university, company_admin)
+  // Fetch pending profiles (status = pending and role in university_admin, company_admin)
   async getPendingProfiles(): Promise<Profile[]> {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("status", "pending")
-      .in("role", ["pending_university", "company_admin"])
+      .in("role", ["university_admin", "company_admin"])
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data as Profile[];
@@ -80,7 +80,7 @@ export const adminService = {
       students: data.filter((p) => p.role === "student").length,
       companies: data.filter((p) => p.role === "company_admin" && p.status === "active").length,
       universities: data.filter((p) => p.role === "university_admin").length,
-      pendingUniversities: data.filter((p) => p.role === "pending_university" && p.status === "pending").length,
+      pendingUniversities: data.filter((p) => p.role === "university_admin" && p.status === "pending").length,
       pendingCompanies: data.filter((p) => p.role === "company_admin" && p.status === "pending").length,
       rejected: data.filter((p) => p.status === "rejected").length,
     };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { studentService } from "../services/student.service";
 import { Tables } from "@/types/database";
+import { studentService } from "@/features/student copy/services/student.service";
 
 type Profile = Tables<"profiles">;
 

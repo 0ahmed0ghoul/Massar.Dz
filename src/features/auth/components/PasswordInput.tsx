@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, forwardRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
@@ -8,12 +8,16 @@ interface PasswordInputProps
   id?: string;
 }
 
-export function PasswordInput({ id = "password", ...props }: PasswordInputProps) {
+export const PasswordInput = forwardRef<
+  HTMLInputElement,
+  PasswordInputProps
+>(({ id = "password", ...props }, ref) => {
   const [show, setShow] = useState(false);
 
   return (
     <div className="relative">
       <Input
+        ref={ref}
         id={id}
         type={show ? "text" : "password"}
         placeholder="Min 8 characters"
@@ -22,6 +26,7 @@ export function PasswordInput({ id = "password", ...props }: PasswordInputProps)
         className="border-white/10 bg-white/5 text-white placeholder:text-white/30
                    focus:border-white/20 focus:ring-white/10 pr-10"
       />
+
       <Button
         type="button"
         variant="ghost"
@@ -34,4 +39,6 @@ export function PasswordInput({ id = "password", ...props }: PasswordInputProps)
       </Button>
     </div>
   );
-}
+});
+
+PasswordInput.displayName = "PasswordInput";

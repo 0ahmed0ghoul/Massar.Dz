@@ -11,14 +11,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, LogIn, ArrowRight, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import MassarLogo from "@/assets/Logo-icon.jpg";
 import { supabase } from "@/lib/supabaseClient";
 import { useLogin } from "../hooks/useLogin";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loginWithGoogle, isLoading } = useLogin();
+  const { login, isLoading } = useLogin();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -61,9 +60,7 @@ const Login = () => {
     await login(formData.email, formData.password);
   };
 
-  const handleGoogleLogin = async () => {
-    await loginWithGoogle();
-  };
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[#0b0c0e] p-4 overflow-hidden">
@@ -92,17 +89,6 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleLogin}
-              className="w-full border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-            >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                {/* Google SVG paths here */}
-              </svg>
-              Continue with Google
-            </Button>
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>

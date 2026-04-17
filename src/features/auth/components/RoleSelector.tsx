@@ -1,5 +1,5 @@
+import { UserRole } from "@/domain/profile.types";
 import { GraduationCap, Building2, School } from "lucide-react";
-import { UserRole } from "../services/authService";
 
 interface RoleOption {
   role: UserRole;
@@ -24,7 +24,7 @@ const ROLES: RoleOption[] = [
     description: "Post jobs and hire top talent",
   },
   {
-    role: "pending_university",
+    role: "university_admin",
     icon: <School className="h-7 w-7" />,
     title: "University",
     description: "Connect your students with employers",

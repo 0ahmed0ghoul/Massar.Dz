@@ -1,18 +1,46 @@
-import { useState } from "react";
+// hooks/useRegister.ts
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { authService } from "../service/auth.service";
 import { useVerification } from "./useVerification";
 import type { UserRole } from "@/constants/roles";
 
+type Step = "role" | "form" | "verify";
+
+export interface RegisterFormData {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  degreeLevel?: string;
+  companyName?: string;
+  industry?: string;
+  universityName?: string;
+  city?: string;
+}
+
+function normalizeError(err: unknown): string {
+  if (err instanceof Error) {
+    if (err.message.includes("429")) {
+      return "Too many attempts. Please wait a moment and try again.";
+    }
+    return err.message;
+  }
+  return "An unexpected error occurred.";
+}
+
 export const useRegister = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<"role" | "form" | "verify">("role");
+  const [step, setStep] = useState<Step>("role");
   const [role, setRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
+
+  const pendingFormDataRef = useRef<RegisterFormData | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const {
     sendVerificationCode,
@@ -21,98 +49,117 @@ export const useRegister = () => {
     resendCooldown,
   } = useVerification();
 
-  // ─────────────────────────────────────
-  // ROLE SELECT
-  // ─────────────────────────────────────
+  // ─── ROLE ─────────────────────────────
   const handleRoleSelect = (r: UserRole) => {
+    console.log("🟢 ROLE SELECTED:", r);
     setRole(r);
     setStep("form");
   };
 
-  // ─────────────────────────────────────
-  // STEP 1: SEND OTP
-  // ─────────────────────────────────────
-  const handleFormSubmit = async (email: string) => {
+  // ─── STEP 1: FORM → VALIDATE + SEND OTP ─────────────────────────────
+  const handleFormSubmit = async (data: RegisterFormData) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
-      if (!email?.includes("@")) {
-        throw new Error("Invalid email");
+      // 🔴 VALIDATION FIRST
+      if (!data.email || !data.email.includes("@")) {
+        throw new Error("Please enter a valid email address.");
       }
 
-      const exists = await authService.checkEmailExists(email);
-      if (exists) throw new Error("Email already exists");
+      if (!data.password || data.password.length < 6) {
+        throw new Error("Password must be at least 6 characters.");
+      }
 
-      await sendVerificationCode(email);
+      if (!role) {
+        throw new Error("Please select a role.");
+      }
 
+      // 🔴 CHECK IF EMAIL ALREADY EXISTS (optional but smart)
+      const exists = await authService.checkEmailExists(data.email);
+      if (exists) {
+        throw new Error("Email already registered. Please login.");
+      }
+
+      // ✅ SAVE DATA
+      pendingFormDataRef.current = data;
+
+      // ✅ SEND OTP ONLY
+      await sendVerificationCode(data.email);
+
+      setVerificationCode("");
       setStep("verify");
 
       toast({
-        title: "Verification code sent",
-        description: "Check your email inbox",
+        title: "Code sent",
+        description: "Check your email inbox.",
       });
-    } catch (err: any) {
+
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message,
+        description: normalizeError(err),
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
-  // ─────────────────────────────────────
-  // STEP 2: VERIFY + REGISTER
-  // ─────────────────────────────────────
-  const handleVerify = async (formData: any) => {
-    if (!role) return;
+  // ─── STEP 2: VERIFY → REGISTER ─────────────────────────────
+  const handleVerify = async () => {
+    const formData = pendingFormDataRef.current;
 
+    if (!role || !formData || isSubmittingRef.current) return;
+
+    isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
-      const { valid, error } = verifyCode(
-        formData.email,
-        verificationCode
-      );
-
+      // 🔴 VERIFY CODE FIRST
+      const { valid, error } = verifyCode(formData.email, verificationCode);
       if (!valid) throw new Error(error);
 
-      // 🔥 SINGLE ENTRY POINT (IMPORTANT)
-      await authService.registerUser({
+      console.log("🚀 FINAL REGISTER:", formData);
+
+      // ✅ REGISTER ONLY HERE (ONCE)
+      const user = await authService.registerUser({
         email: formData.email,
         password: formData.password,
         role,
         profile: formData,
       });
 
+      if (!user) throw new Error("User creation failed.");
+
       toast({
-        title: "Success",
-        description: "Account created successfully",
+        title: "Success!",
+        description: "Account created successfully.",
       });
 
-      // 🔥 REDIRECT LOGIC
-      switch (role) {
-        case "student":
-          navigate("/dashboard/student");
-          break;
-
-        case "company_admin":
-        case "university_admin":
-          navigate("/pending-approval");
-          break;
-
-        default:
-          navigate("/");
+      // ✅ REDIRECT
+      if (role === "student") {
+        navigate("/student/dashboard");
+      } else if (
+        role === "company_admin" ||
+        role === "university_admin"
+      ) {
+        navigate("/pending-approval");
+      } else {
+        navigate("/");
       }
-    } catch (err: any) {
+
+    } catch (err: unknown) {
       toast({
-        title: "Failed",
-        description: err.message,
+        title: "Verification failed",
+        description: normalizeError(err),
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -121,13 +168,15 @@ export const useRegister = () => {
     role,
     isLoading,
     verificationCode,
+    resendCooldown,
+    pendingEmail: pendingFormDataRef.current?.email ?? "",
+
     setVerificationCode,
     setStep,
+
     handleRoleSelect,
     handleFormSubmit,
     handleVerify,
-    sendVerificationCode,
     handleResendCode,
-    resendCooldown,
   };
 };

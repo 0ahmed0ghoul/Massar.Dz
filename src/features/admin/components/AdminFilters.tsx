@@ -41,7 +41,7 @@ export const AdminFilters = ({
         <option value="student">Students</option>
         <option value="company_admin">Companies</option>
         <option value="university_admin">Universities</option>
-        <option value="pending_university">Pending Uni</option>
+        <option value="university_admin">Pending Uni</option>
       </select>
       <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
     </div>

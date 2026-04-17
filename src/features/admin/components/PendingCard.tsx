@@ -11,7 +11,7 @@ interface PendingCardProps {
 }
 
 export const PendingCard = ({ profile, actionLoading, onApprove, onReject }: PendingCardProps) => {
-  const isUni = profile.role === "pending_university";
+  const isUni = profile.role === "university_admin";
   const approving = actionLoading === profile.id;
   const rejecting = actionLoading === `reject-${profile.id}`;
   const busy = approving || rejecting;

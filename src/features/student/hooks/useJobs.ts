@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { studentService } from "../services/student.service";
 import { Tables } from "@/types/database";
+import { studentService } from "@/features/student copy/services/student.service";
 
 type Job = Tables<"jobs">;
 

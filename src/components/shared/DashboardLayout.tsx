@@ -32,12 +32,12 @@ type UserRole =
 
 const navMap: Record<UserRole, any[]> = {
   student: [
-    { title: "Dashboard", url: "/dashboard/student", icon: LayoutDashboard },
-    { title: "Profile", url: "/dashboard/student/profile", icon: User },
-    { title: "Job Feed", url: "/dashboard/student/jobs", icon: Briefcase },
-    { title: "Applications", url: "/dashboard/student/applications", icon: FileText },
-    { title: "Saved Jobs", url: "/dashboard/student/saved", icon: Heart },
-    { title: "Notifications", url: "/dashboard/student/notifications", icon: Bell },
+    { title: "Dashboard", url: "student/dashboard", icon: LayoutDashboard },
+    { title: "Profile", url: "/student/dashboard/profile", icon: User },
+    { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
+    { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
+    { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
+    { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
   ],
   company_admin: [
     { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },

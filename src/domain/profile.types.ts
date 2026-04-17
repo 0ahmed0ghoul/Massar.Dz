@@ -14,8 +14,14 @@ export interface Profile {
     email: string;
     avatar_url?: string;
     phone?: string;
+    status: "active" | "pending";
     is_premium: boolean;
     stripe_customer_id?: string;
     created_at: string;
     updated_at: string;
+    company_name?: string;
+    industry?: string;
+    university_name?: string;
+    city?: string;
+    degree_level?: string;
   }

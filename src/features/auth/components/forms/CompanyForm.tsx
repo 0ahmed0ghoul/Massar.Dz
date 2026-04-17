@@ -1,158 +1,122 @@
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { PasswordInput } from "../PasswordInput";
-import { CompanyFormData } from "../../service/auth.service";
-
+import { FieldError } from "../FieldError";
+import { companySchema, CompanyFields } from "../../schemas/auth.schemas";
 
 interface CompanyFormProps {
-  data: CompanyFormData;
   isLoading: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSelectChange: (field: keyof CompanyFormData, value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (data: CompanyFields) => void;
 }
 
-export function CompanyForm({
-  data,
-  isLoading,
-  onChange,
-  onSelectChange,
-  onSubmit,
-}: CompanyFormProps) {
+const labelCls = "text-white/60 text-xs font-medium uppercase tracking-wider";
+const inputCls = "border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10";
+const errorInputCls = "border-red-500/50 focus:border-red-500/70";
+
+const INDUSTRIES = [
+  ["technology", "Technology"],
+  ["finance",    "Finance"],
+  ["healthcare", "Healthcare"],
+  ["education",  "Education"],
+  ["other",      "Other"],
+] as const;
+
+export function CompanyForm({ isLoading, onSubmit }: CompanyFormProps) {
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<CompanyFields>({ resolver: zodResolver(companySchema) });
+
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       {/* Company name */}
-      <div className="space-y-2">
-        <Label
-          htmlFor="companyName"
-          className="text-white/60 text-xs font-medium uppercase tracking-wider"
-        >
-          Company name
-        </Label>
+      <div>
+        <Label className={labelCls}>Company name</Label>
         <Input
-          id="companyName"
           placeholder="Acme Inc."
-          value={data.companyName}
-          onChange={onChange}
-          required
-          className="border-white/10 bg-white/5 text-white placeholder:text-white/30
-                     focus:border-white/20 focus:ring-white/10"
+          {...register("companyName")}
+          className={`mt-1.5 ${inputCls} ${errors.companyName ? errorInputCls : ""}`}
         />
+        <FieldError message={errors.companyName?.message} />
       </div>
 
       {/* Admin name */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label
-            htmlFor="firstName"
-            className="text-white/60 text-xs font-medium uppercase tracking-wider"
-          >
-            Your first name
-          </Label>
+        <div>
+          <Label className={labelCls}>First name</Label>
           <Input
-            id="firstName"
             placeholder="John"
-            value={data.firstName}
-            onChange={onChange}
-            required
-            className="border-white/10 bg-white/5 text-white placeholder:text-white/30
-                       focus:border-white/20 focus:ring-white/10"
+            {...register("firstName")}
+            className={`mt-1.5 ${inputCls} ${errors.firstName ? errorInputCls : ""}`}
           />
+          <FieldError message={errors.firstName?.message} />
         </div>
-        <div className="space-y-2">
-          <Label
-            htmlFor="lastName"
-            className="text-white/60 text-xs font-medium uppercase tracking-wider"
-          >
-            Your last name
-          </Label>
+        <div>
+          <Label className={labelCls}>Last name</Label>
           <Input
-            id="lastName"
             placeholder="Smith"
-            value={data.lastName}
-            onChange={onChange}
-            required
-            className="border-white/10 bg-white/5 text-white placeholder:text-white/30
-                       focus:border-white/20 focus:ring-white/10"
+            {...register("lastName")}
+            className={`mt-1.5 ${inputCls} ${errors.lastName ? errorInputCls : ""}`}
           />
+          <FieldError message={errors.lastName?.message} />
         </div>
       </div>
 
       {/* Work email */}
-      <div className="space-y-2">
-        <Label
-          htmlFor="email"
-          className="text-white/60 text-xs font-medium uppercase tracking-wider"
-        >
-          Work email
-        </Label>
+      <div>
+        <Label className={labelCls}>Work email</Label>
         <Input
-          id="email"
           type="email"
           placeholder="john@acme.com"
-          value={data.email}
-          onChange={onChange}
-          required
-          className="border-white/10 bg-white/5 text-white placeholder:text-white/30
-                     focus:border-white/20 focus:ring-white/10"
+          {...register("email")}
+          className={`mt-1.5 ${inputCls} ${errors.email ? errorInputCls : ""}`}
         />
+        <FieldError message={errors.email?.message} />
       </div>
 
       {/* Password */}
-      <div className="space-y-2">
-        <Label
-          htmlFor="password"
-          className="text-white/60 text-xs font-medium uppercase tracking-wider"
-        >
-          Password
-        </Label>
+      <div>
+        <Label className={labelCls}>Password</Label>
         <PasswordInput
           id="password"
-          value={data.password}
-          onChange={onChange}
-          required
+          {...register("password")}
+          className={`mt-1.5 ${errors.password ? errorInputCls : ""}`}
         />
+        <FieldError message={errors.password?.message} />
       </div>
 
       {/* Industry */}
-      <div className="space-y-2">
-        <Label className="text-white/60 text-xs font-medium uppercase tracking-wider">
-          Industry
-        </Label>
-        <Select
-          value={data.industry}
-          onValueChange={(v) => onSelectChange("industry", v)}
-        >
-          <SelectTrigger className="border-white/10 bg-white/5 text-white hover:bg-white/10 focus:ring-white/10">
-            <SelectValue placeholder="Select industry" />
-          </SelectTrigger>
-          <SelectContent className="border-white/10 bg-[#0b0c0e] text-white">
-            {[
-              ["technology", "Technology"],
-              ["finance", "Finance"],
-              ["healthcare", "Healthcare"],
-              ["education", "Education"],
-              ["other", "Other"],
-            ].map(([v, label]) => (
-              <SelectItem
-                key={v}
-                value={v}
-                className="focus:bg-white/10 focus:text-white"
-              >
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div>
+        <Label className={labelCls}>Industry</Label>
+        <Controller
+          name="industry"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className={`mt-1.5 border-white/10 bg-white/5 text-white hover:bg-white/10 focus:ring-white/10 ${errors.industry ? errorInputCls : ""}`}>
+                <SelectValue placeholder="Select industry" />
+              </SelectTrigger>
+              <SelectContent className="border-white/10 bg-[#0b0c0e] text-white">
+                {INDUSTRIES.map(([v, label]) => (
+                  <SelectItem key={v} value={v} className="focus:bg-white/10 focus:text-white">
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FieldError message={errors.industry?.message} />
       </div>
 
       <Button

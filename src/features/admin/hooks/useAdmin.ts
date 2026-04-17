@@ -71,7 +71,7 @@ export function useAdmin() {
   const approvePending = useCallback(async (profile: Profile) => {
     setActionLoading(profile.id);
     try {
-      const newRole = profile.role === "pending_university" && profile.status === "pending" ? "university_admin" : "company_admin";
+      const newRole = profile.role === "university_admin" && profile.status === "pending" ? "university_admin" : "company_admin";
       await adminService.approvePending(profile.id, newRole);
       toast({
         title: "Approved ✓",

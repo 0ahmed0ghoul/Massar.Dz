@@ -33,7 +33,7 @@ export const AdminPendingPage = () => {
   const filtered = filter === "all" ? profiles : profiles.filter((p) => p.role === filter);
   const counts = {
     all: profiles.length,
-    pending_university: profiles.filter((p) => p.role === "pending_university").length,
+    university_admin: profiles.filter((p) => p.role === "university_admin").length,
     company_admin: profiles.filter((p) => p.role === "company_admin").length,
   };
 
@@ -55,7 +55,7 @@ export const AdminPendingPage = () => {
       </div>
 
       <div className="flex gap-2">
-        {(["all", "pending_university", "company_admin"] as PendingFilter[]).map((f) => (
+        {(["all", "university_admin", "company_admin"] as PendingFilter[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -64,7 +64,7 @@ export const AdminPendingPage = () => {
             }`}
           >
             {f === "all" && "All"}
-            {f === "pending_university" && <><School className="h-3.5 w-3.5" /> Universities</>}
+            {f === "university_admin" && <><School className="h-3.5 w-3.5" /> Universities</>}
             {f === "company_admin" && <><Building2 className="h-3.5 w-3.5" /> Companies</>}
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${counts[f] > 0 ? "bg-amber-400 text-black" : "bg-white/10 text-white/40"}`}>
               {counts[f]}

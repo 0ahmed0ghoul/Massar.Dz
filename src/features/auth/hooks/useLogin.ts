@@ -1,119 +1,65 @@
-import { useState } from "react";
+// hooks/useLogin.ts
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { authService } from "../service/auth.service";
+import { redirectByProfile } from "@/utils/redirectByProfile";
+import type { Profile } from "@/domain/profile.types";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchProfileWithRetry(
+  userId: string,
+  retries = 2,
+  delayMs = 1200
+): Promise<Profile | null> {
+  for (let i = 0; i < retries; i++) {
+    const profile = await authService.fetchProfile(userId);
+    if (profile) return profile;
+    if (i < retries - 1) await sleep(delayMs);
+  }
+  return null;
+}
 
 export const useLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
   const [isLoading, setIsLoading] = useState(false);
-
-  // ─────────────────────────────────────────
-  // LOGIN WITH EMAIL/PASSWORD
-  // ─────────────────────────────────────────
+  const isSubmittingRef = useRef(false);
 
   const login = async (email: string, password: string) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
-  
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
-      if (error) {
-        console.log("LOGIN ERROR:", error);
-        throw error;
-      }
-  
+      if (error) throw error;
+
       const user = data.user;
-      if (!user) throw new Error("No user returned");
-  
-      let profile = await authService.fetchProfile(user.id);
-  
+      if (!user) throw new Error("No user returned from auth");
+
+      // Profile is written async by a DB trigger — retry once
+      const profile = await fetchProfileWithRetry(user.id);
       if (!profile) {
-        await new Promise((r) => setTimeout(r, 1000));
-        profile = await authService.fetchProfile(user.id);
+        throw new Error("Profile not found. Please contact support.");
       }
-  
-      if (!profile) throw new Error("Profile not found");
-  
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-  
-      handleRedirect(profile.role); // ✅ now correct
-    } catch (err: any) {
-      toast({
-        title: "Login failed",
-        description: err.message,
-        variant: "destructive",
-      });
+
+      toast({ title: "Welcome back!", description: "Logged in successfully." });
+      redirectByProfile(navigate, profile);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      toast({ title: "Login failed", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
-  // ─────────────────────────────────────────
-  // GOOGLE LOGIN
-  // ─────────────────────────────────────────
-
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-    } catch (err: any) {
-      toast({
-        title: "Google Login Failed",
-        description: err.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-
-  // ─────────────────────────────────────────
-  // REDIRECT LOGIC (CENTRALIZED)
-  // ─────────────────────────────────────────
-
-  const handleRedirect = (role: string) => {
-    switch (role) {
-      case "student":
-        navigate("/dashboard/student");
-        break;
-
-      case "company_admin":
-      case "pending_university":
-        navigate("/pending-approval");
-        break;
-
-      case "university_admin":
-        navigate("/dashboard/university");
-        break;
-
-      case "super_admin":
-        navigate("/dashboard/admin");
-        break;
-
-      default:
-        navigate("/");
-    }
-  };
-
-  return {
-    login,
-    loginWithGoogle,
-    isLoading,
-  };
+  return { login, isLoading };
 };
