@@ -89,16 +89,6 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-transparent px-2 text-xs text-white/30">
-                  or
-                </span>
-              </div>
-            </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label

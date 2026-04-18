@@ -57,21 +57,30 @@ class AuthService {
 
   async signUp(email: string, password: string) {
     const cleanEmail = email.trim().toLowerCase();
-
+  
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
     });
-
-    if (error) throw error;
-
-    if (!data.user) {
-      throw new Error("User creation failed");
+  
+    if (error) {
+      console.error("❌ SIGNUP ERROR:", error);
+  
+      const msg = error.message.toLowerCase();
+  
+      if (msg.includes("already registered") || msg.includes("duplicate")) {
+        throw new Error("This email is already registered. Please login.");
+      }
+  
+      throw new Error("Unable to create account. Please try again.");
     }
-
+  
+    if (!data.user) {
+      throw new Error("User creation failed.");
+    }
+  
     return data.user;
   }
-
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -133,33 +142,39 @@ async registerUser(params: {
   role: RegisterRole;
   profile: any;
 }) {
-  // 1. Create the auth user
-  const user = await this.signUp(params.email, params.password);
+  const cleanEmail = params.email.trim().toLowerCase();
 
-  // 2. Build the profile row (all optional fields default to null)
+  // ✅ 1. Create auth user
+  const user = await this.signUp(cleanEmail, params.password);
+
+  // ✅ 2. Prepare profile
   const profileData = {
-    id:              user.id,
-    email:           params.email.trim().toLowerCase(),
-    role:            params.role,
-    status:          params.role === "student" ? "active" : "pending",
-    first_name:      params.profile.firstName      ?? null,
-    last_name:       params.profile.lastName       ?? null,
-    degree_level:    params.profile.degreeLevel    ?? null,
-    company_name:    params.profile.companyName    ?? null,
-    industry:        params.profile.industry       ?? null,
+    id: user.id,
+    email: cleanEmail,
+    role: params.role,
+    status: params.role === "student" ? "active" : "pending",
+
+    first_name: params.profile.firstName ?? null,
+    last_name: params.profile.lastName ?? null,
+    degree_level: params.profile.degreeLevel ?? null,
+    company_name: params.profile.companyName ?? null,
+    industry: params.profile.industry ?? null,
     university_name: params.profile.universityName ?? null,
-    city:            params.profile.city           ?? null,
+    city: params.profile.city ?? null,
   };
 
-  // 3. Insert — this is what was missing before
+  // ✅ 3. Insert profile
   const { error: profileError } = await supabase
     .from("profiles")
     .insert(profileData);
 
   if (profileError) {
-    // Auth user was created but profile failed — attempt cleanup
-    await supabase.auth.admin.deleteUser(user.id).catch(() => null);
-    throw profileError;
+    console.error("❌ PROFILE INSERT ERROR:", profileError);
+
+    // ❌ DO NOT delete user here (not allowed on client)
+    throw new Error(
+      "Account created but profile setup failed. Please contact support."
+    );
   }
 
   return user;

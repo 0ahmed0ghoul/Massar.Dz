@@ -58,13 +58,18 @@ const Navbar = () => {
   // ROLE DASHBOARD ROUTING
   // -------------------------
   const getDashboard = () => {
+    // 🔥 PRIORITY: pending status
+    if (profile?.status === "pending") {
+      return "/pending-approval";
+    }
+  
     switch (role) {
       case ROLES.STUDENT:
         return "/student/dashboard";
       case ROLES.COMPANY_ADMIN:
         return "/dashboard/company";
       case ROLES.UNIVERSITY_ADMIN:
-        return "/dashboard/university";
+        return "/university/dashboard";
       case ROLES.SUPER_ADMIN:
         return "/dashboard/admin";
       default:

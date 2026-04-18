@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { Menu, X, ChevronLeft, Clock } from "lucide-react";
+import { Menu, X, ChevronLeft, Clock, Paperclip } from "lucide-react";
 
 import {
   LayoutDashboard,
@@ -34,6 +34,8 @@ const navMap: Record<UserRole, any[]> = {
   student: [
     { title: "Dashboard", url: "student/dashboard", icon: LayoutDashboard },
     { title: "Profile", url: "/student/dashboard/profile", icon: User },
+    { title: "Certificate", url: "/student/dashboard/certificate", icon: Paperclip },
+
     { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
     { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
     { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
@@ -45,8 +47,8 @@ const navMap: Record<UserRole, any[]> = {
     { title: "Candidates", url: "/dashboard/company/candidates", icon: Search },
   ],
   university_admin: [
-    { title: "Dashboard", url: "/dashboard/university", icon: LayoutDashboard },
-    { title: "Students", url: "/dashboard/university/students", icon: Users },
+    { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
+    { title: "Students", url: "/university/dashboard/students", icon: Users },
   ],
   super_admin: [
     { title: "Dashboard",    url: "/dashboard/admin",          icon: LayoutDashboard },

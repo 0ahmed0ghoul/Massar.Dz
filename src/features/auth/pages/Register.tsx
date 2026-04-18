@@ -70,15 +70,7 @@ const Register = () => {
       />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2 text-white">
-            <div className="rounded-lg bg-white/10 p-1.5">
-              <img src={MassarLogo} className="w-6 h-6" />
-            </div>
-            <span className="font-bold">Massar</span>
-          </Link>
-        </div>
+
 
         {/* VERIFY STEP */}
         {step === "verify" && (
@@ -122,7 +114,9 @@ const Register = () => {
 
             <CardContent className="pt-6">
               {/* ROLE */}
-              {step === "role" && <RoleSelector selected={role} onSelect={handleRoleSelect} />}
+              {step === "role" && (
+                <RoleSelector selected={role} onSelect={handleRoleSelect} />
+              )}
 
               {/* FORMS */}
               {step === "form" && role === "student" && (
@@ -148,11 +142,19 @@ const Register = () => {
             </CardContent>
           </Card>
         )}
+        <div className="mt-6 text-center text-xs text-white/30 space-y-2">
+          <div>By continuing you agree to Terms & Privacy</div>
 
-        {/* FOOTER */}
-        <p className="mt-6 text-center text-xs text-white/30">
-          By continuing you agree to Terms & Privacy
-        </p>
+          <div className="text-sm text-white/40">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-white hover:underline hover:text-white/80 transition-colors font-medium"
+            >
+              Login
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

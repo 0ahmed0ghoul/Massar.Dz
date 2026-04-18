@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Tables } from "@/types/database";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { studentService } from "@/features/student copy/services/student.service";
+import { studentService } from "../services/student.service";
 
 type Application = Tables<"applications">;
 

@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     password: string,
     userData: Partial<Profile>
   ) => {
-    await authService.signUp(email, password, userData);
+    await authService.signUp(email, password);
   };
 
   const signOut = async () => {

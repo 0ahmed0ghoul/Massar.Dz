@@ -22,12 +22,20 @@ export interface RegisterFormData {
 
 function normalizeError(err: unknown): string {
   if (err instanceof Error) {
-    if (err.message.includes("429")) {
-      return "Too many attempts. Please wait a moment and try again.";
+    const msg = err.message.toLowerCase();
+
+    if (msg.includes("already registered") || msg.includes("duplicate")) {
+      return "This email is already registered. Try logging in.";
     }
+
+    if (msg.includes("429")) {
+      return "Too many attempts. Please wait a moment.";
+    }
+
     return err.message;
   }
-  return "An unexpected error occurred.";
+
+  return "Something went wrong. Please try again.";
 }
 
 export const useRegister = () => {

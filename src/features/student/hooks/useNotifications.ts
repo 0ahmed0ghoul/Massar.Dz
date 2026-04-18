@@ -46,8 +46,8 @@ export const useNotifications = () => {
       ];
 
       const universityFields = [
-        { field: "university_name", label: "University name", link: "/dashboard/university/profile" },
-        { field: "avatar_url", label: "Logo", link: "/dashboard/university/profile" },
+        { field: "university_name", label: "University name", link: "/university/dashboard/profile" },
+        { field: "avatar_url", label: "Logo", link: "/university/dashboard/profile" },
       ];
 
       let fieldsToCheck = [...commonFields];

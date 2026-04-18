@@ -1,163 +1,276 @@
-import { Profile } from "@/domain/profile.types";
+// features/student/services/student.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import type { User, Session } from "@supabase/supabase-js";
+import { Tables } from "@/types/database";
 
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
+type Job = Tables<"jobs">;
+type Application = Tables<"applications">;
+type Activity = Tables<"activities">;
+type Interview = Tables<"interviews">;
+type Profile = Tables<"profiles">;
 
-type RegisterRole =
-  | "student"
-  | "company_admin"
-  | "university_admin"
-  | "super_admin";
+// Extended type for applications with joined job data
+type ApplicationWithJob = Application & {
+  jobs: {
+    id: string;
+    title: string;
+    company: string;
+  } | null;
+};
 
-// ─────────────────────────────────────────────
-// SERVICE
-// ─────────────────────────────────────────────
+export const studentService = {
+  /**
+   * Fetch all available jobs
+   */
+  async getJobs(): Promise<Job[]> {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-class AuthService {
-  // ─────────────────────────────────────────
-  // AUTH
-  // ─────────────────────────────────────────
-
-  async signUp(params: {
-    email: string;
-    password: string;
-    role: RegisterRole;
-    profile: Partial<Profile>;
-  }): Promise<User> {
-    const { data, error } = await supabase.auth.signUp({
-      email: params.email,
-      password: params.password,
-      options: {
-        data: {
-          role: params.role,
-          first_name: params.profile.first_name,
-          last_name: params.profile.last_name,
-          degreeLevel: params.profile.degree_level,
-          companyName: params.profile.company_name,
-          industry: params.profile.industry,
-          universityName: params.profile.university_name,
-          city: params.profile.city,
-        },
-      },
-    });
-
-    if (error) throw error;
-
-    if (!data.user) {
-      throw new Error("Signup failed: no user returned");
+    if (error) {
+      console.error("Error fetching jobs:", error);
+      throw new Error(error.message);
     }
+    return data || [];
+  },
 
-    return data.user;
-  }
+  /**
+   * Fetch applications for a given student, including the related job details
+   */
+  async getApplications(studentId: string): Promise<ApplicationWithJob[]> {
+    const { data, error } = await supabase
+      .from("applications")
+      .select(`
+        *,
+        jobs (
+          id,
+          title,
+          company
+        )
+      `)
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false });
 
-  async signIn(email: string, password: string): Promise<User> {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    if (error) {
+      console.error("Error fetching applications:", error);
+      throw new Error(error.message);
+    }
+    return data || [];
+  },
 
-    if (error) throw error;
-    if (!data.user) throw new Error("Login failed");
+  /**
+   * Fetch activities for a given student
+   */
+  async getActivities(studentId: string): Promise<Activity[]> {
+    const { data, error } = await supabase
+      .from("activities")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false });
 
-    return data.user;
-  }
+    if (error) {
+      console.error("Error fetching activities:", error);
+      throw new Error(error.message);
+    }
+    return data || [];
+  },
 
-  async signOut(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  }
+  /**
+   * Fetch interviews for a given student
+   */
+  async getInterviews(studentId: string): Promise<Interview[]> {
+    const { data, error } = await supabase
+      .from("interviews")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("scheduled_at", { ascending: true });
 
-  // ─────────────────────────────────────────
-  // SESSION
-  // ─────────────────────────────────────────
+    if (error) {
+      console.error("Error fetching interviews:", error);
+      throw new Error(error.message);
+    }
+    return data || [];
+  },
 
-  async getSession(): Promise<Session | null> {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return data.session;
-  }
-
-  async getCurrentUser(): Promise<User | null> {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return data.user;
-  }
-
-  // ─────────────────────────────────────────
-  // PROFILE (TRIGGER-OWNED SOURCE OF TRUTH)
-  // ─────────────────────────────────────────
-
-  async getProfile(userId: string): Promise<Profile | null> {
+  /**
+   * Fetch a student's profile
+   */
+  async getProfile(studentId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) {
-      console.warn("Profile fetch warning:", error.message);
-      return null;
-    }
-
-    return data;
-  }
-
-  async getCurrentProfile(): Promise<Profile | null> {
-    const user = await this.getCurrentUser();
-    if (!user) return null;
-
-    return this.getProfile(user.id);
-  }
-
-  async updateProfile(updates: Partial<Profile>): Promise<Profile> {
-    const user = await this.getCurrentUser();
-    if (!user) throw new Error("No authenticated user");
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", user.id)
-      .select()
+      .eq("id", studentId)
       .single();
 
-    if (error) throw error;
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching profile:", error);
+      throw new Error(error.message);
+    }
     return data;
-  }
+  },
 
-  // ─────────────────────────────────────────
-  // PASSWORD
-  // ─────────────────────────────────────────
+  /**
+   * Update a student's profile
+   */
+  async updateProfile(studentId: string, payload: Partial<Profile>): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("id", studentId);
 
-  async resetPassword(email: string): Promise<void> {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    if (error) {
+      console.error("Error updating profile:", error);
+      throw new Error(error.message);
+    }
+  },
 
-    if (error) throw error;
-  }
+  /**
+   * Upload an avatar image for a student
+   * Returns the public URL of the uploaded image
+   */
+  async uploadAvatar(studentId: string, file: File): Promise<string | null> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
 
-  async updatePassword(newPassword: string): Promise<void> {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
+    const { error: uploadError } = await supabase.storage
+      .from("student-files")
+      .upload(filePath, file, { upsert: true });
 
-    if (error) throw error;
-  }
+    if (uploadError) {
+      console.error("Error uploading avatar:", uploadError);
+      throw new Error(uploadError.message);
+    }
 
-  // ─────────────────────────────────────────
-  // UTILS
-  // ─────────────────────────────────────────
+    const { data: publicUrlData } = supabase.storage
+      .from("student-files")
+      .getPublicUrl(filePath);
 
-  onAuthStateChange(callback: (user: User | null) => void) {
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      callback(session?.user ?? null);
-    });
+    const avatarUrl = publicUrlData.publicUrl;
 
-    return data.subscription;
-  }
-}
+    await this.updateProfile(studentId, { avatar_url: avatarUrl });
+    return avatarUrl;
+  },
 
-export const authService = new AuthService();
+  /**
+   * Delete a student's avatar
+   */
+  async deleteAvatar(studentId: string): Promise<void> {
+    const profile = await this.getProfile(studentId);
+    if (!profile?.avatar_url) return;
+
+    const urlParts = profile.avatar_url.split("/");
+    const filePath = urlParts.slice(urlParts.indexOf("avatars")).join("/");
+
+    const { error: deleteError } = await supabase.storage
+      .from("student-files")
+      .remove([filePath]);
+
+    if (deleteError) {
+      console.error("Error deleting avatar:", deleteError);
+      throw new Error(deleteError.message);
+    }
+
+    await this.updateProfile(studentId, { avatar_url: null });
+  },
+
+  /**
+   * Upload a CV/resume file for a student
+   * Returns the public URL of the uploaded file
+   */
+  async uploadCV(studentId: string, file: File): Promise<string | null> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+    const filePath = `resumes/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("student-files")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("Error uploading CV:", uploadError);
+      throw new Error(uploadError.message);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("student-files")
+      .getPublicUrl(filePath);
+
+    const resumeUrl = publicUrlData.publicUrl;
+
+    await this.updateProfile(studentId, { resume_url: resumeUrl });
+    return resumeUrl;
+  },
+
+  /**
+   * Delete a student's CV
+   */
+  async deleteCV(studentId: string): Promise<void> {
+    const profile = await this.getProfile(studentId);
+    if (!profile?.resume_url) return;
+
+    const urlParts = profile.resume_url.split("/");
+    const filePath = urlParts.slice(urlParts.indexOf("resumes")).join("/");
+
+    const { error: deleteError } = await supabase.storage
+      .from("student-files")
+      .remove([filePath]);
+
+    if (deleteError) {
+      console.error("Error deleting CV:", deleteError);
+      throw new Error(deleteError.message);
+    }
+
+    await this.updateProfile(studentId, { resume_url: null });
+  },
+
+  /**
+   * Upload a student card file for a student
+   * Returns the public URL of the uploaded file
+   */
+  async uploadStudentCard(studentId: string, file: File): Promise<string | null> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+    const filePath = `student-cards/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("student-files")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("Error uploading student card:", uploadError);
+      throw new Error(uploadError.message);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("student-files")
+      .getPublicUrl(filePath);
+
+    const studentCardUrl = publicUrlData.publicUrl;
+
+    await this.updateProfile(studentId, { student_card_url: studentCardUrl });
+    return studentCardUrl;
+  },
+
+  /**
+   * Delete a student's student card
+   */
+  async deleteStudentCard(studentId: string): Promise<void> {
+    const profile = await this.getProfile(studentId);
+    if (!profile?.student_card_url) return;
+
+    const urlParts = profile.student_card_url.split("/");
+    const filePath = urlParts.slice(urlParts.indexOf("student-cards")).join("/");
+
+    const { error: deleteError } = await supabase.storage
+      .from("student-files")
+      .remove([filePath]);
+
+    if (deleteError) {
+      console.error("Error deleting student card:", deleteError);
+      throw new Error(deleteError.message);
+    }
+
+    await this.updateProfile(studentId, { student_card_url: null });
+  },
+};
