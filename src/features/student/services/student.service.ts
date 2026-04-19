@@ -8,7 +8,6 @@ type Activity = Tables<"activities">;
 type Interview = Tables<"interviews">;
 type Profile = Tables<"profiles">;
 
-// Extended type for applications with joined job data
 type ApplicationWithJob = Application & {
   jobs: {
     id: string;
@@ -16,6 +15,20 @@ type ApplicationWithJob = Application & {
     company: string;
   } | null;
 };
+
+// Required fields for a student profile to be considered "complete"
+const REQUIRED_STUDENT_FIELDS: (keyof Profile)[] = [
+  "first_name",
+  "last_name",
+  "email",
+  "degree_level",
+  "university_name",
+  "specialty",
+  "wilaya",
+  "academic_year",
+  "specialty_type",
+  "student_id"
+];
 
 export const studentService = {
   /**
@@ -125,8 +138,35 @@ export const studentService = {
   },
 
   /**
+   * Check if a student profile has all required fields filled.
+   */
+  async isProfileComplete(studentId: string): Promise<boolean> {
+    const profile = await this.getProfile(studentId);
+    if (!profile) return false;
+    return REQUIRED_STUDENT_FIELDS.every(field => {
+      const value = profile[field];
+      return value != null && String(value).trim() !== "";
+    });
+  },
+
+  /**
+   * If the profile is complete and not yet marked as completed,
+   * set the is_completed flag to true.
+   * Returns true if the profile is complete (whether it was already marked or just set).
+   */
+  async ensureProfileCompleted(studentId: string): Promise<boolean> {
+    const complete = await this.isProfileComplete(studentId);
+    if (complete) {
+      const profile = await this.getProfile(studentId);
+      if (profile && !profile.is_completed) {
+        await this.updateProfile(studentId, { is_completed: true });
+      }
+    }
+    return complete;
+  },
+
+  /**
    * Upload an avatar image for a student
-   * Returns the public URL of the uploaded image
    */
   async uploadAvatar(studentId: string, file: File): Promise<string | null> {
     const fileExt = file.name.split(".").pop();
@@ -176,7 +216,6 @@ export const studentService = {
 
   /**
    * Upload a CV/resume file for a student
-   * Returns the public URL of the uploaded file
    */
   async uploadCV(studentId: string, file: File): Promise<string | null> {
     const fileExt = file.name.split(".").pop();
@@ -226,7 +265,6 @@ export const studentService = {
 
   /**
    * Upload a student card file for a student
-   * Returns the public URL of the uploaded file
    */
   async uploadStudentCard(studentId: string, file: File): Promise<string | null> {
     const fileExt = file.name.split(".").pop();

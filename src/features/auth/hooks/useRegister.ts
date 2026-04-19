@@ -23,18 +23,14 @@ export interface RegisterFormData {
 function normalizeError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
-
     if (msg.includes("already registered") || msg.includes("duplicate")) {
       return "This email is already registered. Try logging in.";
     }
-
     if (msg.includes("429")) {
       return "Too many attempts. Please wait a moment.";
     }
-
     return err.message;
   }
-
   return "Something went wrong. Please try again.";
 }
 
@@ -57,43 +53,33 @@ export const useRegister = () => {
     resendCooldown,
   } = useVerification();
 
-  // ─── ROLE ─────────────────────────────
   const handleRoleSelect = (r: UserRole) => {
-    console.log("🟢 ROLE SELECTED:", r);
     setRole(r);
     setStep("form");
   };
 
-  // ─── STEP 1: FORM → VALIDATE + SEND OTP ─────────────────────────────
   const handleFormSubmit = async (data: RegisterFormData) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
-      // 🔴 VALIDATION FIRST
       if (!data.email || !data.email.includes("@")) {
         throw new Error("Please enter a valid email address.");
       }
-
       if (!data.password || data.password.length < 6) {
         throw new Error("Password must be at least 6 characters.");
       }
-
       if (!role) {
         throw new Error("Please select a role.");
       }
 
-      // 🔴 CHECK IF EMAIL ALREADY EXISTS (optional but smart)
       const exists = await authService.checkEmailExists(data.email);
       if (exists) {
         throw new Error("Email already registered. Please login.");
       }
 
-      // ✅ SAVE DATA
       pendingFormDataRef.current = data;
-
-      // ✅ SEND OTP ONLY
       await sendVerificationCode(data.email);
 
       setVerificationCode("");
@@ -103,7 +89,6 @@ export const useRegister = () => {
         title: "Code sent",
         description: "Check your email inbox.",
       });
-
     } catch (err: unknown) {
       toast({
         title: "Error",
@@ -116,23 +101,17 @@ export const useRegister = () => {
     }
   };
 
-  // ─── STEP 2: VERIFY → REGISTER ─────────────────────────────
   const handleVerify = async () => {
     const formData = pendingFormDataRef.current;
-
     if (!role || !formData || isSubmittingRef.current) return;
 
     isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
-      // 🔴 VERIFY CODE FIRST
       const { valid, error } = verifyCode(formData.email, verificationCode);
       if (!valid) throw new Error(error);
 
-      console.log("🚀 FINAL REGISTER:", formData);
-
-      // ✅ REGISTER ONLY HERE (ONCE)
       const user = await authService.registerUser({
         email: formData.email,
         password: formData.password,
@@ -147,18 +126,15 @@ export const useRegister = () => {
         description: "Account created successfully.",
       });
 
-      // ✅ REDIRECT
+      // ✅ NEW REDIRECT LOGIC
       if (role === "student") {
         navigate("/student/dashboard");
-      } else if (
-        role === "company_admin" ||
-        role === "university_admin"
-      ) {
-        navigate("/pending-approval");
+      } else if (role === "company_admin" || role === "university_admin") {
+        // Redirect to profile completion (not directly to pending approval)
+        navigate("/complete-profile");
       } else {
         navigate("/");
       }
-
     } catch (err: unknown) {
       toast({
         title: "Verification failed",
@@ -178,10 +154,8 @@ export const useRegister = () => {
     verificationCode,
     resendCooldown,
     pendingEmail: pendingFormDataRef.current?.email ?? "",
-
     setVerificationCode,
     setStep,
-
     handleRoleSelect,
     handleFormSubmit,
     handleVerify,

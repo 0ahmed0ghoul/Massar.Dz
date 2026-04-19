@@ -1,9 +1,11 @@
+// components/profile/ProfileForm.tsx
 import { useEffect, useState, useRef } from "react";
 import {
   Camera, X, User, Mail, GraduationCap, Building2, BookOpen, MapPin, Save,
   FileText, Upload, Trash2, CreditCard, Hash, Calendar, Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { studentService } from "@/features/student/services/student.service";
 
 interface ProfileFormProps {
   profile: any;
@@ -79,6 +81,11 @@ const ProfileForm = ({
     }
     if (Object.keys(changedFields).length === 0) return;
     await updateProfile(changedFields);
+
+    // Automatically mark profile as completed if all required fields are filled
+    if (profile?.role === "student") {
+      await studentService.ensureProfileCompleted(profile.id);
+    }
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,37 +151,37 @@ const ProfileForm = ({
   const isStudent = profile?.role === "student";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-theme-border bg-theme-card backdrop-blur-xl transition-all duration-300 hover:border-primary/30">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
+      {/* Green glow */}
+      <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#639922]/10 blur-3xl group-hover:bg-[#639922]/15 transition-all duration-700" />
 
-      <div className="relative z-10 space-y-6 p-8">
-        <h2 className="flex items-center gap-2 text-2xl font-bold text-theme-text">
-          <Save className="h-6 w-6 text-primary" />
+      <div className="relative z-10 space-y-8 p-6 md:p-8">
+        <h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+          <Save className="h-6 w-6 text-[#639922]" />
           Complete Your Profile
         </h2>
 
         {/* Upload sections */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-3">
           {/* Avatar */}
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-theme-border bg-theme-muted/5 p-5">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
             <div className="relative">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt="Avatar"
-                  className="h-20 w-20 rounded-full object-cover ring-2 ring-primary/50"
+                  className="h-20 w-20 rounded-full object-cover ring-2 ring-[#639922]/50"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5">
-                  <Camera className="h-8 w-8 text-theme-muted" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
+                  <Camera className="h-8 w-8 text-white/40" />
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg transition hover:bg-primary/90 disabled:opacity-50"
+                className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
               >
                 <Camera className="h-3.5 w-3.5" />
               </button>
@@ -196,24 +203,24 @@ const ProfileForm = ({
               />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-theme-text">Profile Picture</p>
-              <p className="text-xs text-theme-muted">JPG, PNG. Max 2MB</p>
-              {uploadingAvatar && <p className="mt-1 text-xs text-primary">Uploading...</p>}
+              <p className="text-sm font-medium text-white">Profile Picture</p>
+              <p className="text-xs text-white/40">JPG, PNG. Max 2MB</p>
+              {uploadingAvatar && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
             </div>
           </div>
 
           {/* CV */}
           {isStudent && (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-theme-border bg-theme-muted/5 p-5">
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5">
-                  <FileText className="h-8 w-8 text-theme-muted" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
+                  <FileText className="h-8 w-8 text-white/40" />
                 </div>
                 <button
                   type="button"
                   onClick={() => cvInputRef.current?.click()}
                   disabled={uploadingCV}
-                  className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg transition hover:bg-primary/90 disabled:opacity-50"
+                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
                 >
                   <Upload className="h-3.5 w-3.5" />
                 </button>
@@ -235,14 +242,14 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-theme-text">CV / Resume</p>
-                <p className="text-xs text-theme-muted">
+                <p className="text-sm font-medium text-white">CV / Resume</p>
+                <p className="text-xs text-white/40">
                   {profile?.resume_url ? (
                     <a
                       href={profile.resume_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="text-[#639922] hover:underline"
                     >
                       View uploaded
                     </a>
@@ -250,23 +257,23 @@ const ProfileForm = ({
                     "PDF only. Max 5MB"
                   )}
                 </p>
-                {uploadingCV && <p className="mt-1 text-xs text-primary">Uploading...</p>}
+                {uploadingCV && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
               </div>
             </div>
           )}
 
           {/* Student Card */}
           {isStudent && (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-theme-border bg-theme-muted/5 p-5">
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5">
-                  <CreditCard className="h-8 w-8 text-theme-muted" />
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
+                  <CreditCard className="h-8 w-8 text-white/40" />
                 </div>
                 <button
                   type="button"
                   onClick={() => studentCardInputRef.current?.click()}
                   disabled={uploadingStudentCard}
-                  className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg transition hover:bg-primary/90 disabled:opacity-50"
+                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
                 >
                   <Upload className="h-3.5 w-3.5" />
                 </button>
@@ -288,14 +295,14 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-theme-text">Student Card</p>
-                <p className="text-xs text-theme-muted">
+                <p className="text-sm font-medium text-white">Student Card</p>
+                <p className="text-xs text-white/40">
                   {profile?.student_card_url ? (
                     <a
                       href={profile.student_card_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="text-[#639922] hover:underline"
                     >
                       View uploaded
                     </a>
@@ -303,7 +310,7 @@ const ProfileForm = ({
                     "Image/PDF. Max 5MB"
                   )}
                 </p>
-                {uploadingStudentCard && <p className="mt-1 text-xs text-primary">Uploading...</p>}
+                {uploadingStudentCard && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
               </div>
             </div>
           )}
@@ -313,11 +320,11 @@ const ProfileForm = ({
         <div className="space-y-8">
           {/* Personal Information */}
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-theme-text">
-              <User className="h-5 w-5 text-primary" />
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-white">
+              <User className="h-5 w-5 text-[#639922]" />
               Personal Information
             </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <InputField
                 label="First name"
                 icon={<User className="h-4 w-4" />}
@@ -348,11 +355,11 @@ const ProfileForm = ({
           {/* Academic Information */}
           {isStudent && (
             <div>
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-theme-text">
-                <GraduationCap className="h-5 w-5 text-primary" />
+              <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-white">
+                <GraduationCap className="h-5 w-5 text-[#639922]" />
                 Academic Information
               </h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <SelectField
                   label="Degree level"
                   icon={<GraduationCap className="h-4 w-4" />}
@@ -433,7 +440,7 @@ const ProfileForm = ({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="group flex items-center gap-2 rounded-lg bg-primary px-8 py-3 font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-xl disabled:opacity-50"
+            className="group flex items-center gap-2 rounded-lg bg-[#639922] px-8 py-3 font-semibold text-white shadow-lg shadow-[#639922]/30 transition-all hover:bg-[#4f7a1a] hover:shadow-xl disabled:opacity-50"
           >
             <Save className="h-5 w-5 transition-transform group-hover:scale-110" />
             {saving ? "Saving..." : "Save Changes"}
@@ -444,71 +451,45 @@ const ProfileForm = ({
   );
 };
 
-// Helper components
-const InputField = ({
-  label,
-  icon,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-}: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  type?: string;
-}) => (
+// Helper components (unchanged)
+const InputField = ({ label, icon, value, onChange, placeholder, type = "text" }) => (
   <div>
-    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-theme-muted">
+    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-white/50">
       {label}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-theme-border bg-theme-input py-3 pl-10 pr-4 text-theme-text placeholder:text-theme-muted/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="w-full rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/30 focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
       />
     </div>
   </div>
 );
 
-const SelectField = ({
-  label,
-  icon,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) => (
+const SelectField = ({ label, icon, value, onChange, options }) => (
   <div>
-    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-theme-muted">
+    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-white/50">
       {label}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-lg border border-theme-border bg-theme-input py-3 pl-10 pr-10 text-theme-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="w-full appearance-none rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-10 text-white focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
       >
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
+          <option key={opt.value} value={opt.value} className="bg-[#1a1c1e]">
             {opt.label}
           </option>
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg className="h-4 w-4 text-theme-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>

@@ -1,7 +1,9 @@
-// components/UniversityConnectionCard.tsx
-import { Building2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Building2, CheckCircle2, AlertCircle, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useMessaging } from "@/features/messaging/hooks/useMessaging";
 
 type Profile = Tables<"profiles">;
 
@@ -9,69 +11,103 @@ interface UniversityConnectionCardProps {
   profile: Profile;
   onRequestConnection: () => Promise<void>;
   isRequesting?: boolean;
+  universityId?: string; // optional – if not provided, try to get from profile
 }
 
 export const UniversityConnectionCard = ({
   profile,
   onRequestConnection,
   isRequesting = false,
+  universityId,
 }: UniversityConnectionCardProps) => {
   const isVerified = profile.isVerified === true;
   const isConnected = profile.university_connection_status === true;
+  const { user } = useAuth();
+  const { startConversation } = useMessaging();
+  const navigate = useNavigate();
+
+  const handleMessage = async () => {
+    if (!user) return;
+    // Determine university ID: either from prop or from profile.university_id
+    const targetUniversityId = universityId || (profile as any).university_id;
+    if (!targetUniversityId) {
+      console.error("University ID not available");
+      return;
+    }
+    const conversation = await startConversation(user.id, targetUniversityId);
+    navigate(`/messages/${conversation.id}`);
+  };
 
   return (
-    <div className="rounded-2xl border border-theme-border bg-theme-card p-6 backdrop-blur-xl">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-4">
-          <div
-            className={cn(
-              "rounded-full p-3",
-              isConnected
-                ? "text-green-600 bg-green-50 dark:bg-green-950/30"
-                : "text-theme-muted bg-theme-muted/10"
-            )}
-          >
-            {isConnected ? (
-              <CheckCircle2 className="h-5 w-5" />
-            ) : (
-              <Building2 className="h-5 w-5" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-theme-text">University Connection</h3>
-            <p className="text-sm text-theme-muted">
-              {isConnected
-                ? `You are connected to ${profile.university_name || "your university"}. You can now claim certificates.`
-                : isVerified
-                ? `Connect with ${profile.university_name || "your university"} to access certificate claims.`
-                : "Complete admin verification before requesting university connection."}
-            </p>
-          </div>
-        </div>
-        <div className="shrink-0">
-          {!isConnected && (
-            <button
-              onClick={onRequestConnection}
-              disabled={!isVerified || isRequesting}
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
+      <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#639922]/10 blur-3xl group-hover:bg-[#639922]/15 transition-all duration-700" />
+
+      <div className="relative z-10 p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div
               className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                isVerified
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "cursor-not-allowed bg-theme-border text-theme-muted"
+                "rounded-full p-3 transition-all duration-300",
+                isConnected
+                  ? "bg-[#639922]/10 text-[#639922]"
+                  : "bg-white/[0.05] text-white/40"
               )}
             >
-              {isRequesting ? "Connecting..." : "Request Connection"}
-            </button>
-          )}
+              {isConnected ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <Building2 className="h-5 w-5" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-white">University Connection</h3>
+              <p className="text-sm text-white/50">
+                {isConnected
+                  ? `You are connected to ${profile.university_name || "your university"}. You can now claim certificates.`
+                  : isVerified
+                  ? `Connect with ${profile.university_name || "your university"} to access certificate claims.`
+                  : "Complete admin verification before requesting university connection."}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-3">
+            {/* Message button – always visible if university ID exists */}
+            {(universityId || (profile as any).university_id) && (
+              <button
+                onClick={handleMessage}
+                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
+              >
+                <MessageCircle className="mr-2 inline h-4 w-4" />
+                Message
+              </button>
+            )}
+            {/* Request connection button */}
+            {!isConnected && (
+              <button
+                onClick={onRequestConnection}
+                disabled={!isVerified || isRequesting}
+                className={cn(
+                  "rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-300",
+                  isVerified
+                    ? "bg-[#639922] text-white shadow-lg shadow-[#639922]/30 hover:bg-[#4f7a1a] hover:shadow-xl"
+                    : "cursor-not-allowed bg-white/[0.05] text-white/30"
+                )}
+              >
+                {isRequesting ? "Connecting..." : "Request Connection"}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {!isVerified && !isConnected && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-          <AlertCircle className="h-4 w-4" />
-          <p className="text-xs">Admin verification is required before connecting with your university.</p>
-        </div>
-      )}
+        {!isVerified && !isConnected && (
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-500/10 p-3 text-amber-400 border border-amber-500/20">
+            <AlertCircle className="h-4 w-4" />
+            <p className="text-xs font-medium">
+              Admin verification is required before connecting with your university.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

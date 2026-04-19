@@ -1,89 +1,153 @@
 // components/ProfileCompletionJourney.tsx
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Lock, Clock } from "lucide-react";
+import React from "react";
 
 export interface Step {
-    id: string;
-    title: string;
-    description: string;
-    icon: React.ReactNode;
-    status: "completed" | "current" | "pending" | "locked";
-  }
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  status: "completed" | "current" | "pending" | "locked";
+}
 
 interface ProfileCompletionJourneyProps {
-  currentStep: number;
   steps: Step[];
 }
 
-export const ProfileCompletionJourney = ({
-  currentStep,
-  steps,
-}: ProfileCompletionJourneyProps) => {
+export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProps) => {
   return (
-    <div className="w-full overflow-x-auto py-6">
-      <div className="flex min-w-max items-start justify-between gap-4 md:min-w-0 md:justify-start">
-        {steps.map((step, idx) => {
-          const isActive = idx === currentStep;
-          const isCompleted = step.status === "completed";
-          const isLocked = step.status === "locked";
-          const isPending = step.status === "pending";
+    <div className="w-full py-4">
 
-          return (
-            <div
-              key={step.id}
-              className={cn(
-                "relative flex flex-1 flex-col items-center text-center transition-all duration-300",
-                idx !== steps.length - 1 && "md:flex-row md:items-start"
-              )}
-            >
-              {/* Connector line (except last) */}
-              {idx !== steps.length - 1 && (
+      {/* ================= MOBILE (VERTICAL) ================= */}
+      <div className="flex flex-col gap-6 md:hidden">
+        {steps.map((step, idx) => (
+          <div key={step.id} className="flex items-start gap-4">
+
+            {/* ICON + LINE */}
+            <div className="flex flex-col items-center">
+              <div
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                  step.status === "completed" &&
+                    "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-white",
+                  step.status === "current" &&
+                    "border-2 border-[#639922] bg-[#639922]/10 text-[#639922]",
+                  step.status === "pending" &&
+                    "border-2 border-amber-500 bg-amber-500/10 text-amber-500",
+                  step.status === "locked" &&
+                    "border border-white/[0.12] bg-white/[0.04] text-white/30"
+                )}
+              >
+                {step.status === "completed" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : step.status === "pending" ? (
+                  <Clock className="h-4 w-4 animate-pulse" />
+                ) : step.status === "locked" ? (
+                  <Lock className="h-4 w-4" />
+                ) : (
+                  <div className="scale-90">{step.icon}</div>
+                )}
+              </div>
+
+              {/* LINE */}
+              {idx < steps.length - 1 && (
                 <div
                   className={cn(
-                    "absolute left-[calc(50%+1.5rem)] top-5 hidden h-[2px] w-[calc(100%-3rem)] md:block",
-                    isCompleted ? "bg-primary" : "bg-theme-border"
+                    "mt-2 h-10 w-[2px]",
+                    step.status === "completed"
+                      ? "bg-[#639922]"
+                      : "bg-white/[0.1]"
                   )}
                 />
               )}
+            </div>
 
-              {/* Step icon */}
-              <div
+            {/* TEXT */}
+            <div>
+              <p
                 className={cn(
-                  "relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300",
-                  isCompleted && "border-primary bg-primary text-white",
-                  isActive && !isCompleted && "border-primary bg-primary/10 text-primary",
-                  isPending && "border-amber-500 bg-amber-500/10 text-amber-500",
-                  isLocked && "border-theme-border bg-theme-muted/10 text-theme-muted"
+                  "text-sm font-semibold",
+                  step.status === "completed" && "text-[#639922]",
+                  step.status === "current" && "text-white",
+                  step.status === "locked" && "text-white/30"
                 )}
               >
-                {isCompleted ? (
-                  <CheckCircle2 className="h-6 w-6" />
-                ) : isPending ? (
-                  <Clock className="h-5 w-5 animate-pulse" />
-                ) : isLocked ? (
-                  <Lock className="h-5 w-5" />
-                ) : (
-                  step.icon
-                )}
-              </div>
+                {step.title}
+              </p>
+              <p className="text-xs text-white/40">{step.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-              {/* Text content */}
-              <div className="mt-3 max-w-[140px] md:ml-4 md:mt-0 md:text-left">
-                <p
+      {/* ================= DESKTOP (HORIZONTAL) ================= */}
+      <div className="hidden md:block overflow-x-auto">
+        <div className="flex items-center justify-between gap-2 min-w-[700px]">
+
+          {steps.map((step, idx) => (
+            <React.Fragment key={step.id}>
+              {/* STEP */}
+              <div className="flex flex-col items-center text-center">
+
+                <div
                   className={cn(
-                    "text-sm font-semibold",
-                    isCompleted && "text-primary",
-                    isActive && "text-theme-text",
-                    isLocked && "text-theme-muted"
+                    "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300",
+                    step.status === "completed" &&
+                      "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-white shadow-lg shadow-[#639922]/30",
+                    step.status === "current" &&
+                      "border-2 border-[#639922] bg-[#639922]/10 text-[#639922]",
+                    step.status === "pending" &&
+                      "border-2 border-amber-500 bg-amber-500/10 text-amber-500",
+                    step.status === "locked" &&
+                      "border border-white/[0.12] bg-white/[0.04] text-white/30"
                   )}
                 >
-                  {step.title}
-                </p>
-                <p className="text-xs text-theme-muted">{step.description}</p>
+                  {step.status === "completed" ? (
+                    <CheckCircle2 className="h-5 w-5" />
+                  ) : step.status === "pending" ? (
+                    <Clock className="h-5 w-5 animate-pulse" />
+                  ) : step.status === "locked" ? (
+                    <Lock className="h-5 w-5" />
+                  ) : (
+                    <div>{step.icon}</div>
+                  )}
+                </div>
+
+                <div className="mt-3 max-w-[120px]">
+                  <p
+                    className={cn(
+                      "text-sm font-semibold",
+                      step.status === "completed" && "text-[#639922]",
+                      step.status === "current" && "text-white",
+                      step.status === "locked" && "text-white/30"
+                    )}
+                  >
+                    {step.title}
+                  </p>
+                  <p className="text-xs text-white/40">
+                    {step.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+
+              {/* CONNECTOR */}
+              {idx < steps.length - 1 && (
+                <div className="flex-1 h-[2px] mx-2">
+                  <div
+                    className={cn(
+                      "h-full w-full rounded-full",
+                      step.status === "completed"
+                        ? "bg-gradient-to-r from-[#639922] to-[#639922]/40"
+                        : "bg-white/[0.08]"
+                    )}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+
+        </div>
       </div>
     </div>
   );

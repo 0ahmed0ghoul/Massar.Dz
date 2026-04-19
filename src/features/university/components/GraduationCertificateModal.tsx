@@ -1,6 +1,8 @@
 // components/GraduationCertificateModal.tsx
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
+import { Award } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -10,20 +12,43 @@ interface Props {
 }
 
 export function GraduationCertificateModal({ open, onOpenChange, token, studentName }: Props) {
-  // The QR code will contain a URL to the student scanning page with the token
+  const [qrSize, setQrSize] = useState(200);
+
+  useEffect(() => {
+    const updateSize = () => {
+      setQrSize(Math.min(window.innerWidth * 0.5, 200));
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
   const qrValue = `${window.location.origin}/student/scan?token=${token}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[90vw] sm:max-w-md md:max-w-lg border border-white/[0.09] bg-[#0b0c0e] text-white shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Graduation Certificate – {studentName}</DialogTitle>
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-[#639922]" />
+            <DialogTitle className="text-lg font-bold text-white sm:text-xl">
+              Graduation Certificate
+            </DialogTitle>
+          </div>
+          <p className="text-sm text-white/40 mt-1">{studentName}</p>
         </DialogHeader>
-        <div className="flex flex-col items-center gap-4 py-4">
-          <QRCodeSVG value={qrValue} size={200} />
-          <p className="text-sm text-muted-foreground text-center">
-            Student must scan this QR code from their dashboard to officially receive the certificate.
-          </p>
+        <div className="flex flex-col items-center gap-5 py-4">
+          <div className="rounded-xl bg-white p-3 shadow-lg">
+            <QRCodeSVG value={qrValue} size={qrSize} />
+          </div>
+          <div className="space-y-2 text-center">
+            <p className="text-sm font-medium text-white/80">
+              Scan to receive certificate
+            </p>
+            <p className="text-xs text-white/40">
+              Student must scan this QR code from their dashboard to officially receive the certificate.
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

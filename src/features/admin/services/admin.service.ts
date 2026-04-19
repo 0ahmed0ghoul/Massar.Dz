@@ -14,6 +14,8 @@ export interface Profile {
   degree_level?: string;
   city?: string;
   created_at: string;
+  is_completed?: boolean;
+  is_verified?: boolean;
 }
 
 export interface AdminStats {
@@ -23,6 +25,7 @@ export interface AdminStats {
   universities: number;
   pendingUniversities: number;
   pendingCompanies: number;
+  pendingStudents: number;
   rejected: number;
 }
 
@@ -37,7 +40,7 @@ export const adminService = {
     return data as Profile[];
   },
 
-  // Fetch pending profiles (status = pending and role in university_admin, company_admin)
+  // Fetch pending institutions (status = pending, role in university_admin, company_admin)
   async getPendingProfiles(): Promise<Profile[]> {
     const { data, error } = await supabase
       .from("profiles")
@@ -49,17 +52,46 @@ export const adminService = {
     return data as Profile[];
   },
 
-  // Update profile status
+  // Fetch pending students (is_completed = true, is_verified = false, role = student)
+  async getPendingStudents(): Promise<Profile[]> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "student")
+      .eq("is_completed", true)
+      .eq("is_verified", false)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data as Profile[];
+  },
+
+  // Fetch all pending (institutions + students)
+  async getAllPending(): Promise<Profile[]> {
+    const institutions = await this.getPendingProfiles();
+    const students = await this.getPendingStudents();
+    return [...institutions, ...students];
+  },
+
+  // Update profile status (for institutions)
   async updateStatus(id: string, status: string): Promise<void> {
     const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
     if (error) throw error;
   },
 
-  // Update profile role + status (for approval)
+  // Approve institution (set role and status to active)
   async approvePending(id: string, newRole: string): Promise<void> {
     const { error } = await supabase
       .from("profiles")
       .update({ role: newRole, status: "active" })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  // Approve student (set is_verified = true)
+  async approveStudent(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_verified: true })
       .eq("id", id);
     if (error) throw error;
   },
@@ -70,19 +102,21 @@ export const adminService = {
     if (error) throw error;
   },
 
-  // Compute stats from profiles array (or fetch directly)
+  // Compute stats
   async getStats(): Promise<AdminStats> {
-    const { data, error } = await supabase.from("profiles").select("role, status");
+    const { data, error } = await supabase.from("profiles").select("role, status, is_completed, is_verified");
     if (error) throw error;
 
+    const students = data.filter(p => p.role === "student");
     return {
       total: data.length,
-      students: data.filter((p) => p.role === "student").length,
-      companies: data.filter((p) => p.role === "company_admin" && p.status === "active").length,
-      universities: data.filter((p) => p.role === "university_admin").length,
-      pendingUniversities: data.filter((p) => p.role === "university_admin" && p.status === "pending").length,
-      pendingCompanies: data.filter((p) => p.role === "company_admin" && p.status === "pending").length,
-      rejected: data.filter((p) => p.status === "rejected").length,
+      students: students.length,
+      companies: data.filter(p => p.role === "company_admin" && p.status === "active").length,
+      universities: data.filter(p => p.role === "university_admin" && p.status === "active").length,
+      pendingUniversities: data.filter(p => p.role === "university_admin" && p.status === "pending").length,
+      pendingCompanies: data.filter(p => p.role === "company_admin" && p.status === "pending").length,
+      pendingStudents: students.filter(s => s.is_completed === true && s.is_verified === false).length,
+      rejected: data.filter(p => p.status === "rejected").length,
     };
   },
 };

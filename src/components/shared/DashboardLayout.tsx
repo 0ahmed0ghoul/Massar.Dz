@@ -4,8 +4,8 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { Menu, X, ChevronLeft, Clock, Paperclip } from "lucide-react";
-
+import { Menu, X, ChevronLeft, Clock, Paperclip, Star } from "lucide-react";
+import univLogo from "@/assets/univ-guelma.png";
 import {
   LayoutDashboard,
   User,
@@ -35,7 +35,6 @@ const navMap: Record<UserRole, any[]> = {
     { title: "Dashboard", url: "student/dashboard", icon: LayoutDashboard },
     { title: "Profile", url: "/student/dashboard/profile", icon: User },
     { title: "Certificate", url: "/student/dashboard/certificate", icon: Paperclip },
-
     { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
     { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
     { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
@@ -43,12 +42,17 @@ const navMap: Record<UserRole, any[]> = {
   ],
   company_admin: [
     { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
+    { title: "Profile", url: "/dashboard/company/profile", icon: User },
     { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
-    { title: "Candidates", url: "/dashboard/company/candidates", icon: Search },
+    { title: "Applications", url: "/dashboard/company/applications", icon: FileText },
+    { title: "Talent", url: "/dashboard/company/talent", icon: Star },
+
   ],
   university_admin: [
     { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
+    { title: "Profile", url: "/university/dashboard/profile", icon: User },
     { title: "Students", url: "/university/dashboard/students", icon: Users },
+    { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
   ],
   super_admin: [
     { title: "Dashboard",    url: "/dashboard/admin",          icon: LayoutDashboard },
@@ -92,7 +96,9 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
     navigate("/login");
   };
 
+  // Width classes: full on mobile, w-64 on desktop when expanded, w-20 when collapsed
   const sidebarWidth = isCollapsed ? "w-20" : "w-64";
+  const mobileWidth = "w-full"; // on mobile, sidebar takes full width
 
   return (
     <>
@@ -106,21 +112,28 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
 
       {/* Sidebar */}
       <aside
-  className={`fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 bg-[#0b0c0e] text-white transition-all duration-300 ease-in-out md:relative ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${sidebarWidth}`}
+        className={`
+          fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 
+          bg-[#0b0c0e] text-white transition-all duration-300 ease-in-out
+          md:relative
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+          ${sidebarWidth}
+          ${isOpen ? mobileWidth : ""}
+        `}
       >
         <div className="flex h-full flex-col">
+          {/* Header */}
           <div className={`flex items-center border-b border-white/10 p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
             {!isCollapsed && (
-              <div className="flex items-center gap-2" onClick={() => navigate(`/`)} style={{ cursor: "pointer" }}>
-                <img src={LogoIcon} className="h-5 w-5" />
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(`/`)}>
+                <img src={LogoIcon} className="h-5 w-5" alt="Logo" />
                 <span className="font-bold">Massar</span>
                 <span className="text-white/40 text-sm">{roleLabels[role]}</span>
               </div>
             )}
             {isCollapsed && (
-              <img src={LogoIcon} className="h-5 w-5" onClick={() => navigate(`/`)} style={{ cursor: "pointer" }}/>
+              <img src={LogoIcon} className="h-5 w-5 cursor-pointer" onClick={() => navigate(`/`)} alt="Logo" />
             )}
             <button
               onClick={onClose}
@@ -130,6 +143,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
             </button>
           </div>
 
+          {/* Navigation Links */}
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
             {items.map((item) => {
               const active = location.pathname === item.url;
@@ -150,6 +164,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
             })}
           </div>
 
+          {/* Logout Button */}
           <div className={`p-3 border-t border-white/10 ${isCollapsed ? "text-center" : ""}`}>
             <button
               onClick={handleLogout}
@@ -178,6 +193,8 @@ const DashboardLayout = ({ role }: Props) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
+  const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+  const email = profile?.email || "";
 
   return (
     <div className="flex min-h-screen bg-[#0b0c0e] text-white">
@@ -189,12 +206,14 @@ const DashboardLayout = ({ role }: Props) => {
       />
 
       <div className="flex-1 flex flex-col">
+        {/* Header */}
         <header className="h-14 flex items-center justify-between border-b border-white/10 px-4">
           <div className="flex items-center gap-2">
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="rounded-md p-1 text-white/60 hover:text-white md:hidden"
+              aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -208,12 +227,15 @@ const DashboardLayout = ({ role }: Props) => {
             </button>
           </div>
 
+          {/* User info – responsive text */}
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm">
-                {profile?.first_name} {profile?.last_name}
-              </p>
-              <p className="text-xs text-white/40">{profile?.email}</p>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
+              <p className="text-xs text-white/40 truncate max-w-[150px]">{email}</p>
+            </div>
+            {/* Always show avatar, but hide text on very small */}
+            <div className="text-right block sm:hidden">
+              <p className="text-sm font-medium">{fullName?.split(' ')[0] || "User"}</p>
             </div>
 
             {profile?.avatar_url ? (
@@ -233,7 +255,8 @@ const DashboardLayout = ({ role }: Props) => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
+        {/* Main content – responsive padding */}
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>

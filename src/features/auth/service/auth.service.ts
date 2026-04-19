@@ -117,7 +117,6 @@ class AuthService {
 
     return data ?? null;
   }
-
   async updateProfile(userId: string, updates: Partial<Profile>) {
     const { data, error } = await supabase
       .from("profiles")
@@ -125,16 +124,24 @@ class AuthService {
       .eq("id", userId)
       .select()
       .single();
-
+  
     if (error) throw error;
     return data;
+  }
+  
+  async markProfileCompleted(userId: string, additionalData: any, verificationDocs: any) {
+    return this.updateProfile(userId, {
+      profile_completed: true,
+      verification_status: "pending",
+      verification_docs: verificationDocs,
+      completed_at: new Date().toISOString(),
+      ...additionalData,
+    });
   }
 
   // ─────────────────────────────────────────────
   // REGISTER (CLEAN & SAFE)
   // ─────────────────────────────────────────────
-
-// service/auth.service.ts  — registerUser only, everything else unchanged
 
 async registerUser(params: {
   email: string;
@@ -143,17 +150,15 @@ async registerUser(params: {
   profile: any;
 }) {
   const cleanEmail = params.email.trim().toLowerCase();
-
-  // ✅ 1. Create auth user
   const user = await this.signUp(cleanEmail, params.password);
 
-  // ✅ 2. Prepare profile
   const profileData = {
     id: user.id,
     email: cleanEmail,
     role: params.role,
     status: params.role === "student" ? "active" : "pending",
-
+    profile_completed: false,               // 👈 NEW
+    verification_status: null,              // 👈 NEW
     first_name: params.profile.firstName ?? null,
     last_name: params.profile.lastName ?? null,
     degree_level: params.profile.degreeLevel ?? null,
@@ -163,18 +168,13 @@ async registerUser(params: {
     city: params.profile.city ?? null,
   };
 
-  // ✅ 3. Insert profile
   const { error: profileError } = await supabase
     .from("profiles")
     .insert(profileData);
 
   if (profileError) {
-    console.error("❌ PROFILE INSERT ERROR:", profileError);
-
-    // ❌ DO NOT delete user here (not allowed on client)
-    throw new Error(
-      "Account created but profile setup failed. Please contact support."
-    );
+    console.error("Profile insert error:", profileError);
+    throw new Error("Account created but profile setup failed. Please contact support.");
   }
 
   return user;
