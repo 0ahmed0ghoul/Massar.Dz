@@ -12,14 +12,14 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0c0e]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#639922] border-t-transparent sm:h-12 sm:w-12" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0c0e]">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Background Textures */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -37,11 +37,11 @@ const DashboardPage = () => {
           {/* Welcome Header */}
           <header className="flex flex-col gap-1 sm:gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-xl font-black tracking-tight text-white sm:text-2xl md:text-3xl lg:text-4xl">
+              <h1 className="text-xl font-black tracking-tight text-foreground sm:text-2xl md:text-3xl lg:text-4xl">
                 Welcome back,{" "}
                 <span className="text-[#639922]">{profile?.first_name || "Talent"}</span>
               </h1>
-              <p className="text-xs text-white/40 sm:text-sm md:text-base">
+              <p className="text-xs text-foreground/40 sm:text-sm md:text-base">
                 Here's what's happening with your career path today.
               </p>
             </div>

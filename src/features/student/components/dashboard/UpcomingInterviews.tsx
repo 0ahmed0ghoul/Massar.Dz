@@ -13,7 +13,7 @@ const UpcomingInterviews = ({ interviews = [] }) => {
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
-      <h2 className="mb-6 text-lg font-bold text-white">Upcoming Interviews</h2>
+      <h2 className="mb-6 text-lg font-bold text-foreground">Upcoming Interviews</h2>
       <div className="space-y-4">
         {displayInterviews.length > 0 ? (
           displayInterviews.map((i) => (
@@ -22,8 +22,8 @@ const UpcomingInterviews = ({ interviews = [] }) => {
                 <Calendar className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold text-white">{i.role}</p>
-                <p className="text-xs text-white/40">{i.company}</p>
+                <p className="text-sm font-bold text-foreground">{i.role}</p>
+                <p className="text-xs text-foreground/40">{i.company}</p>
                 <div className="mt-2 flex items-center gap-2 text-[11px] font-medium text-[#639922]">
                   <Video className="h-3 w-3" />
                   <span>
@@ -42,7 +42,7 @@ const UpcomingInterviews = ({ interviews = [] }) => {
           ))
         ) : (
           <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/20">
+            <p className="text-xs font-bold uppercase tracking-widest text-foreground/20">
               No sessions scheduled
             </p>
           </div>

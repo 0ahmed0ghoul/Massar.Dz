@@ -70,21 +70,21 @@ export default function UniversityProfileForm({
                 <button
                   type="button"
                   onClick={deleteLogo}
-                  className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                  className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </div>
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/10 border border-white/20">
-                <Upload className="h-6 w-6 text-white/40" />
+                <Upload className="h-6 w-6 text-foreground/40" />
               </div>
             )}
           </div>
           <div>
             <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" id="logo-upload" />
             <label htmlFor="logo-upload">
-              <Button type="button" variant="outline" disabled={uploadingLogo} className="border-white/20 text-white">
+              <Button type="button" variant="outline" disabled={uploadingLogo} className="border-white/20 text-foreground">
                 {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
               </Button>
             </label>
@@ -94,48 +94,48 @@ export default function UniversityProfileForm({
         {/* Form fields */}
         <div className="flex-1 space-y-4">
           <div>
-            <Label className="text-white/80">University Name *</Label>
-            <Input name="name" value={formData.name} onChange={handleChange} required className="bg-white/10 border-white/20 text-white" />
+            <Label className="text-foreground/80">University Name *</Label>
+            <Input name="name" value={formData.name} onChange={handleChange} required className="bg-white/10 border-white/20 text-foreground" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-white/80">Address</Label>
-              <Input name="address" value={formData.address} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="text-white/80">Wilaya (State)</Label>
-              <Input name="wilaya" value={formData.wilaya} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
-            </div>
-            <div>
-              <Label className="text-white/80">Phone</Label>
-              <Input name="phone" value={formData.phone} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
+              <Label className="text-foreground/80">Address</Label>
+              <Input name="address" value={formData.address} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-white/80">Email</Label>
-              <Input name="email" type="email" value={formData.email} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
+              <Label className="text-foreground/80">Wilaya (State)</Label>
+              <Input name="wilaya" value={formData.wilaya} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
             <div>
-              <Label className="text-white/80">Website</Label>
-              <Input name="website" value={formData.website} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
+              <Label className="text-foreground/80">Phone</Label>
+              <Input name="phone" value={formData.phone} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label className="text-foreground/80">Email</Label>
+              <Input name="email" type="email" value={formData.email} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
+            </div>
+            <div>
+              <Label className="text-foreground/80">Website</Label>
+              <Input name="website" value={formData.website} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
           </div>
           <div>
-            <Label className="text-white/80">Established Year</Label>
-            <Input name="establishedYear" type="number" value={formData.establishedYear} onChange={handleChange} className="bg-white/10 border-white/20 text-white" />
+            <Label className="text-foreground/80">Established Year</Label>
+            <Input name="establishedYear" type="number" value={formData.establishedYear} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
           </div>
           <div>
-            <Label className="text-white/80">Description</Label>
-            <Textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="bg-white/10 border-white/20 text-white" />
+            <Label className="text-foreground/80">Description</Label>
+            <Textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="bg-white/10 border-white/20 text-foreground" />
           </div>
         </div>
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={saving} className="bg-[#639922] text-white hover:bg-[#4f7a1a]">
+        <Button type="submit" disabled={saving} className="bg-[#639922] text-foreground hover:bg-[#4f7a1a]">
           <Save className="mr-2 h-4 w-4" />
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>

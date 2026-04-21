@@ -10,7 +10,7 @@ interface Props {
 
 export const ConversationList = ({ conversations, selectedId, onSelect, currentUserRole }: Props) => {
   if (conversations.length === 0) {
-    return <div className="text-center text-white/40 py-8">No conversations yet. Start one from a student profile or university page.</div>;
+    return <div className="text-center text-foreground/40 py-8">No conversations yet. Start one from a student profile or university page.</div>;
   }
   return (
     <div className="space-y-2">
@@ -26,13 +26,13 @@ export const ConversationList = ({ conversations, selectedId, onSelect, currentU
           >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                {currentUserRole === "student" ? <Building2 className="h-5 w-5 text-white/60" /> : <GraduationCap className="h-5 w-5 text-white/60" />}
+                {currentUserRole === "student" ? <Building2 className="h-5 w-5 text-foreground/60" /> : <GraduationCap className="h-5 w-5 text-foreground/60" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white truncate">{otherName || "Unknown"}</p>
-                <p className="text-xs text-white/40 truncate">{conv.lastMessage || "No messages yet"}</p>
+                <p className="font-medium text-foreground truncate">{otherName || "Unknown"}</p>
+                <p className="text-xs text-foreground/40 truncate">{conv.lastMessage || "No messages yet"}</p>
               </div>
-              {conv.unreadCount ? <span className="bg-[#639922] text-white text-xs rounded-full px-2 py-0.5">{conv.unreadCount}</span> : null}
+              {conv.unreadCount ? <span className="bg-[#639922] text-foreground text-xs rounded-full px-2 py-0.5">{conv.unreadCount}</span> : null}
             </div>
           </button>
         );

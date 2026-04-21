@@ -156,7 +156,7 @@ const ProfileForm = ({
       <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#639922]/10 blur-3xl group-hover:bg-[#639922]/15 transition-all duration-700" />
 
       <div className="relative z-10 space-y-8 p-6 md:p-8">
-        <h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+        <h2 className="flex items-center gap-2 text-2xl font-bold text-foreground">
           <Save className="h-6 w-6 text-[#639922]" />
           Complete Your Profile
         </h2>
@@ -174,14 +174,14 @@ const ProfileForm = ({
                 />
               ) : (
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
-                  <Camera className="h-8 w-8 text-white/40" />
+                  <Camera className="h-8 w-8 text-foreground/40" />
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
+                className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-foreground shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
               >
                 <Camera className="h-3.5 w-3.5" />
               </button>
@@ -189,7 +189,7 @@ const ProfileForm = ({
                 <button
                   type="button"
                   onClick={handleRemoveAvatar}
-                  className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-white shadow-lg transition hover:bg-red-600"
+                  className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-foreground shadow-lg transition hover:bg-red-600"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -203,8 +203,8 @@ const ProfileForm = ({
               />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-white">Profile Picture</p>
-              <p className="text-xs text-white/40">JPG, PNG. Max 2MB</p>
+              <p className="text-sm font-medium text-foreground">Profile Picture</p>
+              <p className="text-xs text-foreground/40">JPG, PNG. Max 2MB</p>
               {uploadingAvatar && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
             </div>
           </div>
@@ -214,13 +214,13 @@ const ProfileForm = ({
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
-                  <FileText className="h-8 w-8 text-white/40" />
+                  <FileText className="h-8 w-8 text-foreground/40" />
                 </div>
                 <button
                   type="button"
                   onClick={() => cvInputRef.current?.click()}
                   disabled={uploadingCV}
-                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
+                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-foreground shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
                 >
                   <Upload className="h-3.5 w-3.5" />
                 </button>
@@ -228,7 +228,7 @@ const ProfileForm = ({
                   <button
                     type="button"
                     onClick={handleRemoveCV}
-                    className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-white shadow-lg transition hover:bg-red-600"
+                    className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-foreground shadow-lg transition hover:bg-red-600"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -242,8 +242,8 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-white">CV / Resume</p>
-                <p className="text-xs text-white/40">
+                <p className="text-sm font-medium text-foreground">CV / Resume</p>
+                <p className="text-xs text-foreground/40">
                   {profile?.resume_url ? (
                     <a
                       href={profile.resume_url}
@@ -267,13 +267,13 @@ const ProfileForm = ({
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
-                  <CreditCard className="h-8 w-8 text-white/40" />
+                  <CreditCard className="h-8 w-8 text-foreground/40" />
                 </div>
                 <button
                   type="button"
                   onClick={() => studentCardInputRef.current?.click()}
                   disabled={uploadingStudentCard}
-                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-white shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
+                  className="absolute bottom-0 right-0 rounded-full bg-[#639922] p-2 text-foreground shadow-lg shadow-[#639922]/30 transition hover:bg-[#4f7a1a] disabled:opacity-50"
                 >
                   <Upload className="h-3.5 w-3.5" />
                 </button>
@@ -281,7 +281,7 @@ const ProfileForm = ({
                   <button
                     type="button"
                     onClick={handleRemoveStudentCard}
-                    className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-white shadow-lg transition hover:bg-red-600"
+                    className="absolute -top-1 -right-1 rounded-full bg-red-500 p-1 text-foreground shadow-lg transition hover:bg-red-600"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -295,8 +295,8 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-white">Student Card</p>
-                <p className="text-xs text-white/40">
+                <p className="text-sm font-medium text-foreground">Student Card</p>
+                <p className="text-xs text-foreground/40">
                   {profile?.student_card_url ? (
                     <a
                       href={profile.student_card_url}
@@ -320,7 +320,7 @@ const ProfileForm = ({
         <div className="space-y-8">
           {/* Personal Information */}
           <div>
-            <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-white">
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-foreground">
               <User className="h-5 w-5 text-[#639922]" />
               Personal Information
             </h3>
@@ -355,7 +355,7 @@ const ProfileForm = ({
           {/* Academic Information */}
           {isStudent && (
             <div>
-              <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-white">
+              <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-foreground">
                 <GraduationCap className="h-5 w-5 text-[#639922]" />
                 Academic Information
               </h3>
@@ -440,7 +440,7 @@ const ProfileForm = ({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="group flex items-center gap-2 rounded-lg bg-[#639922] px-8 py-3 font-semibold text-white shadow-lg shadow-[#639922]/30 transition-all hover:bg-[#4f7a1a] hover:shadow-xl disabled:opacity-50"
+            className="group flex items-center gap-2 rounded-lg bg-[#639922] px-8 py-3 font-semibold text-foreground shadow-lg shadow-[#639922]/30 transition-all hover:bg-[#4f7a1a] hover:shadow-xl disabled:opacity-50"
           >
             <Save className="h-5 w-5 transition-transform group-hover:scale-110" />
             {saving ? "Saving..." : "Save Changes"}
@@ -454,17 +454,17 @@ const ProfileForm = ({
 // Helper components (unchanged)
 const InputField = ({ label, icon, value, onChange, placeholder, type = "text" }) => (
   <div>
-    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-white/50">
+    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-foreground/50">
       {label}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">{icon}</div>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/30 focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
+        className="w-full rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-4 text-foreground placeholder:text-foreground/30 focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
       />
     </div>
   </div>
@@ -472,15 +472,15 @@ const InputField = ({ label, icon, value, onChange, placeholder, type = "text" }
 
 const SelectField = ({ label, icon, value, onChange, options }) => (
   <div>
-    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-white/50">
+    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-foreground/50">
       {label}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">{icon}</div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-10 text-white focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
+        className="w-full appearance-none rounded-lg border border-white/[0.12] bg-transparent py-3 pl-10 pr-10 text-foreground focus:border-[#639922] focus:outline-none focus:ring-1 focus:ring-[#639922]/50 transition-all"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-[#1a1c1e]">
@@ -489,7 +489,7 @@ const SelectField = ({ label, icon, value, onChange, options }) => (
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg className="h-4 w-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>

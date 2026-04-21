@@ -23,7 +23,7 @@ export const PasswordInput = forwardRef<
         placeholder="Min 8 characters"
         minLength={8}
         {...props}
-        className="border-white/10 bg-white/5 text-white placeholder:text-white/30
+        className="border-white/10 bg-white/5 text-foreground placeholder:text-foreground/30
                    focus:border-white/20 focus:ring-white/10 pr-10"
       />
 
@@ -32,7 +32,7 @@ export const PasswordInput = forwardRef<
         variant="ghost"
         size="icon"
         onClick={() => setShow((v) => !v)}
-        className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white hover:bg-white/10"
+        className="absolute right-0 top-0 h-full px-3 text-foreground/40 hover:text-foreground hover:bg-white/10"
         aria-label={show ? "Hide password" : "Show password"}
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

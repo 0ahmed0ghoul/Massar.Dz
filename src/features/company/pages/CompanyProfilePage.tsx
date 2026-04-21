@@ -36,7 +36,7 @@ export default function CompanyProfilePage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Grid texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -53,7 +53,7 @@ export default function CompanyProfilePage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold text-white sm:text-4xl">Company Profile</h1>
+            <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Company Profile</h1>
             {company?.verified && (
               <>
                 <BadgeCheck className="h-6 w-6 text-[#639922]" />
@@ -63,7 +63,7 @@ export default function CompanyProfilePage() {
               </>
             )}
           </div>
-          <p className="mt-1 text-sm text-white/40">
+          <p className="mt-1 text-sm text-foreground/40">
             Build your brand to attract top talent. A complete profile increases applications by 40%.
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function CompanyProfilePage() {
             <div className="p-5 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-[#639922]" />
-                <h2 className="text-lg font-semibold text-white">Basic Information</h2>
+                <h2 className="text-lg font-semibold text-foreground">Basic Information</h2>
               </div>
 
               <div className="space-y-5">
@@ -89,7 +89,7 @@ export default function CompanyProfilePage() {
                       />
                     ) : (
                       <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/20 bg-white/10">
-                        <Building2 className="h-8 w-8 text-white/40" />
+                        <Building2 className="h-8 w-8 text-foreground/40" />
                       </div>
                     )}
                   </div>
@@ -106,14 +106,14 @@ export default function CompanyProfilePage() {
                         type="button"
                         variant="outline"
                         asChild
-                        className="cursor-pointer border-white/20 text-white hover:bg-white/10"
+                        className="cursor-pointer border-white/20 text-foreground hover:bg-white/10"
                       >
                         <span>
                           <Upload className="mr-2 h-4 w-4" /> Upload Logo
                         </span>
                       </Button>
                     </label>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-foreground/40">
                       Recommended: Square, min 200x200px
                     </p>
                   </div>
@@ -121,20 +121,20 @@ export default function CompanyProfilePage() {
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <Label className="text-white/80">Company Name *</Label>
+                    <Label className="text-foreground/80">Company Name *</Label>
                     <Input
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="mt-1.5 bg-white/10 border-white/20 text-white"
+                      className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                       required
                     />
                   </div>
                   <div>
-                    <Label className="text-white/80">Location</Label>
+                    <Label className="text-foreground/80">Location</Label>
                     <Input
                       value={form.location}
                       onChange={(e) => setForm({ ...form, location: e.target.value })}
-                      className="mt-1.5 bg-white/10 border-white/20 text-white"
+                      className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                       placeholder="Algiers, Algeria"
                     />
                   </div>
@@ -142,31 +142,31 @@ export default function CompanyProfilePage() {
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <Label className="text-white/80">Industry</Label>
+                    <Label className="text-foreground/80">Industry</Label>
                     <Input
                       value={form.industry}
                       onChange={(e) => setForm({ ...form, industry: e.target.value })}
-                      className="mt-1.5 bg-white/10 border-white/20 text-white"
+                      className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                       placeholder="Technology, Finance, Healthcare..."
                     />
                   </div>
                   <div>
-                    <Label className="text-white/80">Company Size</Label>
+                    <Label className="text-foreground/80">Company Size</Label>
                     <Input
                       value={form.size}
                       onChange={(e) => setForm({ ...form, size: e.target.value })}
-                      className="mt-1.5 bg-white/10 border-white/20 text-white"
+                      className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                       placeholder="50-200 employees"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-white/80">Website</Label>
+                  <Label className="text-foreground/80">Website</Label>
                   <Input
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
-                    className="mt-1.5 bg-white/10 border-white/20 text-white"
+                    className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                     placeholder="https://example.com"
                   />
                 </div>
@@ -179,27 +179,27 @@ export default function CompanyProfilePage() {
             <div className="p-5 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-[#639922]" />
-                <h2 className="text-lg font-semibold text-white">Description & Culture</h2>
+                <h2 className="text-lg font-semibold text-foreground">Description & Culture</h2>
               </div>
 
               <div className="space-y-5">
                 <div>
-                  <Label className="text-white/80">Company Description</Label>
+                  <Label className="text-foreground/80">Company Description</Label>
                   <Textarea
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={4}
-                    className="mt-1.5 bg-white/10 border-white/20 text-white"
+                    className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                     placeholder="Tell candidates what your company does, your mission, and what makes you unique..."
                   />
                 </div>
                 <div>
-                  <Label className="text-white/80">Culture & Values</Label>
+                  <Label className="text-foreground/80">Culture & Values</Label>
                   <Textarea
                     value={form.culture}
                     onChange={(e) => setForm({ ...form, culture: e.target.value })}
                     rows={4}
-                    className="mt-1.5 bg-white/10 border-white/20 text-white"
+                    className="mt-1.5 bg-white/10 border-white/20 text-foreground"
                     placeholder="Describe your work environment, team culture, and core values..."
                   />
                 </div>
@@ -209,7 +209,7 @@ export default function CompanyProfilePage() {
 
           {/* Preview Card (optional, shows how the company appears to candidates) */}
           <div className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 backdrop-blur-sm transition-all hover:border-[#639922]/30">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/40">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground/40">
               Preview (how candidates see you)
             </h3>
             <div className="flex items-center gap-3">
@@ -217,17 +217,17 @@ export default function CompanyProfilePage() {
                 <img src={company.logo} alt="Logo" className="h-12 w-12 rounded-full object-cover" />
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-                  <Building2 className="h-5 w-5 text-white/40" />
+                  <Building2 className="h-5 w-5 text-foreground/40" />
                 </div>
               )}
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-foreground">
                   {form.name || "Your Company Name"}
                   {company?.verified && (
                     <BadgeCheck className="ml-1 inline h-4 w-4 text-[#639922]" />
                   )}
                 </p>
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground/40">
                   {form.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {form.location}</span>}
                   {form.industry && <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" /> {form.industry}</span>}
                   {form.size && <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {form.size}</span>}
@@ -236,7 +236,7 @@ export default function CompanyProfilePage() {
               </div>
             </div>
             {form.description && (
-              <p className="mt-3 text-sm text-white/60 line-clamp-2">{form.description}</p>
+              <p className="mt-3 text-sm text-foreground/60 line-clamp-2">{form.description}</p>
             )}
           </div>
 
@@ -244,7 +244,7 @@ export default function CompanyProfilePage() {
           <div className="flex justify-end">
             <Button
               type="submit"
-              className="bg-[#639922] text-white transition-all hover:bg-[#4f7a1a]"
+              className="bg-[#639922] text-foreground transition-all hover:bg-[#4f7a1a]"
             >
               Save Profile
             </Button>

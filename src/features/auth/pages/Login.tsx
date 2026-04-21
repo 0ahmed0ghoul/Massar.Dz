@@ -63,16 +63,9 @@ const Login = () => {
 
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#0b0c0e] p-4 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
       {/* Grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+<div className="pointer-events-none absolute inset-0 bg-grid-pattern" />
 
       <div className="relative z-10 w-full max-w-md">
 
@@ -83,8 +76,8 @@ const Login = () => {
             <img src={MassarLogo} alt="Massar Logo" className="w-11 h-11 rounded-full" />
             </Link>
             </div>
-            <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
-            <CardDescription className="text-white/40">
+            <CardTitle className="text-2xl text-foreground">Welcome back</CardTitle>
+            <CardDescription className="text-foreground/40">
               Sign in to your account
             </CardDescription>
           </CardHeader>
@@ -93,7 +86,7 @@ const Login = () => {
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-white/60 text-xs font-medium uppercase tracking-wider"
+                  className="text-foreground/60 text-xs font-medium uppercase tracking-wider"
                 >
                   Email
                 </Label>
@@ -104,7 +97,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10"
+                  className="border-white/10 bg-white/5 text-foreground placeholder:text-foreground/30 focus:border-white/20 focus:ring-white/10"
                 />
               </div>
 
@@ -112,13 +105,13 @@ const Login = () => {
                 <div className="flex items-center justify-between">
                   <Label
                     htmlFor="password"
-                    className="text-white/60 text-xs font-medium uppercase tracking-wider"
+                    className="text-foreground/60 text-xs font-medium uppercase tracking-wider"
                   >
                     Password
                   </Label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-white/40 hover:text-white transition-colors"
+                    className="text-xs text-foreground/40 hover:text-foreground transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -131,13 +124,13 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10 pr-10"
+                    className="border-white/10 bg-white/5 text-foreground placeholder:text-foreground/30 focus:border-white/20 focus:ring-white/10 pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white hover:bg-white/10"
+                    className="absolute right-0 top-0 h-full px-3 text-foreground/40 hover:text-foreground hover:bg-white/10"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -164,11 +157,11 @@ const Login = () => {
                 )}
               </Button>
             </form>
-            <div className="text-center text-sm text-white/40 mt-5">
+            <div className="text-center text-sm text-foreground/40 mt-5">
               Don't have an account?{" "}
               <Link
                 to="/register"
-                className="text-white hover:underline hover:text-white/80 transition-colors font-medium"
+                className="text-foreground hover:underline hover:text-foreground/80 transition-colors font-medium"
               >
                 Create one
               </Link>

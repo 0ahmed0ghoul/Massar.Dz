@@ -25,10 +25,10 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0c0e]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#639922] border-t-transparent sm:h-12 sm:w-12" />
-          <p className="text-sm text-white/40 sm:text-base">Loading profile...</p>
+          <p className="text-sm text-foreground/40 sm:text-base">Loading profile...</p>
         </div>
       </div>
     );
@@ -36,23 +36,16 @@ const ProfilePage = () => {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0c0e] px-4 text-center text-white/60">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 text-center text-foreground/60">
         No profile found. Please complete your registration.
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+<div className="pointer-events-none absolute inset-0 bg-grid-pattern" />
       {/* Green glow orb */}
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
 
@@ -60,8 +53,8 @@ const ProfilePage = () => {
         {/* Header – stack on mobile, row on larger */}
         <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white sm:text-2xl">Student Profile</h1>
-            <p className="text-xs text-white/40 sm:text-sm">
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Student Profile</h1>
+            <p className="text-xs text-foreground/40 sm:text-sm">
               Manage your academic identity and career readiness
             </p>
           </div>
@@ -113,8 +106,8 @@ const ProfilePage = () => {
           <div className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 backdrop-blur-sm sm:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="font-semibold text-white">Need help?</h3>
-                <p className="text-sm text-white/40">
+                <h3 className="font-semibold text-foreground">Need help?</h3>
+                <p className="text-sm text-foreground/40">
                   Complete all fields and upload required documents to proceed with admin verification.
                   Once verified, you can connect with your university to claim certificates.
                 </p>

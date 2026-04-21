@@ -34,13 +34,13 @@ export const PendingCard = ({ profile, actionLoading, onApprove, onReject, isStu
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium text-white">{displayName}</p>
+              <p className="font-medium text-foreground">{displayName}</p>
               <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-medium text-amber-400">
                 {isStudent ? "Pending Verification" : "Pending Approval"}
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-white/40">{subtitle}</p>
-            <p className="mt-1 text-xs text-white/30">
+            <p className="mt-0.5 text-xs text-foreground/40">{subtitle}</p>
+            <p className="mt-1 text-xs text-foreground/30">
               {isStudent ? "Completed profile awaiting verification" : `Submitted: ${new Date(profile.created_at).toLocaleDateString()}`}
             </p>
           </div>
@@ -48,7 +48,7 @@ export const PendingCard = ({ profile, actionLoading, onApprove, onReject, isStu
         <div className="flex gap-2">
           <button
             onClick={() => navigate(`/dashboard/admin/pending/${profile.id}`, { state: { profile } })}
-            className="rounded-lg border border-white/20 p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg border border-white/20 p-2 text-foreground/60 transition hover:bg-white/10 hover:text-foreground"
           >
             <Eye className="h-4 w-4" />
           </button>

@@ -4,41 +4,43 @@ import { Shield, ArrowRight, GraduationCap, Building2, School, Sparkles } from "
 
 const CTA = () => {
   return (
-    <section className="relative overflow-hidden bg-[#0b0c0e] py-24">
-      {/* Grid texture */}
+    <section className="relative overflow-hidden bg-background py-24">
+      {/* Grid pattern - guaranteed visible in both themes */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundImage: `
+            linear-gradient(hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px)
+          `,
+          backgroundSize: "48px 48px",
         }}
       />
 
-      {/* Gradient background glow */}
+      {/* Gradient background glow - using theme primary color */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-transparent via-primary/5 to-transparent" />
 
       <div className="container relative z-10">
         <div className="mx-auto max-w-4xl text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 mb-6">
-            <Sparkles className="h-3 w-3 text-white/60" />
-            <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-white/60">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/30 px-3 py-1">
+            <Sparkles className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
               Join the future of recruitment
             </span>
           </div>
 
           {/* Heading */}
-          <h2 className="text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+          <h2 className="text-4xl font-bold text-foreground md:text-5xl lg:text-6xl">
             Ready to transform
             <br />
-            <span className="text-[#639922]">
+            <span className="text-primary">
               your recruitment?
             </span>
           </h2>
 
           {/* Description */}
-          <p className="mx-auto mt-4 max-w-md text-white/40">
+          <p className="mx-auto mt-4 max-w-md text-muted-foreground">
             Join thousands of students, companies, and universities already using Massar.
           </p>
 
@@ -47,7 +49,7 @@ const CTA = () => {
             <Button
               asChild
               size="lg"
-              className="group bg-white text-black hover:bg-white/90 transition-all duration-300"
+              className="group bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300"
             >
               <Link to="/register">
                 <GraduationCap className="mr-2 h-4 w-4" />
@@ -60,7 +62,7 @@ const CTA = () => {
               asChild
               size="lg"
               variant="outline"
-              className="group border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
+              className="group border-border bg-card/30 text-foreground hover:bg-card/50 hover:border-primary/30 transition-all duration-300"
             >
               <Link to="/register">
                 <Building2 className="mr-2 h-4 w-4" />
@@ -72,7 +74,7 @@ const CTA = () => {
               asChild
               size="lg"
               variant="outline"
-              className="group border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
+              className="group border-border bg-card/30 text-foreground hover:bg-card/50 hover:border-primary/30 transition-all duration-300"
             >
               <Link to="/register">
                 <School className="mr-2 h-4 w-4" />
@@ -84,10 +86,10 @@ const CTA = () => {
           {/* Divider */}
           <div className="relative my-10">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
+              <div className="w-full border-t border-border/50"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#0b0c0e] px-4 text-xs text-white/30">or</span>
+              <span className="bg-background px-4 text-xs text-muted-foreground/60">or</span>
             </div>
           </div>
 
@@ -96,7 +98,7 @@ const CTA = () => {
             <Button
               asChild
               variant="ghost"
-              className="text-white/60 hover:text-white hover:bg-white/10"
+              className="text-muted-foreground hover:text-foreground hover:bg-card/30"
             >
               <Link to="/jobs">
                 Browse jobs as guest
@@ -106,7 +108,7 @@ const CTA = () => {
           </div>
 
           {/* Trust indicator */}
-          <div className="mt-10 flex items-center justify-center gap-2 text-xs text-white/30">
+          <div className="mt-10 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
             <Shield className="h-3 w-3" />
             <span>Free forever</span>
             <span>•</span>

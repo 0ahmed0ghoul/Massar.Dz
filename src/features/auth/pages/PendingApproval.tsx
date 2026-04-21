@@ -5,7 +5,7 @@ import MassarLogo from "@/assets/Logo-icon.jpg";
 
 const STEPS = [
   {
-    icon: <CheckCircle2 className="h-4 w-4 text-white/60" />,
+    icon: <CheckCircle2 className="h-4 w-4 text-foreground/60" />,
     label: "Application submitted",
     done: true,
   },
@@ -16,7 +16,7 @@ const STEPS = [
     active: true,
   },
   {
-    icon: <Mail className="h-4 w-4 text-white/30" />,
+    icon: <Mail className="h-4 w-4 text-foreground/30" />,
     label: "Confirmation email sent to you",
     done: false,
   },
@@ -24,7 +24,7 @@ const STEPS = [
 
 const PendingApproval = () => {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#0b0c0e] p-4 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
       {/* Grid texture */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -41,7 +41,7 @@ const PendingApproval = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 font-bold text-xl text-white transition-all hover:opacity-80 mb-10"
+          className="inline-flex items-center gap-2 font-bold text-xl text-foreground transition-all hover:opacity-80 mb-10"
         >
           <div className="rounded-lg bg-white/10 p-1.5">
             <img src={MassarLogo} alt="Massar Logo" className="w-6 h-6" />
@@ -58,12 +58,12 @@ const PendingApproval = () => {
             <Clock className="h-7 w-7 text-amber-400" />
           </div>
 
-          <h1 className="text-2xl font-semibold text-white mb-2">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
             Under Review
           </h1>
-          <p className="text-white/40 text-sm leading-relaxed mb-8">
+          <p className="text-foreground/40 text-sm leading-relaxed mb-8">
             Your university account is being reviewed by our team. This usually
-            takes <span className="text-white/60">1–2 business days</span>.
+            takes <span className="text-foreground/60">1–2 business days</span>.
             You'll receive an email once it's approved.
           </p>
 
@@ -86,10 +86,10 @@ const PendingApproval = () => {
                 <span
                   className={`text-sm ${
                     s.done
-                      ? "text-white/60 line-through"
+                      ? "text-foreground/60 line-through"
                       : s.active
                       ? "text-amber-400"
-                      : "text-white/30"
+                      : "text-foreground/30"
                   }`}
                 >
                   {s.label}
@@ -110,11 +110,11 @@ const PendingApproval = () => {
               </Link>
             </Button>
 
-            <p className="text-xs text-white/30">
+            <p className="text-xs text-foreground/30">
               Questions?{" "}
               <a
                 href="mailto:support@massar.com"
-                className="text-white/50 hover:text-white transition-colors"
+                className="text-foreground/50 hover:text-foreground transition-colors"
               >
                 Contact our support team
               </a>

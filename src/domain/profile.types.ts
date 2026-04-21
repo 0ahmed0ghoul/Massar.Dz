@@ -14,7 +14,7 @@ export interface Profile {
     email: string;
     avatar_url?: string;
     phone?: string;
-    status: "active" | "pending";
+    status: string;
     is_premium: boolean;
     stripe_customer_id?: string;
     created_at: string;

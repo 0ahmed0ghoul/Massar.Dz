@@ -67,16 +67,9 @@ export default function CertificatePage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e] overflow-hidden">
+    <div className="relative min-h-screen bg-background overflow-hidden">
       {/* GRID BACKGROUND */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+<div className="pointer-events-none absolute inset-0 bg-grid-pattern" />
 
       {/* GLOW EFFECT */}
       <div className="pointer-events-none absolute top-[-120px] left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#639922]/10 blur-3xl rounded-full" />
@@ -89,11 +82,11 @@ export default function CertificatePage() {
             <ShieldCheck className="w-6 h-6 text-[#639922]" />
           </div>
 
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             Certificate Verification
           </h1>
 
-          <p className="text-white/40 mt-2 text-sm">
+          <p className="text-foreground/40 mt-2 text-sm">
             Scan your university QR code to securely claim your certificate
           </p>
         </div>
@@ -107,7 +100,7 @@ export default function CertificatePage() {
           <div className="relative p-6 md:p-8 space-y-6">
 
             {/* STEP INFO */}
-            <div className="flex items-center gap-3 text-white/60 text-sm">
+            <div className="flex items-center gap-3 text-foreground/60 text-sm">
               <Scan className="w-4 h-4 text-[#639922]" />
               <span>Step 1: Scan the QR code</span>
             </div>
@@ -119,7 +112,7 @@ export default function CertificatePage() {
 
             {/* EMPTY STATE */}
             {!scanResult && (
-              <div className="text-center text-white/30 text-sm py-4">
+              <div className="text-center text-foreground/30 text-sm py-4">
                 Waiting for scan...
               </div>
             )}
@@ -148,7 +141,7 @@ export default function CertificatePage() {
             )}
 
             {/* EXTRA INFO */}
-            <div className="text-xs text-white/30 border-t border-white/10 pt-4">
+            <div className="text-xs text-foreground/30 border-t border-white/10 pt-4">
               This system ensures your certificate is securely verified and cannot be reused.
             </div>
           </div>

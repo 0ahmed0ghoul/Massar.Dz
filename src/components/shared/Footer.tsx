@@ -5,33 +5,34 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-[#0b0c0e]">
-      {/* Grid texture */}
+    <footer className="relative overflow-hidden border-t border-border bg-background">
+      {/* Grid pattern overlay */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundImage: `
+            linear-gradient(hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.4)) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.4)) 1px, transparent 1px)
+          `,
+          backgroundSize: "48px 48px",
         }}
       />
 
-      {/* Subtle gradient glow */}
-      <div className="pointer-events-none absolute -top-40 -right-40 h-80 w-80 rounded-full bg-blue-500/5 blur-3xl" />
+      {/* Subtle gradient glow using theme primary */}
+      <div className="pointer-events-none absolute -right-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
 
       <div className="container relative z-10 py-12">
         {/* Main footer content */}
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
           {/* Brand column */}
           <div className="lg:col-span-2">
-            <Link to="/" className="group inline-flex items-center gap-2 font-bold text-xl transition-all">
-            <img src="src/assets/Logo-icon.jpg" alt="Massar Logo" className="h-5 w-5" />
-
-              <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+            <Link to="/" className="group inline-flex items-center gap-2 text-xl font-bold transition-all">
+              <img src="src/assets/Logo-icon.jpg" alt="Massar Logo" className="h-5 w-5" />
+              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Massar
               </span>
             </Link>
-            <p className="mt-4 max-w-md text-sm text-white/40 leading-relaxed">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
               Connecting students, universities, and employers on one platform. 
               Smarter matching, transparent outcomes, and better career decisions.
             </p>
@@ -46,7 +47,7 @@ const Footer = () => {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/40 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  className="rounded-lg border border-border bg-card p-2 text-muted-foreground transition-all hover:border-primary/30 hover:bg-card/80 hover:text-foreground"
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -57,7 +58,7 @@ const Footer = () => {
 
           {/* For Students */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-white">For Students</h4>
+            <h4 className="mb-4 text-sm font-semibold text-foreground">For Students</h4>
             <nav className="flex flex-col gap-3">
               {[
                 { name: "Browse Jobs", href: "/jobs" },
@@ -68,7 +69,7 @@ const Footer = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm text-white/40 transition-all hover:text-white hover:translate-x-0.5 inline-block"
+                  className="inline-block text-sm text-muted-foreground transition-all hover:translate-x-0.5 hover:text-foreground"
                 >
                   {item.name}
                 </Link>
@@ -78,7 +79,7 @@ const Footer = () => {
 
           {/* For Employers */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-white">For Employers</h4>
+            <h4 className="mb-4 text-sm font-semibold text-foreground">For Employers</h4>
             <nav className="flex flex-col gap-3">
               {[
                 { name: "Post a Job", href: "/register" },
@@ -89,7 +90,7 @@ const Footer = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm text-white/40 transition-all hover:text-white hover:translate-x-0.5 inline-block"
+                  className="inline-block text-sm text-muted-foreground transition-all hover:translate-x-0.5 hover:text-foreground"
                 >
                   {item.name}
                 </Link>
@@ -99,7 +100,7 @@ const Footer = () => {
 
           {/* For Universities */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold text-white">For Universities</h4>
+            <h4 className="mb-4 text-sm font-semibold text-foreground">For Universities</h4>
             <nav className="flex flex-col gap-3">
               {[
                 { name: "Track Outcomes", href: "/register/university" },
@@ -110,7 +111,7 @@ const Footer = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm text-white/40 transition-all hover:text-white hover:translate-x-0.5 inline-block"
+                  className="inline-block text-sm text-muted-foreground transition-all hover:translate-x-0.5 hover:text-foreground"
                 >
                   {item.name}
                 </Link>
@@ -120,38 +121,38 @@ const Footer = () => {
         </div>
 
         {/* Contact info row */}
-        <div className="mt-10 flex flex-wrap justify-between gap-4 rounded-lg border border-white/10 bg-white/5 p-6">
+        <div className="mt-10 flex flex-wrap justify-between gap-4 rounded-lg border border-border bg-card/30 p-6">
           <div className="flex items-center gap-3">
-            <MapPin className="h-4 w-4 text-white/40" />
-            <span className="text-sm text-white/40">Algiers, Algeria</span>
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Algiers, Algeria</span>
           </div>
           <div className="flex items-center gap-3">
-            <Phone className="h-4 w-4 text-white/40" />
-            <span className="text-sm text-white/40">+213 (0) 123 456 789</span>
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">+213 (0) 123 456 789</span>
           </div>
           <div className="flex items-center gap-3">
-            <Mail className="h-4 w-4 text-white/40" />
-            <span className="text-sm text-white/40">contact@massar.dz</span>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">contact@massar.dz</span>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-center md:flex-row">
-          <div className="text-sm text-white/30">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 text-center md:flex-row">
+          <div className="text-sm text-muted-foreground/60">
             © {currentYear} Massar. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <Link to="/privacy" className="text-white/30 transition-all hover:text-white/60">
+            <Link to="/privacy" className="text-muted-foreground/60 transition-all hover:text-foreground/80">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-white/30 transition-all hover:text-white/60">
+            <Link to="/terms" className="text-muted-foreground/60 transition-all hover:text-foreground/80">
               Terms of Service
             </Link>
-            <Link to="/cookies" className="text-white/30 transition-all hover:text-white/60">
+            <Link to="/cookies" className="text-muted-foreground/60 transition-all hover:text-foreground/80">
               Cookie Policy
             </Link>
           </div>
-          <div className="flex items-center gap-2 text-xs text-white/30">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
             <Sparkles className="h-3 w-3" />
             <span>Made with ❤️ in Algeria</span>
           </div>

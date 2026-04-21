@@ -114,7 +114,7 @@ export default function CompleteProfilePage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e] py-12 px-4 overflow-hidden">
+    <div className="relative min-h-screen bg-background py-12 px-4 overflow-hidden">
       {/* Background grid & glow */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -124,8 +124,8 @@ export default function CompleteProfilePage() {
           backgroundSize: "60px 60px",
         }}
       />
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
+<div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
+    <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
 
       <div className="relative z-10 container mx-auto max-w-4xl">
         {/* Progress indicator */}
@@ -133,23 +133,23 @@ export default function CompleteProfilePage() {
           <div className="flex items-center justify-between max-w-md mx-auto">
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full bg-[#639922] flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-white" />
+                <CheckCircle className="h-5 w-5 text-foreground" />
               </div>
-              <span className="text-xs text-white/60 mt-2">Account</span>
+              <span className="text-xs text-foreground/60 mt-2">Account</span>
             </div>
             <div className="flex-1 h-0.5 bg-[#639922]/30 mx-2" />
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full bg-[#639922] flex items-center justify-center">
-                <Building className="h-5 w-5 text-white" />
+                <Building className="h-5 w-5 text-foreground" />
               </div>
-              <span className="text-xs text-white/60 mt-2">Profile</span>
+              <span className="text-xs text-foreground/60 mt-2">Profile</span>
             </div>
             <div className="flex-1 h-0.5 bg-white/10 mx-2" />
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-white/40" />
+                <Shield className="h-5 w-5 text-foreground/40" />
               </div>
-              <span className="text-xs text-white/40 mt-2">Verify</span>
+              <span className="text-xs text-foreground/40 mt-2">Verify</span>
             </div>
           </div>
         </div>
@@ -161,10 +161,10 @@ export default function CompleteProfilePage() {
                 {isCompany ? <Briefcase className="h-6 w-6 text-[#639922]" /> : <GraduationCap className="h-6 w-6 text-[#639922]" />}
               </div>
               <div>
-                <CardTitle className="text-2xl text-white">
+                <CardTitle className="text-2xl text-foreground">
                   Complete Your {isCompany ? "Company" : "University"} Profile
                 </CardTitle>
-                <CardDescription className="text-white/40">
+                <CardDescription className="text-foreground/40">
                   Tell us more about your institution and upload verification documents
                 </CardDescription>
               </div>
@@ -177,17 +177,17 @@ export default function CompleteProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-white/10 pb-2">
                   <MapPin className="h-4 w-4 text-[#639922]" />
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60">Location</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">Location</h3>
                 </div>
                 <div>
-                  <Label className="text-white/80">City / Wilaya *</Label>
+                  <Label className="text-foreground/80">City / Wilaya *</Label>
                   <div className="relative mt-1.5">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                     <Input
                       value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
                       required
-                      className="pl-9 border-white/20 bg-white/10 text-white focus:border-[#639922]/50 focus:ring-[#639922]/20 transition-all"
+                      className="pl-9 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50 focus:ring-[#639922]/20 transition-all"
                       placeholder="e.g., Algiers"
                     />
                   </div>
@@ -199,38 +199,38 @@ export default function CompleteProfilePage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-white/10 pb-2">
                     <Briefcase className="h-4 w-4 text-[#639922]" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60">Company Details</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">Company Details</h3>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label className="text-white/80">Company Name *</Label>
+                      <Label className="text-foreground/80">Company Name *</Label>
                       <div className="relative mt-1.5">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                         <Input
                           value={form.companyName}
                           onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                           required
-                          className="pl-9 border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                          className="pl-9 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label className="text-white/80">Industry *</Label>
+                      <Label className="text-foreground/80">Industry *</Label>
                       <Input
                         value={form.industry}
                         onChange={(e) => setForm({ ...form, industry: e.target.value })}
                         required
-                        className="border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                        className="border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-white/80">Company Description</Label>
+                    <Label className="text-foreground/80">Company Description</Label>
                     <Textarea
                       value={form.companyDescription}
                       onChange={(e) => setForm({ ...form, companyDescription: e.target.value })}
                       rows={3}
-                      className="mt-1.5 border-white/20 bg-white/10 text-white focus:border-[#639922]/50 resize-none"
+                      className="mt-1.5 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50 resize-none"
                       placeholder="Tell us about your company's mission, culture, and values..."
                     />
                   </div>
@@ -241,42 +241,42 @@ export default function CompleteProfilePage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-white/10 pb-2">
                     <GraduationCap className="h-4 w-4 text-[#639922]" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60">University Details</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">University Details</h3>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label className="text-white/80">University Name *</Label>
+                      <Label className="text-foreground/80">University Name *</Label>
                       <div className="relative mt-1.5">
-                        <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                        <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                         <Input
                           value={form.universityName}
                           onChange={(e) => setForm({ ...form, universityName: e.target.value })}
                           required
-                          className="pl-9 border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                          className="pl-9 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label className="text-white/80">Rector / President Name *</Label>
+                      <Label className="text-foreground/80">Rector / President Name *</Label>
                       <div className="relative mt-1.5">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                         <Input
                           value={form.rectorName}
                           onChange={(e) => setForm({ ...form, rectorName: e.target.value })}
                           required
-                          className="pl-9 border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                          className="pl-9 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                         />
                       </div>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-white/80">Website</Label>
+                    <Label className="text-foreground/80">Website</Label>
                     <div className="relative mt-1.5">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                       <Input
                         value={form.website}
                         onChange={(e) => setForm({ ...form, website: e.target.value })}
-                        className="pl-9 border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                        className="pl-9 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                         placeholder="https://..."
                       />
                     </div>
@@ -288,12 +288,12 @@ export default function CompleteProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-white/10 pb-2">
                   <Shield className="h-4 w-4 text-[#639922]" />
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60">Verification Documents</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">Verification Documents</h3>
                 </div>
 
                 {/* Logo Upload */}
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                  <Label className="text-white/80 flex items-center gap-2">
+                  <Label className="text-foreground/80 flex items-center gap-2">
                     <Award className="h-4 w-4 text-[#639922]" /> Institution Logo *
                   </Label>
                   <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -304,14 +304,14 @@ export default function CompleteProfilePage() {
                           <button
                             type="button"
                             onClick={() => removeFile("logo")}
-                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 transition"
+                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600 transition"
                           >
                             <XCircle className="h-4 w-4" />
                           </button>
                         </div>
                       ) : (
                         <div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center border-2 border-dashed border-white/20 group-hover:border-[#639922]/50 transition">
-                          <Building2 className="h-8 w-8 text-white/40" />
+                          <Building2 className="h-8 w-8 text-foreground/40" />
                         </div>
                       )}
                     </div>
@@ -324,20 +324,20 @@ export default function CompleteProfilePage() {
                         id="logo-upload"
                       />
                       <label htmlFor="logo-upload">
-                        <Button type="button" variant="outline" asChild className="cursor-pointer border-white/20 text-white hover:bg-white/10">
+                        <Button type="button" variant="outline" asChild className="cursor-pointer border-white/20 text-foreground hover:bg-white/10">
                           <span>
                             <Upload className="mr-2 h-4 w-4" /> Choose Logo
                           </span>
                         </Button>
                       </label>
-                      <p className="text-xs text-white/40 mt-1">PNG, JPG up to 2MB. Square recommended.</p>
+                      <p className="text-xs text-foreground/40 mt-1">PNG, JPG up to 2MB. Square recommended.</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Registration Certificate */}
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                  <Label className="text-white/80 flex items-center gap-2">
+                  <Label className="text-foreground/80 flex items-center gap-2">
                     <FileText className="h-4 w-4 text-[#639922]" /> Registration Certificate / Legal Document *
                   </Label>
                   <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -347,7 +347,7 @@ export default function CompleteProfilePage() {
                         <button
                           type="button"
                           onClick={() => removeFile("certificate")}
-                          className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 transition"
+                          className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600 transition"
                         >
                           <XCircle className="h-3 w-3" />
                         </button>
@@ -362,24 +362,24 @@ export default function CompleteProfilePage() {
                         id="cert-upload"
                       />
                       <label htmlFor="cert-upload">
-                        <Button type="button" variant="outline" asChild className="cursor-pointer border-white/20 text-white hover:bg-white/10">
+                        <Button type="button" variant="outline" asChild className="cursor-pointer border-white/20 text-foreground hover:bg-white/10">
                           <span>
                             <Upload className="mr-2 h-4 w-4" /> Upload Document
                           </span>
                         </Button>
                       </label>
-                      <p className="text-xs text-white/40 mt-1">PDF or image, max 5MB</p>
+                      <p className="text-xs text-foreground/40 mt-1">PDF or image, max 5MB</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Tax ID */}
                 <div>
-                  <Label className="text-white/80">Tax ID / Registration Number (optional)</Label>
+                  <Label className="text-foreground/80">Tax ID / Registration Number (optional)</Label>
                   <Input
                     value={docs.taxId}
                     onChange={(e) => setDocs({ ...docs, taxId: e.target.value })}
-                    className="mt-1.5 border-white/20 bg-white/10 text-white focus:border-[#639922]/50"
+                    className="mt-1.5 border-white/20 bg-white/10 text-foreground focus:border-[#639922]/50"
                     placeholder="e.g., 123456789"
                   />
                 </div>
@@ -390,7 +390,7 @@ export default function CompleteProfilePage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-white hover:from-[#4f7a1a] hover:to-[#3b5e14] transition-all duration-300 group"
+                  className="w-full bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-foreground hover:from-[#4f7a1a] hover:to-[#3b5e14] transition-all duration-300 group"
                 >
                   {loading ? (
                     "Submitting..."
@@ -401,7 +401,7 @@ export default function CompleteProfilePage() {
                     </>
                   )}
                 </Button>
-                <p className="text-center text-xs text-white/30 mt-4">
+                <p className="text-center text-xs text-foreground/30 mt-4">
                   Your information will be reviewed by our team. We'll notify you once approved.
                 </p>
               </div>

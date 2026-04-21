@@ -30,13 +30,13 @@ export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProp
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-full transition-all",
                   step.status === "completed" &&
-                    "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-white",
+                    "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-foreground",
                   step.status === "current" &&
                     "border-2 border-[#639922] bg-[#639922]/10 text-[#639922]",
                   step.status === "pending" &&
                     "border-2 border-amber-500 bg-amber-500/10 text-amber-500",
                   step.status === "locked" &&
-                    "border border-white/[0.12] bg-white/[0.04] text-white/30"
+                    "border border-white/[0.12] bg-white/[0.04] text-foreground/30"
                 )}
               >
                 {step.status === "completed" ? (
@@ -69,13 +69,13 @@ export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProp
                 className={cn(
                   "text-sm font-semibold",
                   step.status === "completed" && "text-[#639922]",
-                  step.status === "current" && "text-white",
-                  step.status === "locked" && "text-white/30"
+                  step.status === "current" && "text-foreground",
+                  step.status === "locked" && "text-foreground/30"
                 )}
               >
                 {step.title}
               </p>
-              <p className="text-xs text-white/40">{step.description}</p>
+              <p className="text-xs text-foreground/40">{step.description}</p>
             </div>
           </div>
         ))}
@@ -94,13 +94,13 @@ export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProp
                   className={cn(
                     "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300",
                     step.status === "completed" &&
-                      "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-white shadow-lg shadow-[#639922]/30",
+                      "bg-gradient-to-br from-[#639922] to-[#4f7a1a] text-foreground shadow-lg shadow-[#639922]/30",
                     step.status === "current" &&
                       "border-2 border-[#639922] bg-[#639922]/10 text-[#639922]",
                     step.status === "pending" &&
                       "border-2 border-amber-500 bg-amber-500/10 text-amber-500",
                     step.status === "locked" &&
-                      "border border-white/[0.12] bg-white/[0.04] text-white/30"
+                      "border border-white/[0.12] bg-white/[0.04] text-foreground/30"
                   )}
                 >
                   {step.status === "completed" ? (
@@ -119,13 +119,13 @@ export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProp
                     className={cn(
                       "text-sm font-semibold",
                       step.status === "completed" && "text-[#639922]",
-                      step.status === "current" && "text-white",
-                      step.status === "locked" && "text-white/30"
+                      step.status === "current" && "text-foreground",
+                      step.status === "locked" && "text-foreground/30"
                     )}
                   >
                     {step.title}
                   </p>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-foreground/40">
                     {step.description}
                   </p>
                 </div>

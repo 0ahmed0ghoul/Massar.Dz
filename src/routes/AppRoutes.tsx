@@ -30,6 +30,7 @@ import CompleteProfilePage from "@/features/auth/pages/CompleteProfilePage";
 import { InboxPage } from "@/features/messaging/pages/InboxPage";
 import { ConversationPage } from "@/features/messaging/pages/ConversationPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
+import MessagesPage from "@/features/student/pages/MessagesPage";
 
 const AppRoutes = () => {
   return (
@@ -63,6 +64,10 @@ const AppRoutes = () => {
             <Route
               path="/student/dashboard/notifications"
               element={<NotificationsPage />}
+            />
+            <Route
+              path="/student/dashboard/messages"
+              element={<MessagesPage/>}
             />
             <Route
               path="/student/dashboard/certificate"
@@ -123,6 +128,8 @@ const AppRoutes = () => {
 
         <Route path="/messages" element={<InboxPage />} />
         <Route path="/messages/:id" element={<ConversationPage />} />
+
+        <Route path="/jobs" element={<JobsPage />} />
 
         {/* ================= ADMIN ================= */}
         <Route element={<DashboardLayout role="super_admin" />}>

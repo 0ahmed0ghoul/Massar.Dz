@@ -13,13 +13,13 @@ const ActivityTimeline = ({ activities = [] }) => {
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
-      <h2 className="mb-6 text-lg font-bold text-white">Activity Feed</h2>
+      <h2 className="mb-6 text-lg font-bold text-foreground">Activity Feed</h2>
       <div className="relative space-y-6 before:absolute before:left-[7px] before:top-2 before:h-[calc(100%-16px)] before:w-[1px] before:bg-white/10">
         {displayActivities.map((a, i) => (
           <div key={i} className="relative pl-6">
             <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-[#0b0c0e] bg-[#639922] shadow-[0_0_8px_#639922]" />
-            <p className="text-sm font-medium text-white/80">{a.action}</p>
-            <p className="text-[11px] text-white/30">
+            <p className="text-sm font-medium text-foreground/80">{a.action}</p>
+            <p className="text-[11px] text-foreground/30">
               {new Date(a.date || Date.now()).toLocaleDateString()}
             </p>
           </div>

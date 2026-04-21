@@ -26,7 +26,7 @@ export default function CompanyApplicationsPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Grid texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -37,12 +37,11 @@ export default function CompanyApplicationsPage() {
         }}
       />
       {/* Green glow orb */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
-
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
       <div className="relative z-10 container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white sm:text-4xl">Applicant Dashboard</h1>
-          <p className="mt-1 text-sm text-white/40">Manage applications, shortlist candidates, and add notes.</p>
+          <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Applicant Dashboard</h1>
+          <p className="mt-1 text-sm text-foreground/40">Manage applications, shortlist candidates, and add notes.</p>
         </div>
 
         {/* Job Selector Card */}
@@ -50,13 +49,13 @@ export default function CompanyApplicationsPage() {
           <div className="p-5 sm:p-6">
             <div className="mb-4 flex items-center gap-2">
               <Users className="h-5 w-5 text-[#639922]" />
-              <h2 className="text-lg font-semibold text-white">Select Job</h2>
+              <h2 className="text-lg font-semibold text-foreground">Select Job</h2>
             </div>
             <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-              <SelectTrigger className="w-full border-white/20 bg-white/10 text-white sm:w-64">
+              <SelectTrigger className="w-full border-white/20 bg-white/10 text-foreground sm:w-64">
                 <SelectValue placeholder="Choose a job" />
               </SelectTrigger>
-              <SelectContent className="border-white/20 bg-[#1a1c20] text-white">
+              <SelectContent className="border-white/20 bg-[#1a1c20] text-foreground">
                 {jobs.map((job) => (
                   <SelectItem key={job.id} value={job.id}>
                     {job.title}
@@ -68,7 +67,7 @@ export default function CompanyApplicationsPage() {
         </div>
 
         {applications.length === 0 ? (
-          <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] p-8 text-center text-white/40 backdrop-blur-md">
+          <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] p-8 text-center text-foreground/40 backdrop-blur-md">
             No applications for this job yet.
           </div>
         ) : (
@@ -81,10 +80,10 @@ export default function CompanyApplicationsPage() {
                 <div className="p-5 sm:p-6">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-xl font-semibold text-white">
+                      <h3 className="text-xl font-semibold text-foreground">
                         {app.candidate?.firstName} {app.candidate?.lastName}
                       </h3>
-                      <p className="text-xs text-white/40">{app.candidate?.email} • {app.candidate?.university}</p>
+                      <p className="text-xs text-foreground/40">{app.candidate?.email} • {app.candidate?.university}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge className="bg-blue-600/20 text-blue-400">
@@ -94,10 +93,10 @@ export default function CompanyApplicationsPage() {
                         value={app.status}
                         onValueChange={(val) => updateApplication(app.id, { status: val as any })}
                       >
-                        <SelectTrigger className="h-7 w-36 border-white/20 bg-white/10 text-xs text-white">
+                        <SelectTrigger className="h-7 w-36 border-white/20 bg-white/10 text-xs text-foreground">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="border-white/20 bg-[#1a1c20] text-white">
+                        <SelectContent className="border-white/20 bg-[#1a1c20] text-foreground">
                           {statusOptions.map((s) => (
                             <SelectItem key={s} value={s}>
                               {s}
@@ -112,14 +111,14 @@ export default function CompanyApplicationsPage() {
                   <div className="space-y-4">
                     {/* Rating stars */}
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-white/60">Rating:</span>
+                      <span className="text-sm text-foreground/60">Rating:</span>
                       {[1, 2, 3, 4, 5].map((r) => (
                         <Star
                           key={r}
                           className={`h-4 w-4 cursor-pointer transition hover:scale-110 ${
                             r <= app.rating
                               ? "fill-yellow-500 text-yellow-500"
-                              : "text-white/30"
+                              : "text-foreground/30"
                           }`}
                           onClick={() => setRating(app.id, r)}
                         />
@@ -128,19 +127,19 @@ export default function CompanyApplicationsPage() {
 
                     {/* Notes */}
                     <div>
-                      <label className="mb-1 flex items-center gap-1 text-sm text-white/60">
+                      <label className="mb-1 flex items-center gap-1 text-sm text-foreground/60">
                         <MessageSquare className="h-3 w-3" /> Notes
                       </label>
                       <Textarea
                         value={app.notes}
                         onChange={(e) => addNote(app.id, e.target.value)}
-                        className="bg-white/10 border-white/20 text-white"
+                        className="bg-white/10 border-white/20 text-foreground"
                         rows={3}
                         placeholder="Add interview feedback, strengths, concerns..."
                       />
                     </div>
 
-                    <div className="text-xs text-white/40">
+                    <div className="text-xs text-foreground/40">
                       Applied on {new Date(app.appliedAt).toLocaleDateString()}
                     </div>
                   </div>

@@ -51,14 +51,14 @@ export function RoleSelector({ selected, onSelect }: RoleSelectorProps) {
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-all duration-200
               ${
                 isSelected
-                  ? "border-white/30 bg-white/10"
-                  : "border-white/10 bg-white/[0.03] hover:bg-white/5 hover:border-white/20"
+                  ? "border-border/80 bg-card/50"
+                  : "border-border bg-card/30 hover:bg-card/50 hover:border-border/70"
               }`}
           >
             {/* Icon bubble */}
             <div
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors
-                ${isSelected ? "border-white/30 bg-white/10 text-white" : "border-white/10 bg-white/5 text-white/50"}`}
+                ${isSelected ? "border-border/80 bg-card/60 text-foreground" : "border-border bg-card/40 text-muted-foreground"}`}
             >
               {icon}
             </div>
@@ -66,7 +66,7 @@ export function RoleSelector({ selected, onSelect }: RoleSelectorProps) {
             {/* Text */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-white">{title}</span>
+                <span className="text-sm font-semibold text-foreground">{title}</span>
                 {badge && (
                   <span
                     className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${badgeColor}`}
@@ -75,13 +75,13 @@ export function RoleSelector({ selected, onSelect }: RoleSelectorProps) {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-white/40 mt-0.5">{description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
             </div>
 
             {/* Radio dot */}
             <div
               className={`h-4 w-4 shrink-0 rounded-full border-2 transition-colors
-                ${isSelected ? "border-white bg-white" : "border-white/20 bg-transparent"}`}
+                ${isSelected ? "border-primary bg-primary" : "border-border bg-transparent"}`}
             />
           </button>
         );

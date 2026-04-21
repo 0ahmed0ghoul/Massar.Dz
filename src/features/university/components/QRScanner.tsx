@@ -96,7 +96,7 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
 
         {/* Loading state */}
         {!isScanning && !errorMessage && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40 text-sm">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground/40 text-sm">
             <Loader2 className="w-5 h-5 animate-spin mb-2" />
             Initializing camera...
           </div>
@@ -136,7 +136,7 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
             stopScanner();
             startScanner();
           }}
-          className="border-white/10 text-white/70 hover:bg-white/10"
+          className="border-white/10 text-foreground/70 hover:bg-white/10"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Retry
@@ -144,7 +144,7 @@ export function QRScanner({ onScanSuccess, onScanError }: QRScannerProps) {
       </div>
 
       {/* FOOTER INFO */}
-      <p className="text-xs text-white/30 text-center max-w-xs">
+      <p className="text-xs text-foreground/30 text-center max-w-xs">
         Align the QR code inside the frame. The scan will happen automatically.
       </p>
     </div>

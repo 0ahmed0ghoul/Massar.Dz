@@ -17,9 +17,9 @@ interface CompanyFormProps {
   onSubmit: (data: CompanyFields) => void;
 }
 
-const labelCls = "text-white/60 text-xs font-medium uppercase tracking-wider";
-const inputCls = "border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10";
-const errorInputCls = "border-red-500/50 focus:border-red-500/70";
+const labelCls = "text-muted-foreground text-xs font-medium uppercase tracking-wider";
+const inputCls = "border-border bg-card/30 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-primary/20";
+const errorInputCls = "border-destructive/50 focus:border-destructive/70";
 
 const INDUSTRIES = [
   ["technology", "Technology"],
@@ -103,12 +103,12 @@ export function CompanyForm({ isLoading, onSubmit }: CompanyFormProps) {
           control={control}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={`mt-1.5 border-white/10 bg-white/5 text-white hover:bg-white/10 focus:ring-white/10 ${errors.industry ? errorInputCls : ""}`}>
+              <SelectTrigger className={`mt-1.5 border-border bg-card/30 text-foreground hover:bg-card/50 focus:ring-primary/20 ${errors.industry ? errorInputCls : ""}`}>
                 <SelectValue placeholder="Select industry" />
               </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#0b0c0e] text-white">
+              <SelectContent className="border-border bg-card text-foreground">
                 {INDUSTRIES.map(([v, label]) => (
-                  <SelectItem key={v} value={v} className="focus:bg-white/10 focus:text-white">
+                  <SelectItem key={v} value={v} className="focus:bg-muted focus:text-foreground">
                     {label}
                   </SelectItem>
                 ))}
@@ -122,7 +122,7 @@ export function CompanyForm({ isLoading, onSubmit }: CompanyFormProps) {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-white text-black hover:bg-white/90 transition-all duration-300 group"
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 group"
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

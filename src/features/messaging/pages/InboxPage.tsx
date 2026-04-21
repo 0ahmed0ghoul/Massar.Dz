@@ -20,12 +20,12 @@ export const InboxPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
       <div className="relative z-10 container mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-3xl font-bold text-white mb-6">Messages</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-6">Messages</h1>
         <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md p-4">
-          {loading ? <div className="text-center text-white/40">Loading...</div> : <ConversationList conversations={conversations} onSelect={handleSelect} currentUserRole={userRole} />}
+          {loading ? <div className="text-center text-foreground/40">Loading...</div> : <ConversationList conversations={conversations} onSelect={handleSelect} currentUserRole={userRole} />}
         </div>
       </div>
     </div>

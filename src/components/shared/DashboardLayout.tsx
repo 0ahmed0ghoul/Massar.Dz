@@ -4,8 +4,7 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { Menu, X, ChevronLeft, Clock, Paperclip, Star } from "lucide-react";
-import univLogo from "@/assets/univ-guelma.png";
+import { Menu, X, ChevronLeft, Clock, Paperclip, Star, MessageCircleMore } from "lucide-react";
 import {
   LayoutDashboard,
   User,
@@ -38,6 +37,8 @@ const navMap: Record<UserRole, any[]> = {
     { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
     { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
     { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
+    { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMore },
+
     { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
   ],
   company_admin: [
@@ -114,7 +115,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
       <aside
         className={`
           fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 
-          bg-[#0b0c0e] text-white transition-all duration-300 ease-in-out
+          bg-background text-foreground transition-all duration-300 ease-in-out
           md:relative
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
@@ -129,7 +130,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(`/`)}>
                 <img src={LogoIcon} className="h-5 w-5" alt="Logo" />
                 <span className="font-bold">Massar</span>
-                <span className="text-white/40 text-sm">{roleLabels[role]}</span>
+                <span className="text-foreground/40 text-sm">{roleLabels[role]}</span>
               </div>
             )}
             {isCollapsed && (
@@ -137,7 +138,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
             )}
             <button
               onClick={onClose}
-              className="rounded-md p-1 text-white/60 hover:text-white md:hidden"
+              className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden"
             >
               <X className="h-5 w-5" />
             </button>
@@ -153,7 +154,7 @@ function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
                   to={item.url}
                   onClick={() => onClose()}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                    active ? "bg-white/10 text-white" : "text-white/50 hover:text-white"
+                    active ? "bg-white/10 text-foreground" : "text-foreground/50 hover:text-foreground"
                   } ${isCollapsed ? "justify-center" : ""}`}
                   title={isCollapsed ? item.title : undefined}
                 >
@@ -197,7 +198,7 @@ const DashboardLayout = ({ role }: Props) => {
   const email = profile?.email || "";
 
   return (
-    <div className="flex min-h-screen bg-[#0b0c0e] text-white">
+    <div className="flex min-h-screen bg-background text-foreground">
       <AppSidebar
         role={role}
         isOpen={sidebarOpen}
@@ -212,7 +213,7 @@ const DashboardLayout = ({ role }: Props) => {
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="rounded-md p-1 text-white/60 hover:text-white md:hidden"
+              className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -220,7 +221,7 @@ const DashboardLayout = ({ role }: Props) => {
             {/* Desktop collapse/expand button */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden md:flex rounded-md p-1 text-white/60 hover:text-white"
+              className="hidden md:flex rounded-md p-1 text-foreground/60 hover:text-foreground"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               <ChevronLeft className={`h-5 w-5 transition-transform duration-200 ${sidebarCollapsed ? "rotate-180" : ""}`} />
@@ -231,7 +232,7 @@ const DashboardLayout = ({ role }: Props) => {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
-              <p className="text-xs text-white/40 truncate max-w-[150px]">{email}</p>
+              <p className="text-xs text-foreground/40 truncate max-w-[150px]">{email}</p>
             </div>
             {/* Always show avatar, but hide text on very small */}
             <div className="text-right block sm:hidden">

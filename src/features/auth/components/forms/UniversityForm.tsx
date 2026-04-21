@@ -13,9 +13,9 @@ interface UniversityFormProps {
   onSubmit: (data: UniversityFields) => void;
 }
 
-const labelCls = "text-white/60 text-xs font-medium uppercase tracking-wider";
-const inputCls = "border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-white/20 focus:ring-white/10";
-const errorInputCls = "border-red-500/50 focus:border-red-500/70";
+const labelCls = "text-muted-foreground text-xs font-medium uppercase tracking-wider";
+const inputCls = "border-border bg-card/30 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-primary/20";
+const errorInputCls = "border-destructive/50 focus:border-destructive/70";
 
 export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
   const {
@@ -78,7 +78,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
           className={`mt-1.5 ${inputCls} ${errors.email ? errorInputCls : ""}`}
         />
         {!errors.email && (
-          <p className="mt-1 text-[11px] text-white/30">
+          <p className="mt-1 text-[11px] text-muted-foreground/60">
             Use your institution's official email address.
           </p>
         )}
@@ -110,7 +110,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-white text-black hover:bg-white/90 transition-all duration-300 group"
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 group"
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

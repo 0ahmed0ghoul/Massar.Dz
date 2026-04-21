@@ -21,7 +21,7 @@ export const StatsCard = ({ label, value, icon: Icon, color, bg, pulse }: StatsC
     <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: bg }}>
       <Icon className="h-5 w-5" style={{ color }} />
     </div>
-    <div className="text-3xl font-bold text-white">{value}</div>
-    <div className="text-sm text-white/40 mt-1">{label}</div>
+    <div className="text-3xl font-bold text-foreground">{value}</div>
+    <div className="text-sm text-foreground/40 mt-1">{label}</div>
   </div>
 );

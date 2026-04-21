@@ -34,8 +34,8 @@ export const AccountRow = ({ profile, actionLoading, onStatusChange, onDelete }:
             {(profile.first_name?.[0] || "?").toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">{name}</p>
-            <p className="text-xs text-white/40 truncate">{profile.email}</p>
+            <p className="text-sm font-medium text-foreground truncate">{name}</p>
+            <p className="text-xs text-foreground/40 truncate">{profile.email}</p>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export const AccountRow = ({ profile, actionLoading, onStatusChange, onDelete }:
           </span>
         </div>
 
-        <ChevronDown className={`h-4 w-4 text-white/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-foreground/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
       </div>
 
       {expanded && (
@@ -81,8 +81,8 @@ export const AccountRow = ({ profile, actionLoading, onStatusChange, onDelete }:
               .filter(Boolean)
               .map((row: any) => (
                 <div key={row.label} className="flex gap-2">
-                  <span className="text-white/30 w-28 shrink-0">{row.label}</span>
-                  <span className="text-white/70">{row.value}</span>
+                  <span className="text-foreground/30 w-28 shrink-0">{row.label}</span>
+                  <span className="text-foreground/70">{row.value}</span>
                 </div>
               ))}
           </div>
@@ -106,7 +106,7 @@ export const AccountRow = ({ profile, actionLoading, onStatusChange, onDelete }:
                 <XCircle className="h-3.5 w-3.5" /> Reject
               </button>
             )}
-            <a href={`mailto:${profile.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all">
+            <a href={`mailto:${profile.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-foreground/60 hover:text-foreground hover:bg-white/10 transition-all">
               <Mail className="h-3.5 w-3.5" /> Email
             </a>
             <button

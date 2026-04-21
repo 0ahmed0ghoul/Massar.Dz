@@ -30,7 +30,7 @@ export default function UniversityDashboard() {
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Grid texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -47,8 +47,8 @@ export default function UniversityDashboard() {
         <div className="space-y-6 sm:space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-white sm:text-3xl">University Dashboard</h1>
-            <p className="text-sm text-white/40 sm:text-base">
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">University Dashboard</h1>
+            <p className="text-sm text-foreground/40 sm:text-base">
               Track student outcomes and program performance.
             </p>
           </div>
@@ -61,14 +61,14 @@ export default function UniversityDashboard() {
                 className="group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30 hover:shadow-lg hover:shadow-[#639922]/5"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium uppercase tracking-wider text-white/50">
+                  <p className="text-sm font-medium uppercase tracking-wider text-foreground/50">
                     {s.label}
                   </p>
-                  <s.icon className="h-4 w-4 text-white/40 group-hover:text-[#639922] transition-colors" />
+                  <s.icon className="h-4 w-4 text-foreground/40 group-hover:text-[#639922] transition-colors" />
                 </div>
                 <div className="mt-2">
-                  <div className="text-2xl font-bold text-white">{s.value}</div>
-                  <p className="text-xs text-white/40">{s.desc}</p>
+                  <div className="text-2xl font-bold text-foreground">{s.value}</div>
+                  <p className="text-xs text-foreground/40">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -79,10 +79,10 @@ export default function UniversityDashboard() {
             <div className="p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Newspaper className="h-5 w-5 text-[#639922]" />
-                <h2 className="text-lg font-semibold text-white">Recent Placements & Internships</h2>
+                <h2 className="text-lg font-semibold text-foreground">Recent Placements & Internships</h2>
               </div>
               {recentPlacements.length === 0 ? (
-                <p className="text-sm text-white/40">No recent placements to show.</p>
+                <p className="text-sm text-foreground/40">No recent placements to show.</p>
               ) : (
                 <div className="space-y-3">
                   {recentPlacements.map((p) => (
@@ -91,8 +91,8 @@ export default function UniversityDashboard() {
                       className="flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
-                        <p className="font-medium text-white">{p.firstName + p.lastName}</p>
-                        <p className="text-xs text-white/40">
+                        <p className="font-medium text-foreground">{p.firstName + p.lastName}</p>
+                        <p className="text-xs text-foreground/40">
                           {p.speciality} → {p.outcome} at {p.company}
                         </p>
                       </div>
@@ -109,7 +109,7 @@ export default function UniversityDashboard() {
           {/* Recent Student Outcomes */}
           <div className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
             <div className="p-5 sm:p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white">Recent Student Outcomes</h2>
+              <h2 className="mb-4 text-lg font-semibold text-foreground">Recent Student Outcomes</h2>
               <div className="space-y-3">
                 {students.slice(0, 3).map((s) => (
                   <div
@@ -117,8 +117,8 @@ export default function UniversityDashboard() {
                     className="flex flex-col gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <p className="font-medium text-white">{s.firstName +' '+ s.lastName}</p>
-                      <p className="text-xs text-white/40">
+                      <p className="font-medium text-foreground">{s.firstName +' '+ s.lastName}</p>
+                      <p className="text-xs text-foreground/40">
                         {s.speciality} → {s.outcome?.company || "Still studying"}
                       </p>
                     </div>
@@ -126,7 +126,7 @@ export default function UniversityDashboard() {
                       className={`self-start rounded-full px-2.5 py-0.5 text-xs font-medium sm:self-center ${
                         s.outcome?.outcome === "Employed"
                           ? "bg-[#639922]/10 text-[#639922]"
-                          : "bg-white/10 text-white/60"
+                          : "bg-white/10 text-foreground/60"
                       }`}
                     >
                       {s.outcome?.outcome || "Enrolled"}

@@ -1,186 +1,163 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, LogOut } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { ROLES } from "@/constants/roles";
 import LogoIcon from "@/assets/Logo-icon.jpg";
 
+type Theme = "light" | "dark";
+
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>(() => {
+    return (localStorage.getItem("theme") as Theme) || "dark";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  return {
+    theme,
+    toggleTheme: () => setTheme(prev => (prev === "dark" ? "light" : "dark")),
+  };
+}
+
 const Navbar = () => {
-  // ✅ ALL HOOKS at the top level (before any conditional returns)
   const { user, profile, role, isLoading, signOut } = useAuth();
-  const [forceShow, setForceShow] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
-  // ✅ Close dropdown outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpenMenu(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Loading timeout fallback
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        console.warn("Auth loading timeout - forcing navbar render");
-        setForceShow(true);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [isLoading]);
-
-  // ✅ Logout handler
   const handleLogout = async () => {
     await signOut();
-    setOpenMenu(false);
-    setMobileOpen(false);
     navigate("/login");
   };
 
-  // ✅ Conditional return after all hooks
-  if (isLoading && !forceShow) {
-    return (
-      <header className="h-16 border-b border-white/10 bg-[#0b0c0e]/80" />
-    );
-  }
-
-  // -------------------------
-  // ROLE DASHBOARD ROUTING
-  // -------------------------
   const getDashboard = () => {
-    // 🔥 PRIORITY: pending status
-    if (profile?.status === "pending") {
-      return "/pending-approval";
-    }
-  
+    if (profile?.status === "pending") return "/pending-approval";
     switch (role) {
-      case ROLES.STUDENT:
-        return "/student/dashboard";
-      case ROLES.COMPANY_ADMIN:
-        return "/dashboard/company";
-      case ROLES.UNIVERSITY_ADMIN:
-        return "/university/dashboard";
-      case ROLES.SUPER_ADMIN:
-        return "/dashboard/admin";
-      default:
-        return "/";
+      case ROLES.STUDENT: return "/student/dashboard";
+      case ROLES.COMPANY_ADMIN: return "/dashboard/company";
+      case ROLES.UNIVERSITY_ADMIN: return "/university/dashboard";
+      case ROLES.SUPER_ADMIN: return "/dashboard/admin";
+      default: return "/";
     }
   };
 
-  // -------------------------
-  // USER INITIALS (fallback)
-  // -------------------------
-  const initials =
-    (profile?.first_name?.[0] ?? "") +
-    (profile?.last_name?.[0] ?? "");
+  const initials = (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
 
-  // -------------------------
-  // UI
-  // -------------------------
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0c0e]/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/70 backdrop-blur-xl">
+      {/* Grid pattern */}
+      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-60" />
 
+      {/* Glow line */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+      <div className="container relative z-10 flex h-16 items-center justify-between">
         {/* LOGO */}
-        <Link to="/" className="font-bold text-white flex items-center gap-4 text-lg">
-          <img src={LogoIcon} className="h-10 w-10 rounded-full" />
-          Massar
+        <Link to="/" className="group flex items-center gap-3 text-lg font-bold text-foreground">
+          <div className="relative">
+            <img src={LogoIcon} className="h-10 w-10 rounded-xl object-cover shadow-md" />
+            <div className="absolute inset-0 rounded-xl opacity-0 blur-md transition group-hover:opacity-100 bg-primary/40" />
+          </div>
+          <span className="tracking-tight transition group-hover:text-primary">Massar</span>
         </Link>
 
-        {/* DESKTOP NAV */}
-        <nav className="hidden md:flex gap-6 text-white/70">
-          <Link to="/jobs">Jobs</Link>
-          <Link to="/internships">Internships</Link>
+        {/* NAV LINKS */}
+        <nav className="hidden items-center gap-8 md:flex">
+          {["Jobs", "Internships"].map((item) => (
+            <Link
+              key={item}
+              to={`/${item.toLowerCase()}`}
+              className="relative text-sm text-muted-foreground transition hover:text-foreground group"
+            >
+              {item}
+              <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-primary transition-all group-hover:w-full" />
+            </Link>
+          ))}
         </nav>
 
-        {/* AUTH AREA */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* RIGHT SIDE */}
+        <div className="hidden items-center gap-3 md:flex">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="rounded-lg border border-border bg-card p-2 hover:bg-muted transition"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4 text-yellow-400" /> : <Moon className="h-4 w-4" />}
+          </button>
 
           {!user ? (
             <>
-              <Button asChild variant="ghost">
+              <Button variant="ghost" asChild>
                 <Link to="/login">Login</Link>
               </Button>
 
-              <Button asChild className="bg-[#639922]">
-                <Link to="/register">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Get Started
+              {/* ✅ FIXED: asChild now has a single child <Link> with everything inside */}
+              <Button asChild className="relative overflow-hidden bg-primary text-primary-foreground">
+                <Link to="/register" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Get Started</span>
+                  {/* Shine effect moved inside the Link */}
+                  <span className="absolute inset-0 -z-10 opacity-0 transition group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </Link>
               </Button>
             </>
           ) : (
             <div className="relative" ref={menuRef}>
-
-              {/* AVATAR with image fallback */}
               <button
-                onClick={() => setOpenMenu((prev) => !prev)}
-                className="h-9 w-9 rounded-full bg-[#639922] text-white font-bold flex items-center justify-center overflow-hidden"
+                onClick={() => setOpenMenu(!openMenu)}
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary font-bold text-white ring-2 ring-primary/20 hover:ring-primary/40 transition"
               >
                 {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={profile.avatar_url} className="h-full w-full object-cover" />
                 ) : (
-                  <span>{initials || "U"}</span>
+                  initials || "U"
                 )}
               </button>
 
-              {/* DROPDOWN */}
               {openMenu && (
-                <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/10 bg-[#0b0c0e] text-white overflow-hidden shadow-lg">
-
-                  {/* USER INFO */}
-                  <div className="px-3 py-2 border-b border-white/10">
-                    <p className="text-sm font-medium">
+                <div className="absolute right-0 mt-3 w-56 rounded-xl border border-border bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95">
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-sm font-semibold text-foreground">
                       {profile?.first_name} {profile?.last_name}
                     </p>
-                    <p className="text-xs text-white/40">
-                      {profile?.email}
-                    </p>
-                    <p className="text-xs text-[#639922] capitalize">
-                      {role ?? "user"}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{profile?.email}</p>
                   </div>
-
-                  {/* ACTIONS */}
                   <button
-                    onClick={() => {
-                      setOpenMenu(false);
-                      navigate(getDashboard());
-                    }}
-                    className="w-full text-left px-3 py-2 hover:bg-white/10"
+                    onClick={() => navigate(getDashboard())}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition"
                   >
                     Dashboard
                   </button>
-
                   <button
-                    onClick={() => {
-                      setOpenMenu(false);
-                      navigate(getDashboard() + "/profile");
-                    }}
-                    className="w-full text-left px-3 py-2 hover:bg-white/10"
+                    onClick={() => navigate(getDashboard() + "/profile")}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition"
                   >
                     Profile
                   </button>
-
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="h-4 w-4" />
                     Logout
                   </button>
                 </div>
@@ -190,52 +167,29 @@ const Navbar = () => {
         </div>
 
         {/* MOBILE BUTTON */}
-        <Button
-          className="md:hidden"
-          variant="ghost"
-          onClick={() => setMobileOpen((p) => !p)}
-        >
+        <Button variant="ghost" className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X /> : <Menu />}
         </Button>
       </div>
 
       {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/10 p-4 text-white/70 space-y-3">
-
-          <Link to="/jobs" onClick={() => setMobileOpen(false)}>
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl p-5 space-y-4 animate-in fade-in slide-in-from-top-2">
+          <Link to="/jobs" onClick={() => setMobileOpen(false)} className="block hover:text-foreground">
             Jobs
           </Link>
-
           {user && (
-            <Link
-              to={getDashboard()}
-              onClick={() => setMobileOpen(false)}
-            >
+            <Link to={getDashboard()} onClick={() => setMobileOpen(false)}>
               Dashboard
             </Link>
           )}
-
-          {user ? (
-            <button
-              onClick={handleLogout}
-              className="text-red-400 block"
-            >
-              Logout
-            </button>
-          ) : (
+          {!user ? (
             <>
-              <Link to="/login" onClick={() => setMobileOpen(false)}>
-                Login
-              </Link>
-
-              <Link
-                to="/register/student"
-                onClick={() => setMobileOpen(false)}
-              >
-                Get Started
-              </Link>
+              <Link to="/login">Login</Link>
+              <Link to="/register">Get Started</Link>
             </>
+          ) : (
+            <button onClick={handleLogout} className="text-red-500">Logout</button>
           )}
         </div>
       )}

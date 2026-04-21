@@ -68,10 +68,10 @@ export const AdminPendingPage = () => {
   const displayedProfiles = getDisplayProfiles();
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Background grid & glow (same as before) */}
       <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
 
       <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -83,8 +83,8 @@ export const AdminPendingPage = () => {
                 <Clock className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white sm:text-4xl">Pending Verifications</h1>
-                <p className="mt-1 text-sm text-white/40">
+                <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Pending Verifications</h1>
+                <p className="mt-1 text-sm text-foreground/40">
                   Review and approve institutions, companies & student profiles
                 </p>
               </div>
@@ -93,7 +93,7 @@ export const AdminPendingPage = () => {
           <button
             onClick={loadPending}
             disabled={loading}
-            className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/60 backdrop-blur-sm transition-all hover:border-[#639922]/30 hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
+            className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-foreground/60 backdrop-blur-sm transition-all hover:border-[#639922]/30 hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 transition-transform duration-300 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
             Refresh
@@ -108,8 +108,8 @@ export const AdminPendingPage = () => {
               onClick={() => setFilter(f)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                 filter === f
-                  ? "bg-gradient-to-r from-[#639922]/20 to-[#639922]/10 text-white shadow-lg"
-                  : "text-white/40 hover:text-white hover:bg-white/5"
+                  ? "bg-gradient-to-r from-[#639922]/20 to-[#639922]/10 text-foreground shadow-lg"
+                  : "text-foreground/40 hover:text-foreground hover:bg-white/5"
               }`}
             >
               {f === "all" && <><Shield className="h-3.5 w-3.5" /> All</>}
@@ -120,7 +120,7 @@ export const AdminPendingPage = () => {
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-all ${
                   counts[f] > 0
                     ? "bg-amber-400 text-black shadow-sm"
-                    : "bg-white/10 text-white/40"
+                    : "bg-white/10 text-foreground/40"
                 }`}
               >
                 {counts[f]}
@@ -135,7 +135,7 @@ export const AdminPendingPage = () => {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-[#639922]" />
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-foreground">
                   {filter === "all" ? "All Pending" :
                    filter === "students" ? "Students Pending Verification" :
                    filter === "university_admin" ? "Universities Pending Approval" : "Companies Pending Approval"}
@@ -152,7 +152,6 @@ export const AdminPendingPage = () => {
               onApprove={filter === "students" ? handleVerifyStudent : handleApprove}
               onReject={filter === "students" ? handleRejectStudent : handleReject}
               loading={loading}
-              isStudentList={filter === "students"}
             />
           </div>
         </div>
@@ -160,9 +159,9 @@ export const AdminPendingPage = () => {
         {/* Help text */}
         {displayedProfiles.length === 0 && !loading && (
           <div className="mt-6 rounded-2xl border border-white/[0.09] bg-white/[0.02] p-8 text-center backdrop-blur-sm">
-            <Shield className="mx-auto h-12 w-12 text-white/20" />
-            <p className="mt-3 text-white/40">No pending verification requests at the moment.</p>
-            <p className="text-sm text-white/30">Check back later or refresh.</p>
+            <Shield className="mx-auto h-12 w-12 text-foreground/20" />
+            <p className="mt-3 text-foreground/40">No pending verification requests at the moment.</p>
+            <p className="text-sm text-foreground/30">Check back later or refresh.</p>
           </div>
         )}
       </div>

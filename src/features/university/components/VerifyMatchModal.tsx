@@ -22,10 +22,10 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
   if (!importedStudent) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-[#0f1012] border-white/10 text-white">
+        <DialogContent className="bg-[#0f1012] border-white/10 text-foreground">
           <DialogHeader>
             <DialogTitle>Student Not Found in Imported Data</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-foreground/60">
               No matching student found with email {invitation.profileData.email} or student ID {invitation.profileData.studentId}.
               Please check the imported student list.
             </DialogDescription>
@@ -58,10 +58,10 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f1012] border-white/10 text-white">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0f1012] border-white/10 text-foreground">
         <DialogHeader>
           <DialogTitle>Verify Student Identity & Data</DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-foreground/60">
             Compare the university's imported record (left) with the student's filled profile (right).
             <span className="block mt-1 text-xs">
               ✅ Green = matched &nbsp;|&nbsp; ❌ Red = mismatched
@@ -77,37 +77,37 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
             </h3>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50 flex items-center gap-1"><User className="h-3 w-3" /> Full Name</dt>
+                <dt className="text-foreground/50 flex items-center gap-1"><User className="h-3 w-3" /> Full Name</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(nameMatch)}`}>
                   {importedStudent.firstName} {importedStudent.lastName}
                 </dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50 flex items-center gap-1"><IdCard className="h-3 w-3" /> Student ID</dt>
+                <dt className="text-foreground/50 flex items-center gap-1"><IdCard className="h-3 w-3" /> Student ID</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(studentIdMatch)}`}>{importedStudent.studentId}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Email</dt>
+                <dt className="text-foreground/50">Email</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(emailMatch)}`}>{importedStudent.email}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50 flex items-center gap-1"><MapPin className="h-3 w-3" /> Wilaya</dt>
+                <dt className="text-foreground/50 flex items-center gap-1"><MapPin className="h-3 w-3" /> Wilaya</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(wilayaMatch)}`}>{importedStudent.wilaya || '—'}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50 flex items-center gap-1"><BookOpen className="h-3 w-3" /> Speciality</dt>
+                <dt className="text-foreground/50 flex items-center gap-1"><BookOpen className="h-3 w-3" /> Speciality</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityMatch)}`}>{importedStudent.speciality}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Specialty Type</dt>
+                <dt className="text-foreground/50">Specialty Type</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialtyTypeMatch)}`}>{importedStudent.specialtyType || '—'}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Academic Years</dt>
+                <dt className="text-foreground/50">Academic Years</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(academicYearsMatch)}`}>{importedStudent.academicYears || '—'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-white/50">Degree Level</dt>
+                <dt className="text-foreground/50">Degree Level</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(degreeLevelMatch)}`}>{importedStudent.degreeLevel || '—'}</dd>
               </div>
             </dl>
@@ -120,43 +120,43 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
             </h3>
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Full Name</dt>
+                <dt className="text-foreground/50">Full Name</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(nameMatch)}`}>
                   {profile.firstName} {profile.lastName}
                 </dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Student ID</dt>
+                <dt className="text-foreground/50">Student ID</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(studentIdMatch)}`}>{profile.studentId}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Email</dt>
+                <dt className="text-foreground/50">Email</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(emailMatch)}`}>{profile.email || '—'}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Wilaya</dt>
+                <dt className="text-foreground/50">Wilaya</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(wilayaMatch)}`}>{profile.wilaya}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Speciality</dt>
+                <dt className="text-foreground/50">Speciality</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityMatch)}`}>{profile.speciality}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Specialty Type</dt>
+                <dt className="text-foreground/50">Specialty Type</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialtyTypeMatch)}`}>{profile.specialtyType}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-white/50">Academic Years</dt>
+                <dt className="text-foreground/50">Academic Years</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(academicYearsMatch)}`}>{profile.academicYears}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-white/50">Degree Level</dt>
+                <dt className="text-foreground/50">Degree Level</dt>
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(degreeLevelMatch)}`}>{profile.degreeLevel}</dd>
               </div>
             </dl>
             {profile.studentIdCardImage && (
               <div className="mt-3 pt-2 border-t border-white/10">
-                <dt className="text-white/50 text-xs mb-1">ID Card Image</dt>
+                <dt className="text-foreground/50 text-xs mb-1">ID Card Image</dt>
                 <img src={idcard} alt="Student ID Card" className="max-h-32 rounded border border-white/20" />
               </div>
             )}
@@ -164,10 +164,10 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
         </div>
 
         <div className="flex justify-end gap-3 mt-4">
-          <Button variant="outline" onClick={onReject} className="border-white/20 text-white/80 hover:bg-white/10">
+          <Button variant="outline" onClick={onReject} className="border-white/20 text-foreground/80 hover:bg-white/10">
             <XCircle className="mr-2 h-4 w-4" /> Reject
           </Button>
-          <Button onClick={onAccept} className="bg-[#639922] text-white hover:bg-[#4f7a1a]">
+          <Button onClick={onAccept} className="bg-[#639922] text-foreground hover:bg-[#4f7a1a]">
             <CheckCircle2 className="mr-2 h-4 w-4" /> Accept & Connect
           </Button>
         </div>

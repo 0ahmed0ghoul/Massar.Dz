@@ -8,6 +8,9 @@ export function mapProfile(db: ProfileDB): Profile {
   return {
     id: db.id,
     role: db.role as UserRole,
+    first_name:db.first_name,
+    last_name:db.last_name,
+    status : db.status,
     full_name: `${db.first_name ?? ""} ${db.last_name ?? ""}`.trim(),
     email: db.email ?? "",
     avatar_url: db.avatar_url ?? undefined,

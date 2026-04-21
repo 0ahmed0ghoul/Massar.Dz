@@ -50,7 +50,7 @@ export const UniversityConnectionCard = ({
                 "rounded-full p-3 transition-all duration-300",
                 isConnected
                   ? "bg-[#639922]/10 text-[#639922]"
-                  : "bg-white/[0.05] text-white/40"
+                  : "bg-white/[0.05] text-foreground/40"
               )}
             >
               {isConnected ? (
@@ -60,8 +60,8 @@ export const UniversityConnectionCard = ({
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-white">University Connection</h3>
-              <p className="text-sm text-white/50">
+              <h3 className="font-semibold text-foreground">University Connection</h3>
+              <p className="text-sm text-foreground/50">
                 {isConnected
                   ? `You are connected to ${profile.university_name || "your university"}. You can now claim certificates.`
                   : isVerified
@@ -75,7 +75,7 @@ export const UniversityConnectionCard = ({
             {(universityId || (profile as any).university_id) && (
               <button
                 onClick={handleMessage}
-                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
+                className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-white/10"
               >
                 <MessageCircle className="mr-2 inline h-4 w-4" />
                 Message
@@ -89,8 +89,8 @@ export const UniversityConnectionCard = ({
                 className={cn(
                   "rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-300",
                   isVerified
-                    ? "bg-[#639922] text-white shadow-lg shadow-[#639922]/30 hover:bg-[#4f7a1a] hover:shadow-xl"
-                    : "cursor-not-allowed bg-white/[0.05] text-white/30"
+                    ? "bg-[#639922] text-foreground shadow-lg shadow-[#639922]/30 hover:bg-[#4f7a1a] hover:shadow-xl"
+                    : "cursor-not-allowed bg-white/[0.05] text-foreground/30"
                 )}
               >
                 {isRequesting ? "Connecting..." : "Request Connection"}

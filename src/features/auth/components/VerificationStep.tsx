@@ -35,18 +35,18 @@ export function VerificationStep({
     <Card className="border border-white/10 bg-white/[0.03] backdrop-blur-sm shadow-2xl">
       <CardHeader className="text-center border-b border-white/10 pb-6">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10">
-          <CheckCircle className="h-5 w-5 text-white/60" />
+          <CheckCircle className="h-5 w-5 text-foreground/60" />
         </div>
-        <CardTitle className="text-2xl text-white">Verify Your Email</CardTitle>
-        <CardDescription className="text-white/40">
+        <CardTitle className="text-2xl text-foreground">Verify Your Email</CardTitle>
+        <CardDescription className="text-foreground/40">
           Enter the 6-digit code sent to{" "}
-          <span className="text-white/60">{email}</span>
+          <span className="text-foreground/60">{email}</span>
         </CardDescription>
       </CardHeader>
 
       <CardContent className="pt-6 space-y-4">
         <div className="space-y-2">
-          <Label className="text-white/60 text-xs font-medium uppercase tracking-wider">
+          <Label className="text-foreground/60 text-xs font-medium uppercase tracking-wider">
             Verification Code
           </Label>
           <Input
@@ -56,8 +56,8 @@ export function VerificationStep({
             maxLength={6}
             value={code}
             onChange={(e) => onCodeChange(e.target.value.replace(/\D/g, ""))}
-            className="text-center text-2xl tracking-widest border-white/10 bg-white/5 text-white
-                       placeholder:text-white/30 focus:border-white/20 focus:ring-white/10"
+            className="text-center text-2xl tracking-widest border-white/10 bg-white/5 text-foreground
+                       placeholder:text-foreground/30 focus:border-white/20 focus:ring-white/10"
             autoFocus
           />
         </div>
@@ -79,18 +79,18 @@ export function VerificationStep({
             type="button"
             onClick={onResend}
             disabled={resendCooldown > 0}
-            className="text-sm text-white/40 hover:text-white transition-colors disabled:cursor-not-allowed"
+            className="text-sm text-foreground/40 hover:text-foreground transition-colors disabled:cursor-not-allowed"
           >
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
           </button>
         </div>
 
-        <div className="text-center text-sm text-white/40">
+        <div className="text-center text-sm text-foreground/40">
           Wrong email?{" "}
           <button
             type="button"
             onClick={onBack}
-            className="text-white hover:underline transition-colors"
+            className="text-foreground hover:underline transition-colors"
           >
             Go back
           </button>

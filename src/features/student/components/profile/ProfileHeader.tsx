@@ -163,24 +163,24 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                   />
                 ) : (
                   <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-2xl border-2 border-[#639922]/30 bg-[#639922]/10">
-                    <UserCircle className="h-10 w-10 text-white/40" />
+                    <UserCircle className="h-10 w-10 text-foreground/40" />
                   </div>
                 )}
 
                 {profile.isVerified && (
                   <div className="absolute -bottom-1 -right-1 rounded-full bg-[#639922] border-2 border-[#0b0c0e] p-1">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
+                    <CheckCircle2 className="h-4 w-4 text-foreground" />
                   </div>
                 )}
               </div>
 
               {/* USER INFO */}
               <div className="min-w-0 text-center sm:text-left flex-1">
-                <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">
                   {profile.first_name} {profile.last_name}
                 </h1>
 
-                <p className="mt-1 text-sm text-white/40 capitalize">
+                <p className="mt-1 text-sm text-foreground/40 capitalize">
                   {profile.role}
                 </p>
 
@@ -198,7 +198,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                       "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
                       profile.university_connection_status
                         ? "border-[#639922]/30 bg-[#639922]/10 text-[#639922]"
-                        : "border-white/10 bg-white/5 text-white/40"
+                        : "border-white/10 bg-white/5 text-foreground/40"
                     )}
                   >
                     <Building2 className="h-3 w-3" />
@@ -223,7 +223,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                     r="42"
                     strokeWidth="8"
                     fill="none"
-                    className="text-white/10"
+                    className="text-foreground/10"
                     stroke="currentColor"
                   />
                   <circle
@@ -243,10 +243,10 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                 </svg>
 
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg sm:text-xl font-bold text-white">
+                  <span className="text-lg sm:text-xl font-bold text-foreground">
                     {completeness}%
                   </span>
-                  <span className="text-[10px] uppercase text-white/40">
+                  <span className="text-[10px] uppercase text-foreground/40">
                     Complete
                   </span>
                 </div>

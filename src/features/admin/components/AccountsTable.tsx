@@ -11,7 +11,7 @@ interface AccountsTableProps {
 
 export const AccountsTable = ({ profiles, actionLoading, onStatusChange, onDelete }: AccountsTableProps) => (
   <div className="rounded-xl border border-white/10 overflow-hidden">
-    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b border-white/10 bg-white/[0.02] px-5 py-3 text-xs font-medium uppercase tracking-wider text-white/30">
+    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b border-white/10 bg-white/[0.02] px-5 py-3 text-xs font-medium uppercase tracking-wider text-foreground/30">
       <span>User</span>
       <span className="hidden sm:block">Role</span>
       <span className="hidden sm:block">Status</span>

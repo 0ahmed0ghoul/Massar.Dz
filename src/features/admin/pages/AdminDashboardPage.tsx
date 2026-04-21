@@ -24,7 +24,7 @@ export const AdminDashboardPage = () => {
   const totalPending = stats ? stats.pendingUniversities + stats.pendingCompanies : 0;
 
   return (
-    <div className="relative min-h-screen bg-[#0b0c0e]">
+    <div className="relative min-h-screen bg-background">
       {/* Grid texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -35,7 +35,7 @@ export const AdminDashboardPage = () => {
         }}
       />
       {/* Green glow orbs */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
 
       <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -47,20 +47,20 @@ export const AdminDashboardPage = () => {
                 <Shield className="h-6 w-6 text-[#639922]" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white sm:text-4xl">Admin Dashboard</h1>
-                <p className="mt-1 text-sm text-white/40">
+                <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Admin Dashboard</h1>
+                <p className="mt-1 text-sm text-foreground/40">
                   Overview of platform activity and pending verifications
                 </p>
               </div>
             </div>
-            <p className="mt-2 text-xs text-white/30">
+            <p className="mt-2 text-xs text-foreground/30">
               Last refreshed at {lastRefresh.toLocaleTimeString()}
             </p>
           </div>
           <button
             onClick={loadStats}
             disabled={loading}
-            className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/60 backdrop-blur-sm transition-all hover:border-[#639922]/30 hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
+            className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-foreground/60 backdrop-blur-sm transition-all hover:border-[#639922]/30 hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 transition-transform duration-300 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
             Refresh
@@ -83,8 +83,8 @@ export const AdminDashboardPage = () => {
                   <Clock className="h-6 w-6 text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-white">Pending Verifications</p>
-                  <p className="text-sm text-white/40">
+                  <p className="font-semibold text-foreground">Pending Verifications</p>
+                  <p className="text-sm text-foreground/40">
                     {totalPending > 0 
                       ? `${totalPending} account${totalPending > 1 ? "s" : ""} waiting for review` 
                       : "All clear — no pending accounts"}
@@ -103,14 +103,14 @@ export const AdminDashboardPage = () => {
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5">
-                  <Users className="h-6 w-6 text-white/60" />
+                  <Users className="h-6 w-6 text-foreground/60" />
                 </div>
                 <div>
-                  <p className="font-semibold text-white">All Accounts</p>
-                  <p className="text-sm text-white/40">Browse, search and manage all users</p>
+                  <p className="font-semibold text-foreground">All Accounts</p>
+                  <p className="text-sm text-foreground/40">Browse, search and manage all users</p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-white/40 transition-transform duration-300 group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 text-foreground/40 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </Link>
         </div>
@@ -120,10 +120,10 @@ export const AdminDashboardPage = () => {
           <div className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30 sm:p-6">
             <div className="mb-5 flex items-center gap-2 border-b border-white/10 pb-3">
               <Shield className="h-5 w-5 text-[#639922]" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-white/60">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
                 Role Breakdown
               </h2>
-              <span className="ml-auto text-xs text-white/30">Total: {stats.total}</span>
+              <span className="ml-auto text-xs text-foreground/30">Total: {stats.total}</span>
             </div>
             <div className="space-y-4">
               {[
@@ -140,9 +140,9 @@ export const AdminDashboardPage = () => {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <Icon className="h-3.5 w-3.5" style={{ color: row.color }} />
-                        <span className="text-white/70">{row.label}</span>
+                        <span className="text-foreground/70">{row.label}</span>
                       </div>
-                      <span className="font-medium text-white">{row.value}</span>
+                      <span className="font-medium text-foreground">{row.value}</span>
                     </div>
                     <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                       <div
@@ -158,7 +158,7 @@ export const AdminDashboardPage = () => {
         )}
 
         {/* Additional Info (if needed) */}
-        <div className="mt-6 text-center text-xs text-white/30">
+        <div className="mt-6 text-center text-xs text-foreground/30">
           <p>Platform health: All systems operational</p>
         </div>
       </div>

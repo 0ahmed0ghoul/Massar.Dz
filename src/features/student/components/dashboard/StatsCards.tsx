@@ -12,8 +12,8 @@ const StatsCards = ({ stats }: { stats: any[] }) => {
         >
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-white/40">{stat.label}</p>
-              <h3 className="mt-1 text-3xl font-black text-white">{stat.value}</h3>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-foreground/40">{stat.label}</p>
+              <h3 className="mt-1 text-3xl font-black text-foreground">{stat.value}</h3>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#639922]/10 text-[#639922] transition-transform group-hover:scale-110">
               {icons[i % icons.length]}
