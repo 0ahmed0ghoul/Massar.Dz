@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Briefcase, Twitter, Linkedin, Github, Mail, MapPin, Phone, Sparkles } from "lucide-react";
-
+import MassarLogo from "@/assets/Logo-icon.jpg";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -27,7 +27,7 @@ const Footer = () => {
           {/* Brand column */}
           <div className="lg:col-span-2">
             <Link to="/" className="group inline-flex items-center gap-2 text-xl font-bold transition-all">
-              <img src="src/assets/Logo-icon.jpg" alt="Massar Logo" className="h-5 w-5" />
+              <img src={MassarLogo} alt="Massar Logo" className="h-5 w-5" />
               <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Massar
               </span>

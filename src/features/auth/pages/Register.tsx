@@ -99,7 +99,9 @@ const Register = () => {
               )}
 
               <div className="mx-auto mb-3">
+                <Link to={'/'}>
                 <img src={MassarLogo} className="h-10 w-10" alt="Massar Logo" />
+                </Link>
               </div>
 
               <CardTitle className="text-foreground bg-transparent">

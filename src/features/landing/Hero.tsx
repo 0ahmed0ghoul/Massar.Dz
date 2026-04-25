@@ -38,8 +38,11 @@ const Hero = () => {
   // Initialize theme from localStorage or system preference
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    const shouldBeDark =
+      savedTheme === "dark" || (!savedTheme && systemPrefersDark);
     setIsDark(shouldBeDark);
     if (shouldBeDark) {
       document.documentElement.classList.add("dark");
@@ -61,7 +64,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-background transition-colors h-[100vh]">
+    <section className="relative overflow-hidden bg-background transition-colors">
       {/* Grid Pattern – guaranteed visible in both themes */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -96,8 +99,7 @@ const Hero = () => {
             <span className="font-extrabold text-foreground [WebkitTextStroke:1.5px_rgba(0,0,0,0.4)] dark:[WebkitTextStroke:1.5px_rgba(255,255,255,0.45)]">
               talent
             </span>{" "}
-            meets{" "}
-            <span className="text-primary">opportunity</span>
+            meets <span className="text-primary">opportunity</span>
             <br />— powered by data
           </h1>
 
@@ -109,12 +111,18 @@ const Hero = () => {
 
           {/* CTAs */}
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Button size="lg" asChild className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link to="/register/student">
+            <Button
+              size="lg"
+              asChild
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Link to="/register">
                 Find your next role <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/internships">Explore internships</Link>
+            </Button>
             <Button
               size="lg"
               variant="outline"
@@ -146,7 +154,10 @@ const Hero = () => {
             </div>
 
             <p className="text-xs leading-snug text-muted-foreground">
-              <span className="font-medium text-foreground">45,000+ students</span> already matched
+              <span className="font-medium text-foreground">
+                45,000+ students
+              </span>{" "}
+              already matched
               <br />
               across 120+ universities worldwide
             </p>
@@ -158,18 +169,24 @@ const Hero = () => {
           {/* Match card */}
           <div
             className={`absolute left-[8%] top-0 w-72 rounded-2xl border bg-card/60 p-4 backdrop-blur-md ${
-              !isDark ? "border-primary/20 shadow-lg shadow-primary/20" : "border-border"
+              !isDark
+                ? "border-primary/20 shadow-lg shadow-primary/20"
+                : "border-border"
             }`}
             style={{ animation: "floatA 5s ease-in-out infinite" }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Top match</span>
+              <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Top match
+              </span>
               <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold text-primary">
                 {topMatch.score}%
               </span>
             </div>
 
-            <p className="text-[16px] font-bold text-foreground">{topMatch.role}</p>
+            <p className="text-[16px] font-bold text-foreground">
+              {topMatch.role}
+            </p>
             <p className="mb-3 text-[12px] text-muted-foreground">
               {topMatch.company} · {topMatch.location}
             </p>
@@ -187,16 +204,23 @@ const Hero = () => {
 
             <div className="flex items-center gap-2.5">
               <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${topMatch.score}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${topMatch.score}%` }}
+                />
               </div>
-              <span className="text-[12px] font-semibold text-primary">{topMatch.score}%</span>
+              <span className="text-[12px] font-semibold text-primary">
+                {topMatch.score}%
+              </span>
             </div>
           </div>
 
           {/* Weekly stats */}
           <div
             className={`absolute right-0 top-1/2 w-56 -translate-y-1/2 rounded-2xl border bg-card/60 p-4 backdrop-blur-md ${
-              !isDark ? "border-primary/20 shadow-lg shadow-primary/20" : "border-border"
+              !isDark
+                ? "border-primary/20 shadow-lg shadow-primary/20"
+                : "border-border"
             }`}
             style={{ animation: "floatB 6s ease-in-out infinite" }}
           >
@@ -204,8 +228,12 @@ const Hero = () => {
               <Activity className="h-4 w-4 text-primary" />
             </div>
 
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">New opportunities</p>
-            <p className="mt-0.5 text-[22px] font-black text-foreground">{weeklyStats.count}</p>
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              New opportunities
+            </p>
+            <p className="mt-0.5 text-[22px] font-black text-foreground">
+              {weeklyStats.count}
+            </p>
             <p className="text-[12px] text-muted-foreground">roles this week</p>
 
             <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-primary">
@@ -217,7 +245,9 @@ const Hero = () => {
           {/* Profile card */}
           <div
             className={`absolute bottom-0 left-0 w-64 rounded-2xl border bg-card/60 p-4 backdrop-blur-md ${
-              !isDark ? "border-primary/20 shadow-lg shadow-primary/20" : "border-border"
+              !isDark
+                ? "border-primary/20 shadow-lg shadow-primary/20"
+                : "border-border"
             }`}
             style={{ animation: "floatC 7s ease-in-out infinite" }}
           >
@@ -226,22 +256,32 @@ const Hero = () => {
                 {profileCard.initials}
               </div>
               <div>
-                <p className="text-[14px] font-semibold text-foreground">{profileCard.name}</p>
-                <p className="text-[11px] text-muted-foreground">{profileCard.uni}</p>
+                <p className="text-[14px] font-semibold text-foreground">
+                  {profileCard.name}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {profileCard.uni}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <p className="text-[16px] font-bold text-foreground">{profileCard.apps}</p>
+                <p className="text-[16px] font-bold text-foreground">
+                  {profileCard.apps}
+                </p>
                 <p className="text-[10px] text-muted-foreground">Apps</p>
               </div>
               <div>
-                <p className="text-[16px] font-bold text-foreground">{profileCard.interviews}</p>
+                <p className="text-[16px] font-bold text-foreground">
+                  {profileCard.interviews}
+                </p>
                 <p className="text-[10px] text-muted-foreground">Interviews</p>
               </div>
               <div>
-                <p className="text-[16px] font-bold text-foreground">{profileCard.matchRate}</p>
+                <p className="text-[16px] font-bold text-foreground">
+                  {profileCard.matchRate}
+                </p>
                 <p className="text-[10px] text-muted-foreground">Match</p>
               </div>
             </div>

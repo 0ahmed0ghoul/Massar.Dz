@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/shared/DashboardLayout";
 
 import Landing from "@/features/landing/pages/Landing";
 import StudentDashboard from "@/features/student/pages/DashboardPage";
-import JobsPage from "@/features/student/pages/JobsPage";
 import ApplicationsPage from "@/features/student/pages/ApplicationsPage";
 import CompanyDashboard from "@/features/company/pages/CompanyDashboard";
 import Login from "@/features/auth/pages/Login";
@@ -31,17 +30,27 @@ import { InboxPage } from "@/features/messaging/pages/InboxPage";
 import { ConversationPage } from "@/features/messaging/pages/ConversationPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
 import MessagesPage from "@/features/student/pages/MessagesPage";
+import JobsPage from "@/features/jobs/pages/JobsPage";
+import StudentJobsPage from "@/features/student/pages/JobsPage";
+import InternshipsPage from "@/features/internships/pages/InternshipsPage";
+import JobDetailPage from "@/features/jobs/pages/JobDetailPage";
+import InternshipDetailPage from "@/features/internships/pages/InternshipDetailPage";
+import AuthPage from "@/features/auth/pages/AuthPage";
+
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* ================= PUBLIC ================= */}
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/register" element={<AuthPage />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
       <Route path="/complete-profile" element={<CompleteProfilePage />} />
-
+      <Route path="/jobs" element={<JobsPage />} />
+      <Route path="/internships" element={<InternshipsPage />} />
+      <Route path="/jobs/:id" element={<JobDetailPage />} />
+      <Route path="/internships/:id" element={<InternshipDetailPage />} />
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
         {/* ================= STUDENT ================= */}
@@ -52,7 +61,7 @@ const AppRoutes = () => {
               path="/student/dashboard/profile"
               element={<ProfilePage />}
             />
-            <Route path="/student/dashboard/jobs" element={<JobsPage />} />
+            <Route path="/student/dashboard/jobs" element={<StudentJobsPage />} />
             <Route
               path="/student/dashboard/applications"
               element={<ApplicationsPage />}
@@ -129,7 +138,6 @@ const AppRoutes = () => {
         <Route path="/messages" element={<InboxPage />} />
         <Route path="/messages/:id" element={<ConversationPage />} />
 
-        <Route path="/jobs" element={<JobsPage />} />
 
         {/* ================= ADMIN ================= */}
         <Route element={<DashboardLayout role="super_admin" />}>
