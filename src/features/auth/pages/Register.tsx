@@ -11,17 +11,16 @@ import { useToast } from "@/components/ui/use-toast";
 import MassarLogo from "@/assets/Logo-icon.jpg";
 
 import { useRegister } from "../hooks/useRegister";
-import { UserRole } from "@/constants/roles";
-
 import { RoleSelector } from "../components/RoleSelector";
 import { VerificationStep } from "../components/VerificationStep";
 import { StudentForm } from "../components/forms/StudentForm";
 import { CompanyForm } from "../components/forms/CompanyForm";
 import { UniversityForm } from "../components/forms/UniversityForm";
+import { UserRole } from "@/domain/profile.types";
 
 const META: Record<UserRole, { title: string; description: string }> = {
   student: {
-    title: "Student",
+    title: "Candidate",
     description: "Find internships and jobs",
   },
   company_admin: {
@@ -30,11 +29,19 @@ const META: Record<UserRole, { title: string; description: string }> = {
   },
   university_admin: {
     title: "University (Pending)",
-    description: "Awaiting verification",
+    description: "",
   },
   super_admin: {
     title: "Super Admin",
     description: "Full system control",
+  },
+  graduate: {
+    title: "Graduate",
+    description: "Explore career opportunities",
+  },
+  professional: {
+    title: "Professional",
+    description: "Advance your career",
   },
 };
 
@@ -58,7 +65,7 @@ const Register = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
-      {/* Grid pattern using theme variables */}
+      {/* Grid pattern */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -99,8 +106,12 @@ const Register = () => {
               )}
 
               <div className="mx-auto mb-3">
-                <Link to={'/'}>
-                <img src={MassarLogo} className="h-10 w-10" alt="Massar Logo" />
+                <Link to="/">
+                  <img
+                    src={MassarLogo}
+                    className="h-10 w-10"
+                    alt="Massar Logo"
+                  />
                 </Link>
               </div>
 
@@ -114,9 +125,13 @@ const Register = () => {
             </CardHeader>
 
             <CardContent className="pt-6">
-              {/* ROLE */}
+              {/* ROLE SELECTION */}
+              {/* ROLE SELECTION */}
               {step === "role" && (
-                <RoleSelector selected={role} onSelect={handleRoleSelect} />
+                <RoleSelector
+                  selectedRole={role}
+                  onRoleSelect={handleRoleSelect}
+                />
               )}
 
               {/* FORMS */}
@@ -143,7 +158,7 @@ const Register = () => {
             </CardContent>
           </Card>
         )}
-        
+
         <div className="mt-6 space-y-2 text-center text-xs text-muted-foreground/60">
           <div>By continuing you agree to Terms & Privacy</div>
           <div className="text-sm">

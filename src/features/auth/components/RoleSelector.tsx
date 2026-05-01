@@ -1,5 +1,5 @@
-import { UserRole } from "@/domain/profile.types";
 import { GraduationCap, Building2, School } from "lucide-react";
+import { UserRole } from "@/domain/profile.types";
 
 interface RoleOption {
   role: UserRole;
@@ -14,12 +14,14 @@ const ROLES: RoleOption[] = [
   {
     role: "student",
     icon: <GraduationCap className="h-7 w-7" />,
-    title: "Student",
+    title: "Candidate",
     description: "Find internships, jobs & build your career",
   },
   {
     role: "company_admin",
     icon: <Building2 className="h-7 w-7" />,
+    badge: "Requires Approval",
+    badgeColor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     title: "Company",
     description: "Post jobs and hire top talent",
   },
@@ -34,20 +36,20 @@ const ROLES: RoleOption[] = [
 ];
 
 interface RoleSelectorProps {
-  selected: UserRole | null;
-  onSelect: (role: UserRole) => void;
+  selectedRole: UserRole | null;
+  onRoleSelect: (role: UserRole) => void;
 }
 
-export function RoleSelector({ selected, onSelect }: RoleSelectorProps) {
+export function RoleSelector({ selectedRole, onRoleSelect }: RoleSelectorProps) {
   return (
     <div className="space-y-3">
       {ROLES.map(({ role, icon, title, description, badge, badgeColor }) => {
-        const isSelected = selected === role;
+        const isSelected = selectedRole === role;
         return (
           <button
             key={role}
             type="button"
-            onClick={() => onSelect(role)}
+            onClick={() => onRoleSelect(role)}
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-all duration-200
               ${
                 isSelected

@@ -156,14 +156,7 @@ export const AdminPendingPage = () => {
           </div>
         </div>
 
-        {/* Help text */}
-        {displayedProfiles.length === 0 && !loading && (
-          <div className="mt-6 rounded-2xl border border-white/[0.09] bg-white/[0.02] p-8 text-center backdrop-blur-sm">
-            <Shield className="mx-auto h-12 w-12 text-foreground/20" />
-            <p className="mt-3 text-foreground/40">No pending verification requests at the moment.</p>
-            <p className="text-sm text-foreground/30">Check back later or refresh.</p>
-          </div>
-        )}
+
       </div>
     </div>
   );

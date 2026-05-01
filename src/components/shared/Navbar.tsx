@@ -80,7 +80,9 @@ const Navbar = () => {
   };
 
   const getDashboard = () => {
-    if (profile?.status === "pending") return "/pending-approval";
+  if (profile?.status === "pending") return "/pending-approval";   
+   if (!profile?.is_completed ) return "/complete-profile";
+
     switch (role) {
       case ROLES.STUDENT: return "/student/dashboard";
       case ROLES.COMPANY_ADMIN: return "/dashboard/company";
@@ -216,16 +218,6 @@ const Navbar = () => {
                       Dashboard
                     </button>
                     <button
-                      onClick={() => {
-                        navigate(getDashboard() + "/profile");
-                        setOpenMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors"
-                      role="menuitem"
-                    >
-                      Profile
-                    </button>
-                    <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                       role="menuitem"
@@ -353,11 +345,6 @@ const Navbar = () => {
                     <Button variant="ghost" asChild className="w-full justify-start gap-3">
                       <Link to={getDashboard()} onClick={closeMobileMenu}>
                         Dashboard
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" asChild className="w-full justify-start gap-3">
-                      <Link to={getDashboard() + "/profile"} onClick={closeMobileMenu}>
-                        Profile
                       </Link>
                     </Button>
                     <Button

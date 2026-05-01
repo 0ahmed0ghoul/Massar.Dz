@@ -31,9 +31,6 @@ const REQUIRED_STUDENT_FIELDS: (keyof Profile)[] = [
 ];
 
 export const studentService = {
-  /**
-   * Fetch all available jobs
-   */
   async getJobs(): Promise<Job[]> {
     const { data, error } = await supabase
       .from("jobs")
@@ -47,9 +44,6 @@ export const studentService = {
     return data || [];
   },
 
-  /**
-   * Fetch applications for a given student, including the related job details
-   */
   async getApplications(studentId: string): Promise<ApplicationWithJob[]> {
     const { data, error } = await supabase
       .from("applications")
@@ -71,9 +65,7 @@ export const studentService = {
     return data || [];
   },
 
-  /**
-   * Fetch activities for a given student
-   */
+
   async getActivities(studentId: string): Promise<Activity[]> {
     const { data, error } = await supabase
       .from("activities")
@@ -88,9 +80,6 @@ export const studentService = {
     return data || [];
   },
 
-  /**
-   * Fetch interviews for a given student
-   */
   async getInterviews(studentId: string): Promise<Interview[]> {
     const { data, error } = await supabase
       .from("interviews")
@@ -105,9 +94,6 @@ export const studentService = {
     return data || [];
   },
 
-  /**
-   * Fetch a student's profile
-   */
   async getProfile(studentId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")

@@ -4,7 +4,7 @@ import { MapPin, DollarSign, Briefcase, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/types/database";
 
-type Job = Tables<"jobs"> & { skills?: string[] };
+type Job = Tables<"jobs"> & { skills?: string[][] };
 
 interface JobCardProps {
   job: Job;

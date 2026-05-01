@@ -1,3 +1,4 @@
+// AuthPage.tsx
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader2, TrendingUp, Activity } from "lucide-react";
@@ -34,7 +35,6 @@ const avatars = [
 function PreviewPanel() {
   return (
     <div className="relative hidden lg:flex flex-col justify-between h-full p-12 border-r border-border overflow-hidden">
-      {/* Same grid as Hero */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -45,19 +45,15 @@ function PreviewPanel() {
           backgroundSize: "48px 48px",
         }}
       />
-      {/* Same glow class as Hero */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full gradient-hero blur-3xl opacity-60" />
 
-      {/* Logo */}
       <Link to="/" className="relative z-10 flex items-center gap-2.5 w-fit">
         <img src={MassarLogo} alt="Massar" className="h-8 w-8 rounded-lg border border-border" />
         <span className="font-bold text-foreground text-base tracking-tight">Massar</span>
       </Link>
 
-      {/* Floating cards — exact same style as Hero right panel */}
       <div className="relative z-10 flex-1 flex items-center">
         <div className="relative w-full h-[360px]">
-
           {/* Top-match card */}
           <div
             className="absolute left-0 top-0 w-64 rounded-2xl border bg-card/60 p-4 backdrop-blur-md border-primary/20 shadow-lg shadow-primary/10"
@@ -127,7 +123,6 @@ function PreviewPanel() {
         </div>
       </div>
 
-      {/* Bottom tagline */}
       <p className="relative z-10 text-[11px] text-muted-foreground/50 tracking-widest uppercase font-medium">
         — Built for ambition.
       </p>
@@ -223,15 +218,24 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
 /* ── Register flow ─────────────────────────────────────── */
 function RegisterFlow({ onSwitch }: { onSwitch: () => void }) {
   const {
-    step, role, isLoading, verificationCode, resendCooldown,
-    pendingEmail, setVerificationCode, setStep,
-    handleRoleSelect, handleFormSubmit, handleVerify, handleResendCode,
+    step,
+    role,
+    isLoading,
+    verificationCode,
+    resendCooldown,
+    pendingEmail,
+    setVerificationCode,
+    setStep,
+    handleRoleSelect,
+    handleFormSubmit,
+    handleVerify,
+    handleResendCode,
   } = useRegister();
 
   const META: Record<string, { title: string; desc: string }> = {
     student:          { title: "Student",    desc: "Find internships and jobs" },
     company_admin:    { title: "Company",    desc: "Post jobs & manage candidates" },
-    university_admin: { title: "University", desc: "Awaiting verification" },
+    university_admin: { title: "University", desc: "" },
     super_admin:      { title: "Super Admin",desc: "Full system control" },
   };
   const meta = role ? META[role] : null;
@@ -275,10 +279,22 @@ function RegisterFlow({ onSwitch }: { onSwitch: () => void }) {
             )}
           </div>
 
-          {step === "role"                                    && <RoleSelector    selected={role} onSelect={handleRoleSelect} />}
-          {step === "form" && role === "student"              && <StudentForm     isLoading={isLoading} onSubmit={handleFormSubmit} />}
-          {step === "form" && role === "company_admin"        && <CompanyForm     isLoading={isLoading} onSubmit={handleFormSubmit} />}
-          {step === "form" && role === "university_admin"     && <UniversityForm  isLoading={isLoading} onSubmit={handleFormSubmit} />}
+          {/* RoleSelector – only main roles (no company type) */}
+          {step === "role" && (
+            <RoleSelector selectedRole={role} onRoleSelect={handleRoleSelect} />
+          )}
+
+          {step === "form" && role === "student" && (
+            <StudentForm isLoading={isLoading} onSubmit={handleFormSubmit} />
+          )}
+
+          {step === "form" && role === "company_admin" && (
+            <CompanyForm isLoading={isLoading} onSubmit={handleFormSubmit} />
+          )}
+
+          {step === "form" && role === "university_admin" && (
+            <UniversityForm isLoading={isLoading} onSubmit={handleFormSubmit} />
+          )}
 
           {step === "role" && (
             <p className="text-center text-sm text-foreground/40 mt-5">

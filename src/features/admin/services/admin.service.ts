@@ -7,15 +7,15 @@ export interface Profile {
   first_name: string;
   last_name: string;
   role: string;
-  status: string;
+  status: string;               // active, pending, rejected
   university_name?: string;
   company_name?: string;
   industry?: string;
   degree_level?: string;
-  city?: string;
+  wilaya?: string;
   created_at: string;
-  is_completed?: boolean;
-  is_verified?: boolean;
+  is_completed?: boolean;       // profile completion flag
+  status?: string; // pending, approved, rejected, null
 }
 
 export interface AdminStats {
@@ -52,14 +52,15 @@ export const adminService = {
     return data as Profile[];
   },
 
-  // Fetch pending students (is_completed = true, is_verified = false, role = student)
+  // Fetch pending students:
+  // - those who have completed their profile but status = 'pending'
+  // - or those who have not completed their profile (is_completed = false)
   async getPendingStudents(): Promise<Profile[]> {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("role", "student")
-      .eq("is_completed", true)
-      .eq("is_verified", false)
+      .or(`is_completed.eq.false,status.eq.pending`)
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data as Profile[];
@@ -87,16 +88,20 @@ export const adminService = {
     if (error) throw error;
   },
 
-  // Approve student (set is_verified = true)
+  // Approve student: mark profile as completed and verified
   async approveStudent(id: string): Promise<void> {
     const { error } = await supabase
       .from("profiles")
-      .update({ is_verified: true })
+      .update({
+        is_completed: true,
+        status: "approved",
+        status: "active",
+      })
       .eq("id", id);
     if (error) throw error;
   },
 
-  // Delete profile
+  // Delete profile (for rejection of students or institutions)
   async deleteProfile(id: string): Promise<void> {
     const { error } = await supabase.from("profiles").delete().eq("id", id);
     if (error) throw error;
@@ -104,18 +109,23 @@ export const adminService = {
 
   // Compute stats
   async getStats(): Promise<AdminStats> {
-    const { data, error } = await supabase.from("profiles").select("role, status, is_completed, is_verified");
+    const { data, error } = await supabase.from("profiles").select("role, status, is_completed, status");
     if (error) throw error;
 
     const students = data.filter(p => p.role === "student");
+    const companies = data.filter(p => p.role === "company_admin");
+    const universities = data.filter(p => p.role === "university_admin");
+
     return {
       total: data.length,
       students: students.length,
-      companies: data.filter(p => p.role === "company_admin" && p.status === "active").length,
-      universities: data.filter(p => p.role === "university_admin" && p.status === "active").length,
-      pendingUniversities: data.filter(p => p.role === "university_admin" && p.status === "pending").length,
-      pendingCompanies: data.filter(p => p.role === "company_admin" && p.status === "pending").length,
-      pendingStudents: students.filter(s => s.is_completed === true && s.is_verified === false).length,
+      companies: companies.filter(c => c.status === "active").length,
+      universities: universities.filter(u => u.status === "active").length,
+      pendingUniversities: universities.filter(u => u.status === "pending").length,
+      pendingCompanies: companies.filter(c => c.status === "pending").length,
+      pendingStudents: students.filter(s =>
+        s.is_completed === false || s.status === "pending"
+      ).length,
       rejected: data.filter(p => p.status === "rejected").length,
     };
   },

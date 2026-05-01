@@ -1,73 +1,12 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
+// layouts/DashboardLayout.tsx
+import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
-import { useToast } from "@/components/ui/use-toast";
-import LogoIcon from "@/assets/Logo-icon.jpg";
-import { Menu, X, ChevronLeft, Clock, Paperclip, Star, MessageCircleMore } from "lucide-react";
-import {
-  LayoutDashboard,
-  User,
-  FileText,
-  Heart,
-  Bell,
-  Building2,
-  Users,
-  Search,
-  BarChart3,
-  LogOut,
-  Briefcase,
-} from "lucide-react";
+import { Menu, ChevronLeft } from "lucide-react";
+import { DashboardSidebar } from "./DashboardSidebar";
 
-/* ---------------- TYPES ---------------- */
-
-type UserRole =
-  | "student"
-  | "company_admin"
-  | "university_admin"
-  | "super_admin";
-
-/* ---------------- NAV CONFIG ---------------- */
-
-const navMap: Record<UserRole, any[]> = {
-  student: [
-    { title: "Dashboard", url: "student/dashboard", icon: LayoutDashboard },
-    { title: "Profile", url: "/student/dashboard/profile", icon: User },
-    { title: "Certificate", url: "/student/dashboard/certificate", icon: Paperclip },
-    { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
-    { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
-    { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
-    { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMore },
-
-    { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
-  ],
-  company_admin: [
-    { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
-    { title: "Profile", url: "/dashboard/company/profile", icon: User },
-    { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
-    { title: "Applications", url: "/dashboard/company/applications", icon: FileText },
-    { title: "Talent", url: "/dashboard/company/talent", icon: Star },
-
-  ],
-  university_admin: [
-    { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
-    { title: "Profile", url: "/university/dashboard/profile", icon: User },
-    { title: "Students", url: "/university/dashboard/students", icon: Users },
-    { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
-  ],
-  super_admin: [
-    { title: "Dashboard",    url: "/dashboard/admin",          icon: LayoutDashboard },
-    { title: "Pending",      url: "/dashboard/admin/pending",  icon: Clock           },
-    { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users           },
-  ],
-};
-
-const roleLabels: Record<UserRole, string> = {
-  student: "Student",
-  company_admin: "Employer",
-  university_admin: "University",
-  super_admin: "Admin",
-};
+type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
 
 const roleColors: Record<UserRole, string> = {
   student: "#639922",
@@ -76,122 +15,74 @@ const roleColors: Record<UserRole, string> = {
   super_admin: "#EF4444",
 };
 
-/* ---------------- SIDEBAR ---------------- */
-
-interface AppSidebarProps {
-  role: UserRole;
-  isOpen: boolean;
-  isCollapsed: boolean;
-  onClose: () => void;
-}
-
-function AppSidebar({ role, isOpen, isCollapsed, onClose }: AppSidebarProps) {
-  const items = navMap[role];
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({ title: "Logged out" });
-    navigate("/login");
-  };
-
-  // Width classes: full on mobile, w-64 on desktop when expanded, w-20 when collapsed
-  const sidebarWidth = isCollapsed ? "w-20" : "w-64";
-  const mobileWidth = "w-full"; // on mobile, sidebar takes full width
-
-  return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 
-          bg-background text-foreground transition-all duration-300 ease-in-out
-          md:relative
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0
-          ${sidebarWidth}
-          ${isOpen ? mobileWidth : ""}
-        `}
-      >
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className={`flex items-center border-b border-white/10 p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
-            {!isCollapsed && (
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(`/`)}>
-                <img src={LogoIcon} className="h-5 w-5" alt="Logo" />
-                <span className="font-bold">Massar</span>
-                <span className="text-foreground/40 text-sm">{roleLabels[role]}</span>
-              </div>
-            )}
-            {isCollapsed && (
-              <img src={LogoIcon} className="h-5 w-5 cursor-pointer" onClick={() => navigate(`/`)} alt="Logo" />
-            )}
-            <button
-              onClick={onClose}
-              className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-1">
-            {items.map((item) => {
-              const active = location.pathname === item.url;
-              return (
-                <Link
-                  key={item.title}
-                  to={item.url}
-                  onClick={() => onClose()}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                    active ? "bg-white/10 text-foreground" : "text-foreground/50 hover:text-foreground"
-                  } ${isCollapsed ? "justify-center" : ""}`}
-                  title={isCollapsed ? item.title : undefined}
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  {!isCollapsed && <span>{item.title}</span>}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Logout Button */}
-          <div className={`p-3 border-t border-white/10 ${isCollapsed ? "text-center" : ""}`}>
-            <button
-              onClick={handleLogout}
-              className={`flex items-center gap-2 text-red-400 text-sm ${isCollapsed ? "justify-center w-full" : ""}`}
-              title={isCollapsed ? "Logout" : undefined}
-            >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
-              {!isCollapsed && <span>Logout</span>}
-            </button>
-          </div>
-        </div>
-      </aside>
-    </>
-  );
-}
-
-/* ---------------- LAYOUT ---------------- */
-
 interface Props {
   role: UserRole;
 }
 
 const DashboardLayout = ({ role }: Props) => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0); // ✅ new state
+
+  // Fetch unread notification count (unchanged)
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnreadCount = async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (!error && count !== null) setNotificationCount(count);
+    };
+    fetchUnreadCount();
+    const channel = supabase
+      .channel("notifications-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => fetchUnreadCount())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // Check profile completion (unchanged)
+  useEffect(() => {
+    if (profile) setIsProfileComplete(profile.is_completed === true);
+    else setIsProfileComplete(false);
+  }, [profile]);
+
+  // ✅ Fetch pending count for super_admin
+  useEffect(() => {
+    if (role !== "super_admin") return;
+    const fetchPendingCount = async () => {
+      // Count pending institutions (status = 'pending' and role in university_admin, company_admin)
+      const { count: pendingInstitutions, error: instError } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending")
+        .in("role", ["university_admin", "company_admin"]);
+
+      // Count pending students (is_completed = false or status = 'pending')
+      const { count: pendingStudents, error: studentError } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "student")
+        .or(`is_completed.eq.false,status.eq.pending`);
+
+      if (!instError && !studentError) {
+        setPendingCount((pendingInstitutions || 0) + (pendingStudents || 0));
+      }
+    };
+    fetchPendingCount();
+
+    // Optional: subscribe to realtime changes (simplified, could also refresh periodically)
+    const channel = supabase
+      .channel("pending-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => fetchPendingCount())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [role]);
 
   const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
   const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
@@ -199,18 +90,21 @@ const DashboardLayout = ({ role }: Props) => {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <AppSidebar
+      <DashboardSidebar
         role={role}
         isOpen={sidebarOpen}
         isCollapsed={sidebarCollapsed}
         onClose={() => setSidebarOpen(false)}
+        notificationCount={notificationCount}
+        isProfileComplete={isProfileComplete}
+        pendingCount={pendingCount} // ✅ pass new prop
+
       />
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="h-14 flex items-center justify-between border-b border-white/10 px-4">
           <div className="flex items-center gap-2">
-            {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden"
@@ -218,7 +112,6 @@ const DashboardLayout = ({ role }: Props) => {
             >
               <Menu className="h-5 w-5" />
             </button>
-            {/* Desktop collapse/expand button */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="hidden md:flex rounded-md p-1 text-foreground/60 hover:text-foreground"
@@ -228,13 +121,11 @@ const DashboardLayout = ({ role }: Props) => {
             </button>
           </div>
 
-          {/* User info – responsive text */}
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
               <p className="text-xs text-foreground/40 truncate max-w-[150px]">{email}</p>
             </div>
-            {/* Always show avatar, but hide text on very small */}
             <div className="text-right block sm:hidden">
               <p className="text-sm font-medium">{fullName?.split(' ')[0] || "User"}</p>
             </div>
@@ -256,7 +147,7 @@ const DashboardLayout = ({ role }: Props) => {
           </div>
         </header>
 
-        {/* Main content – responsive padding */}
+        {/* Main content */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <Outlet />
         </main>

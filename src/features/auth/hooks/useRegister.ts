@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { authService } from "../service/auth.service";
 import { useVerification } from "./useVerification";
-import type { UserRole } from "@/constants/roles";
+import { CompanyType, UserRole } from "@/domain/profile.types";
 
 type Step = "role" | "form" | "verify";
 
@@ -15,11 +15,26 @@ export interface RegisterFormData {
   lastName?: string;
   degreeLevel?: string;
   companyName?: string;
+  companyType?: CompanyType;  // ✅ added
   industry?: string;
   universityName?: string;
-  city?: string;
+  wilaya?: string;
+  // additional fields for other roles
+  department?: string;
+  position?: string;
+  graduationYear?: string;
+  university?: string;
+  degree?: string;
+  speciality?: string;
+  skills?: string[];
+  currentRole?: string;
+  company?: string;
+  yearsOfExperience?: string;
+  lookingFor?: string;
+  registrationNumber?: string;
+  location?: string;
 }
-
+type BaseFormData = Partial<RegisterFormData>;
 function normalizeError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
@@ -40,6 +55,7 @@ export const useRegister = () => {
 
   const [step, setStep] = useState<Step>("role");
   const [role, setRole] = useState<UserRole | null>(null);
+  const [roleType, setRoleType] = useState<CompanyType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
@@ -58,10 +74,30 @@ export const useRegister = () => {
     setStep("form");
   };
 
-  const handleFormSubmit = async (data: RegisterFormData) => {
+  const handleRoleTypeSelect = (type: CompanyType) => {
+    setRoleType(type);
+  };
+
+  const handleFormSubmit = async (data: BaseFormData) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setIsLoading(true);
+
+    // Merge roleType into data for company_admin
+    const formDataWithType = { ...data };
+    if (role === "company_admin" && roleType) {
+      formDataWithType.companyType = roleType;
+    }
+
+    // Save pending profile to localStorage
+    const pendingProfile = {
+      email: data.email,
+      role: role,
+      roleType: roleType,
+      profileData: formDataWithType,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem("pending_profile", JSON.stringify(pendingProfile));
 
     try {
       if (!data.email || !data.email.includes("@")) {
@@ -79,7 +115,13 @@ export const useRegister = () => {
         throw new Error("Email already registered. Please login.");
       }
 
-      pendingFormDataRef.current = data;
+      const strictData: RegisterFormData = {
+        ...formDataWithType,
+        email: data.email!,       // safe after validation
+        password: data.password!, // safe after validation
+      };
+      
+      pendingFormDataRef.current = strictData;
       await sendVerificationCode(data.email);
 
       setVerificationCode("");
@@ -126,11 +168,11 @@ export const useRegister = () => {
         description: "Account created successfully.",
       });
 
-      // ✅ NEW REDIRECT LOGIC
+      localStorage.removeItem("pending_profile");
+
       if (role === "student") {
         navigate("/student/dashboard");
       } else if (role === "company_admin" || role === "university_admin") {
-        // Redirect to profile completion (not directly to pending approval)
         navigate("/complete-profile");
       } else {
         navigate("/");
@@ -150,6 +192,7 @@ export const useRegister = () => {
   return {
     step,
     role,
+    roleType,
     isLoading,
     verificationCode,
     resendCooldown,
@@ -157,6 +200,7 @@ export const useRegister = () => {
     setVerificationCode,
     setStep,
     handleRoleSelect,
+    handleRoleTypeSelect,
     handleFormSubmit,
     handleVerify,
     handleResendCode,

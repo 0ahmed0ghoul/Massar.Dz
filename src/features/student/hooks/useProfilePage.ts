@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { studentService } from "@/features/student/services/student.service";
 import { Tables } from "@/types/database";
+import { Profile } from "@/domain/profile.types";
 
-type Profile = Tables<"profiles">;
 
 export const useProfilePage = () => {
   const { user } = useAuth();
@@ -24,6 +24,7 @@ export const useProfilePage = () => {
     try {
       const data = await studentService.getProfile(user.id);
       setProfile(data);
+      console.log('data',data)
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     } finally {
@@ -119,7 +120,7 @@ export const useProfilePage = () => {
   };
 
   const requestUniversityConnection = async () => {
-    if (!user || !profile?.isVerified) return; // use correct snake_case field name
+    if (!user || profile?.status !== 'pending') return; // use correct snake_case field name
     try {
       await studentService.updateProfile(user.id, { university_connection_status: true });
       setProfile((prev) => prev ? { ...prev, university_connection_status: true } : null);

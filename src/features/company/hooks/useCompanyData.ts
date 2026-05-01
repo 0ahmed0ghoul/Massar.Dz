@@ -218,7 +218,7 @@ export function useCompanyData() {
 
   // Candidate management (search, filter)
   const filterCandidates = (filters: {
-    skills?: string[];
+    skills?: string[][];
     university?: string;
     experience?: string;
     location?: string;

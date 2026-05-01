@@ -76,7 +76,7 @@ export const AccountRow = ({ profile, actionLoading, onStatusChange, onDelete }:
               org && { label: "Organisation", value: org },
               profile.industry && { label: "Industry", value: profile.industry },
               profile.degree_level && { label: "Degree", value: profile.degree_level },
-              profile.city && { label: "City", value: profile.city },
+              profile.wilaya && { label: "wilaya", value: profile.wilaya },
             ]
               .filter(Boolean)
               .map((row: any) => (

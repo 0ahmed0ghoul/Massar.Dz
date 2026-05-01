@@ -4,7 +4,7 @@ import { MapPin, Clock, DollarSign, Calendar, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/types/database";
 
-type Internship = Tables<"internships"> & { skills?: string[] };
+type Internship = Tables<"internships"> & { skills?: string[][] };
 
 interface InternshipCardProps {
   internship: Internship;

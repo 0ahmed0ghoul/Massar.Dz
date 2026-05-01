@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Tables } from "@/types/database";
 
 type Internship = Tables<"internships"> & {
-  skills?: string[];
+  skills?: string[][];
 };
 
 const MOCK_INTERNSHIPS: Internship[] = [

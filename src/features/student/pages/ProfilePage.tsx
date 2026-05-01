@@ -49,28 +49,10 @@ const ProfilePage = () => {
       {/* Green glow orb */}
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
 
-      <div className="relative z-10 container mx-auto max-w-6xl px-4 py-6 sm:py-8">
-        {/* Header – stack on mobile, row on larger */}
-        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Student Profile</h1>
-            <p className="text-xs text-foreground/40 sm:text-sm">
-              Manage your academic identity and career readiness
-            </p>
-          </div>
-          <div className="self-end sm:self-auto">
-            <ThemeToggle />
-          </div>
-        </div>
 
         {/* Cards – reduce padding on mobile, keep consistent spacing */}
         <div className="space-y-5 sm:space-y-6">
-          {/* ProfileHeader card wrapper */}
-          <div className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30 hover:shadow-lg hover:shadow-[#639922]/5">
-            <div className="p-4 sm:p-6">
-              <ProfileHeader profile={profile} />
-            </div>
-          </div>
+
 
           {/* ProfileForm card wrapper */}
           <div className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30 hover:shadow-lg hover:shadow-[#639922]/5">
@@ -91,17 +73,6 @@ const ProfilePage = () => {
               />
             </div>
           </div>
-
-          {/* UniversityConnectionCard wrapper */}
-          <div className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30 hover:shadow-lg hover:shadow-[#639922]/5">
-            <div className="p-4 sm:p-6">
-              <UniversityConnectionCard
-                profile={profile}
-                onRequestConnection={requestUniversityConnection}
-              />
-            </div>
-          </div>
-
           {/* Help card – improved for mobile */}
           <div className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 backdrop-blur-sm sm:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -117,8 +88,9 @@ const ProfilePage = () => {
               </button>
             </div>
           </div>
+
         </div>
-      </div>
+
     </div>
   );
 };

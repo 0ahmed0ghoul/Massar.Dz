@@ -25,7 +25,6 @@ import CompanyProfilePage from "@/features/company/pages/CompanyProfilePage";
 import CompanyApplicationsPage from "@/features/company/pages/ApplicationsPage";
 import TalentPage from "@/features/company/pages/TalentPage";
 import CompanyJobsPage from "@/features/company/pages/JobsPage";
-import CompleteProfilePage from "@/features/auth/pages/CompleteProfilePage";
 import { InboxPage } from "@/features/messaging/pages/InboxPage";
 import { ConversationPage } from "@/features/messaging/pages/ConversationPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
@@ -37,6 +36,25 @@ import JobDetailPage from "@/features/jobs/pages/JobDetailPage";
 import InternshipDetailPage from "@/features/internships/pages/InternshipDetailPage";
 import AuthPage from "@/features/auth/pages/AuthPage";
 
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+
+import { Navigate } from "react-router-dom";
+import UniversityCompleteProfilePage from "@/features/auth/pages/UniversityCompleteProfilePage";
+import CompanyCompleteProfilePage from "@/features/auth/pages/CompanyCompleteProfilePage";
+
+function CompleteProfileRouter() {
+  const { profile, isLoading } = useAuth();
+  if (isLoading) return <div>Loading...</div>;
+  if (!profile) return <Navigate to="/login" />;
+  
+  if (profile.role === "university_admin") {
+    return <UniversityCompleteProfilePage />;
+  } else if (profile.role === "company_admin") {
+    return <CompanyCompleteProfilePage />;
+  } else {
+    return <Navigate to="/dashboard" />;
+  }
+}
 
 const AppRoutes = () => {
   return (
@@ -46,7 +64,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<AuthPage />} />
       <Route path="/register" element={<AuthPage />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
-      <Route path="/complete-profile" element={<CompleteProfilePage />} />
+      <Route path="/complete-profile" element={<CompleteProfileRouter />} />
       <Route path="/jobs" element={<JobsPage />} />
       <Route path="/internships" element={<InternshipsPage />} />
       <Route path="/jobs/:id" element={<JobDetailPage />} />

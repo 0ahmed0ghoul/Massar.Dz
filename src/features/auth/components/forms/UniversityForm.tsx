@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { PasswordInput } from "../PasswordInput";
 import { FieldError } from "../FieldError";
 import { universitySchema, UniversityFields } from "../../schemas/auth.schemas";
+import { ALGERIAN_UNIVERSITIES, ALGERIAN_WILAYAS } from "../../constants/algeria.constants";
+import { SearchableSelect } from "../searchable-select";
 
 interface UniversityFormProps {
   isLoading: boolean;
@@ -21,28 +23,40 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
-  } = useForm<UniversityFields>({ resolver: zodResolver(universitySchema) });
+  } = useForm<UniversityFields>({
+    resolver: zodResolver(universitySchema),
+    defaultValues: {
+      universityName: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      wilaya: "",
+    },
+  });
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-      {/* Warning banner */}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3">
-        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-        <p className="text-xs text-amber-400/80 leading-relaxed">
-          University accounts require manual review before activation.
-          You'll be notified once approved.
-        </p>
-      </div>
-
-      {/* University name */}
+      {/* University name - searchable select with Controller */}
       <div>
-        <Label className={labelCls}>University name</Label>
-        <Input
-          placeholder="MIT"
-          {...register("universityName")}
-          className={`mt-1.5 ${inputCls} ${errors.universityName ? errorInputCls : ""}`}
-        />
+        <Label className={labelCls}>University name *</Label>
+        <div className="mt-1.5">
+          <Controller
+            name="universityName"
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={ALGERIAN_UNIVERSITIES}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                placeholder="Select or search your university..."
+                emptyMessage="No university found."
+              />
+            )}
+          />
+        </div>
         <FieldError message={errors.universityName?.message} />
       </div>
 
@@ -96,15 +110,25 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
         <FieldError message={errors.password?.message} />
       </div>
 
-      {/* City */}
+      {/* Wilaya - searchable select with Controller */}
       <div>
-        <Label className={labelCls}>City</Label>
-        <Input
-          placeholder="Cambridge"
-          {...register("city")}
-          className={`mt-1.5 ${inputCls} ${errors.city ? errorInputCls : ""}`}
-        />
-        <FieldError message={errors.city?.message} />
+        <Label className={labelCls}>Wilaya *</Label>
+        <div className="mt-1.5">
+          <Controller
+            name="wilaya"
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={ALGERIAN_WILAYAS}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                placeholder="Select or search your wilaya..."
+                emptyMessage="No wilaya found."
+              />
+            )}
+          />
+        </div>
+        <FieldError message={errors.wilaya?.message} />
       </div>
 
       <Button
@@ -116,7 +140,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <>
-            <span>Submit for Review</span>
+            <span>Register</span>
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </>
         )}

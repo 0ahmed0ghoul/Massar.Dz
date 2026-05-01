@@ -23,7 +23,7 @@ export const PendingCard = ({ profile, actionLoading, onApprove, onReject, isStu
 
   const subtitle = isStudent
     ? `${profile.degree_level || "Student"} • ${profile.university_name || "University not set"}`
-    : `${profile.email} • ${profile.city || "Location not set"}`;
+    : `${profile.email} • ${profile.wilaya || "Location not set"}`;
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition-all hover:border-[#639922]/30">
