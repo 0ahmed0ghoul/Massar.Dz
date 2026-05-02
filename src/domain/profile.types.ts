@@ -24,6 +24,7 @@ export type ProfileDB = Tables<"profiles">;
 
 // Frontend‑friendly Profile interface (includes all relevant fields)
 export interface Profile {
+  certificatee: any;
   // Core
   id: string;
   email: string;

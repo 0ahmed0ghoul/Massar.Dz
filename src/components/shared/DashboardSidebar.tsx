@@ -1,9 +1,9 @@
-// components/DashboardSidebar.tsx
+// components/DashboardSidebar.tsx (updated)
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, ChevronLeft, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users } from "lucide-react";
+import { X, ChevronLeft, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -12,12 +12,11 @@ interface DashboardSidebarProps {
   onClose: () => void;
   notificationCount: number;
   isProfileComplete: boolean;
-  pendingCount: number;  // ✅ new prop
+  pendingCount: number;
 }
 
 type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
 
-// Navigation items per role (same as before)
 const navMap: Record<UserRole, any[]> = {
   student: [
     { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
@@ -46,6 +45,8 @@ const navMap: Record<UserRole, any[]> = {
     { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
     { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
     { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
+    { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
+
   ],
 };
 
@@ -63,7 +64,7 @@ export function DashboardSidebar({
   onClose,
   notificationCount,
   isProfileComplete,
-  pendingCount,  // ✅ new
+  pendingCount,
 }: DashboardSidebarProps) {
   const items = navMap[role];
   const location = useLocation();
@@ -78,16 +79,16 @@ export function DashboardSidebar({
 
   const sidebarWidth = isCollapsed ? "w-20" : "w-64";
   const mobileWidth = "w-full";
-  const badgeColor = isProfileComplete ? "bg-green-500" : "bg-red-500";
+
+  // Separate badge for notifications (only when > 0)
+  const showNotificationBadge = notificationCount > 0;
 
   return (
     <>
-      {/* Mobile overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={onClose} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 
@@ -100,7 +101,6 @@ export function DashboardSidebar({
         `}
       >
         <div className="flex h-full flex-col">
-          {/* Header */}
           <div className={`flex items-center border-b border-white/10 p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
             {!isCollapsed && (
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
@@ -117,7 +117,6 @@ export function DashboardSidebar({
             </button>
           </div>
 
-          {/* Navigation Links */}
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
             {items.map((item) => {
               const active = location.pathname === item.url;
@@ -136,14 +135,14 @@ export function DashboardSidebar({
                 >
                   <div className="relative">
                     <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {isNotifications && (
-                      <span className={`absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${badgeColor}`}>
-                        {notificationCount > 0 ? notificationCount : ""}
+                    {isNotifications && showNotificationBadge && (
+                      <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-md">
+                        {notificationCount > 99 ? "99+" : notificationCount}
                       </span>
                     )}
                     {isPending && role === "super_admin" && pendingCount > 0 && (
                       <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-black">
-                        {pendingCount}
+                        {pendingCount > 99 ? "99+" : pendingCount}
                       </span>
                     )}
                   </div>
@@ -153,7 +152,6 @@ export function DashboardSidebar({
             })}
           </div>
 
-          {/* Logout Button */}
           <div className={`p-3 border-t border-white/10 ${isCollapsed ? "text-center" : ""}`}>
             <button
               onClick={handleLogout}

@@ -139,6 +139,13 @@ const Navbar = () => {
               Internships
               <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-primary transition-all duration-200 group-hover:w-full" />
             </Link>
+            <Link
+              to="/pricing"
+              className="relative text-sm text-muted-foreground transition-colors hover:text-foreground group"
+            >
+              Pricing
+              <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-primary transition-all duration-200 group-hover:w-full" />
+            </Link>
           </nav>
 
           {/* DESKTOP RIGHT SIDE */}

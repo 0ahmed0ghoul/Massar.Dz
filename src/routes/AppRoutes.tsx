@@ -41,12 +41,15 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import UniversityCompleteProfilePage from "@/features/auth/pages/UniversityCompleteProfilePage";
 import CompanyCompleteProfilePage from "@/features/auth/pages/CompanyCompleteProfilePage";
+import PricingPage from "@/features/landing/pages/PricingPage";
+import PaymentPage from "@/features/landing/pages/PaymentPage";
+import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
   if (isLoading) return <div>Loading...</div>;
   if (!profile) return <Navigate to="/login" />;
-  
+
   if (profile.role === "university_admin") {
     return <UniversityCompleteProfilePage />;
   } else if (profile.role === "company_admin") {
@@ -69,6 +72,9 @@ const AppRoutes = () => {
       <Route path="/internships" element={<InternshipsPage />} />
       <Route path="/jobs/:id" element={<JobDetailPage />} />
       <Route path="/internships/:id" element={<InternshipDetailPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/payment/:paymentId" element={<PaymentPage />} />
+
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
         {/* ================= STUDENT ================= */}
@@ -79,7 +85,10 @@ const AppRoutes = () => {
               path="/student/dashboard/profile"
               element={<ProfilePage />}
             />
-            <Route path="/student/dashboard/jobs" element={<StudentJobsPage />} />
+            <Route
+              path="/student/dashboard/jobs"
+              element={<StudentJobsPage />}
+            />
             <Route
               path="/student/dashboard/applications"
               element={<ApplicationsPage />}
@@ -94,7 +103,7 @@ const AppRoutes = () => {
             />
             <Route
               path="/student/dashboard/messages"
-              element={<MessagesPage/>}
+              element={<MessagesPage />}
             />
             <Route
               path="/student/dashboard/certificate"
@@ -156,7 +165,6 @@ const AppRoutes = () => {
         <Route path="/messages" element={<InboxPage />} />
         <Route path="/messages/:id" element={<ConversationPage />} />
 
-
         {/* ================= ADMIN ================= */}
         <Route element={<DashboardLayout role="super_admin" />}>
           <Route path="/dashboard/admin" element={<AdminDashboardPage />} />
@@ -164,10 +172,17 @@ const AppRoutes = () => {
             path="/dashboard/admin/pending"
             element={<AdminPendingPage />}
           />
-          <Route path="dashboard/admin/pending/:id" element={<AdminPendingDetailPage />} />
+          <Route
+            path="dashboard/admin/pending/:id"
+            element={<AdminPendingDetailPage />}
+          />
           <Route
             path="/dashboard/admin/accounts"
             element={<AdminAccountsPage />}
+          />
+          <Route
+            path="/dashboard/admin/payments"
+            element={<AdminPaymentsPage />}
           />
         </Route>
       </Route>

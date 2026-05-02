@@ -81,6 +81,7 @@ export function useUniversityData() {
     }
   }, []);
 
+
   const persistStudents = (newStudents: Student[]) => {
     setStudents(newStudents);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(newStudents));

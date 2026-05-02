@@ -344,13 +344,12 @@ export default function AuthPage() {
       {/* Hero glow — identical class */}
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/2 rounded-full gradient-hero blur-3xl" />
 
-      {/* ── Left panel ── */}
       <div className="relative z-10 hidden lg:block w-[46%] flex-shrink-0">
         <PreviewPanel />
       </div>
 
       {/* ── Right / form column ── */}
-      <div className="relative z-10 flex flex-1 items-center justify-center p-6 sm:p-10">
+      <div className="relative z-10 flex flex-1 items-center justify-center p-6 sm:p-10 ">
         <div className="w-full max-w-[400px]">
 
           {/* Mobile logo */}

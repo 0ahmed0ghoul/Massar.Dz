@@ -1,9 +1,21 @@
 // RecommendedJobs.tsx
-import { Sparkles } from "lucide-react";
+import { Sparkles, Lock, CreditCard } from "lucide-react";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
-const RecommendedJobs = ({ jobs = [] }) => {
-  // Mock data (will be used if jobs prop is empty)
-  const mockJobs = [
+interface Job {
+  id: number;
+  title: string;
+  company: string;
+  location?: string;
+  match?: number;
+}
+
+const RecommendedJobs = ({ jobs = [] }: { jobs?: Job[] }) => {
+  const { profile } = useAuth();
+  const isPremium = profile?.is_premium === true;
+
+  // Mock data (only shown if premium)
+  const mockJobs: Job[] = [
     { id: 1, title: "Frontend Developer", company: "Google", location: "Mountain View, CA", match: 98 },
     { id: 2, title: "Software Engineer", company: "Microsoft", location: "Redmond, WA", match: 95 },
     { id: 3, title: "Product Manager", company: "Meta", location: "Menlo Park, CA", match: 92 },
@@ -12,6 +24,29 @@ const RecommendedJobs = ({ jobs = [] }) => {
 
   const displayJobs = jobs.length > 0 ? jobs : mockJobs;
 
+  // If not premium, show upsell
+  if (!isPremium) {
+    return (
+      <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.02] to-white/[0.01] p-6 text-center backdrop-blur-sm">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#639922]/10">
+          <Lock className="h-6 w-6 text-[#639922]" />
+        </div>
+        <h3 className="text-lg font-bold text-foreground">Premium Feature</h3>
+        <p className="mt-1 text-sm text-foreground/40">
+          Unlock AI‑powered job recommendations tailored to your skills and career goals.
+        </p>
+        <button
+          onClick={() => window.location.href = "/pricing"} // or open a payment modal
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#639922] px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-[#4f7a1a]"
+        >
+          <CreditCard className="h-4 w-4" />
+          Upgrade to Premium
+        </button>
+      </div>
+    );
+  }
+
+  // Premium user: show recommendations
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
       <div className="mb-6 flex items-center gap-2">
