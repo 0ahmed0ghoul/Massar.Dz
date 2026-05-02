@@ -39,7 +39,7 @@ export const useNotifications = () => {
       const studentFields = [
         { field: "degree_level", label: "Degree level", link: "/student/dashboard/profile" },
         { field: "university_name", label: "University name", link: "/student/dashboard/profile" },
-        { field: "specialty", label: "Specialty", link: "/student/dashboard/profile" },
+        { field: "speciality", label: "speciality", link: "/student/dashboard/profile" },
         { field: "avatar_url", label: "Profile picture", link: "/student/dashboard/profile" },
         { field: "resume_url", label: "CV / Resume", link: "/student/dashboard/profile" },
       ];

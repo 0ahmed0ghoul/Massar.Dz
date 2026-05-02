@@ -57,7 +57,7 @@ export const PendingList = ({ profiles, actionLoading, onApprove, onReject, load
                   {/* Additional info for students */}
                   {isStudent && profile.university_name && (
                     <p className="mt-1 text-xs text-foreground/30">
-                      🎓 {profile.university_name} • {profile.specialty || profile.major || "No specialty"}
+                      🎓 {profile.university_name} • {profile.speciality || profile.major || "No speciality"}
                     </p>
                   )}
                   <p className="mt-1 text-xs text-foreground/30">

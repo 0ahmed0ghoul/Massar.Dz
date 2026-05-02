@@ -1,4 +1,4 @@
-// hooks/useUniversityCompleteProfile.ts
+// hooks/useUniversityCompleteProfile.ts (updated)
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,8 +18,8 @@ interface UniversityFormData {
 }
 
 interface DocsState {
-  logo: File | null;
-  registrationCertificate: File | null;
+  logoBase64: string | null;
+  certBase64: string | null;
   taxId: string;
 }
 
@@ -40,8 +40,8 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
   });
 
   const [docs, setDocs] = useState<DocsState>({
-    logo: null,
-    registrationCertificate: null,
+    logoBase64: null,
+    certBase64: null,
     taxId: "",
   });
 
@@ -58,13 +58,13 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
       reader.onerror = reject;
     });
 
-  const handleFileChange = (field: "logo" | "certificate", file: File | null) => {
+  const handleFileChange = async (field: "logo" | "certificate", file: File | null) => {
     if (!file) return;
 
     // File validation
     const isImage = file.type.startsWith("image/");
     const isPDF = file.type === "application/pdf";
-    
+
     if (field === "logo" && !isImage) {
       toast({ title: "Invalid file", description: "Logo must be an image (JPG, PNG).", variant: "destructive" });
       return;
@@ -74,21 +74,32 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
       return;
     }
 
-    // Size limit 5MB
     if (file.size > 5 * 1024 * 1024) {
       toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" });
       return;
     }
 
     console.log(`File uploaded for ${field}:`, file.name, file.size);
-    setDocs((prev) => ({ ...prev, [field]: file }));
-    const url = URL.createObjectURL(file);
-    setPreviewUrls((prev) => ({ ...prev, [field]: url }));
+
+    // Convert to base64 immediately and store
+    const base64 = await fileToBase64(file);
+    if (field === "logo") {
+      setDocs((prev) => ({ ...prev, logoBase64: base64 }));
+      setPreviewUrls((prev) => ({ ...prev, logo: URL.createObjectURL(file) }));
+    } else {
+      setDocs((prev) => ({ ...prev, certBase64: base64 }));
+      setPreviewUrls((prev) => ({ ...prev, certificate: URL.createObjectURL(file) }));
+    }
   };
 
   const removeFile = (field: "logo" | "certificate") => {
-    setDocs((prev) => ({ ...prev, [field]: null }));
-    setPreviewUrls((prev) => ({ ...prev, [field]: "" }));
+    if (field === "logo") {
+      setDocs((prev) => ({ ...prev, logoBase64: null }));
+      setPreviewUrls((prev) => ({ ...prev, logo: "" }));
+    } else {
+      setDocs((prev) => ({ ...prev, certBase64: null }));
+      setPreviewUrls((prev) => ({ ...prev, certificate: "" }));
+    }
   };
 
   const updateForm = (key: keyof UniversityFormData, value: string) => {
@@ -117,36 +128,11 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
       };
 
       const verificationDocs: any = { tax_id: docs.taxId };
+      if (docs.logoBase64) verificationDocs.logo = docs.logoBase64;
+      if (docs.certBase64) verificationDocs.registration_certificate = docs.certBase64;
 
-      // Convert logo
-      if (docs.logo) {
-        try {
-          verificationDocs.logo = await fileToBase64(docs.logo);
-          console.log("Logo converted to base64, length:", verificationDocs.logo.length);
-        } catch (err) {
-          console.error("Logo conversion failed:", err);
-          toast({ title: "Error", description: "Failed to process logo file.", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
-      }
+      console.log("Final verificationDocs keys:", Object.keys(verificationDocs));
 
-      // Convert registration certificate
-      if (docs.registrationCertificate) {
-        try {
-          verificationDocs.registration_certificate = await fileToBase64(docs.registrationCertificate);
-          console.log("Certificate converted to base64, length:", verificationDocs.registration_certificate.length);
-        } catch (err) {
-          console.error("Certificate conversion failed:", err);
-          toast({ title: "Error", description: "Failed to process certificate file.", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
-      } else {
-        console.warn("No registration certificate file found in docs");
-      }
-
-      console.log("Final verificationDocs:", Object.keys(verificationDocs));
       await authService.markProfileCompleted(user.id, additionalData, verificationDocs);
 
       toast({

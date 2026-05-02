@@ -20,6 +20,7 @@ interface SearchableSelectProps {
   options: string[];
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   emptyMessage?: string;
 }
@@ -28,15 +29,23 @@ export function SearchableSelect({
   options,
   value,
   onChange,
+  onBlur,
   placeholder,
   emptyMessage = "No option found.",
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) onBlur?.(); // ✅ trigger blur when closing
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -46,18 +55,24 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
+
       <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[300px] p-0">
         <Command>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
+
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
                   key={option}
                   value={option}
                   onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue);
+                    const newValue =
+                      currentValue === value ? "" : currentValue;
+
+                    onChange(newValue);
+                    onBlur?.(); // ✅ critical
                     setOpen(false);
                   }}
                 >

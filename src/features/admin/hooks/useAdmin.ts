@@ -24,7 +24,7 @@ export function useAdmin() {
     }
   }, []);
 
-  // Fetch pending institutions
+  // Fetch pending institutions (completed but not verified)
   const fetchPendingProfiles = useCallback(async (): Promise<Profile[]> => {
     setLoading(true);
     try {
@@ -75,21 +75,7 @@ export function useAdmin() {
     }
   }, []);
 
-  const updateStatus = useCallback(async (id: string, status: string) => {
-    setActionLoading(`status-${id}`);
-    try {
-      await adminService.updateStatus(id, status);
-      toast({ title: "Updated", description: `Status changed to ${status}.` });
-      return true;
-    } catch (err: any) {
-      handleError(err);
-      return false;
-    } finally {
-      setActionLoading(null);
-    }
-  }, []);
-
-  // Approve institution
+  // Approve institution (set is_verified = true)
   const approvePending = useCallback(async (profile: Profile) => {
     setActionLoading(profile.id);
     try {
@@ -115,7 +101,7 @@ export function useAdmin() {
       await adminService.approveStudent(profile.id);
       toast({
         title: "Approved ✓",
-        description: `${profile.first_name} ${profile.last_name}'s profile marked as complete.`,
+        description: `${profile.first_name} ${profile.last_name}'s profile completed.`,
       });
       return true;
     } catch (err: any) {
@@ -126,14 +112,14 @@ export function useAdmin() {
     }
   }, []);
 
-  // Reject institution
+  // Reject institution by deleting profile
   const rejectPending = useCallback(async (profile: Profile) => {
     setActionLoading(`reject-${profile.id}`);
     try {
-      await adminService.updateStatus(profile.id, "rejected");
+      await adminService.deleteProfile(profile.id);
       toast({
         title: "Rejected",
-        description: `${profile.first_name} ${profile.last_name}'s account rejected.`,
+        description: `${profile.first_name} ${profile.last_name}'s account removed.`,
         variant: "destructive",
       });
       return true;
@@ -145,11 +131,10 @@ export function useAdmin() {
     }
   }, []);
 
-  // Reject student (optional – just remove from list? We'll just delete for simplicity)
+  // Reject student by deleting profile
   const rejectStudent = useCallback(async (profile: Profile) => {
     setActionLoading(`reject-${profile.id}`);
     try {
-      // Option 1: delete profile
       await adminService.deleteProfile(profile.id);
       toast({
         title: "Rejected",
@@ -187,7 +172,6 @@ export function useAdmin() {
     fetchPendingStudents,
     fetchAllPending,
     fetchStats,
-    updateStatus,
     approvePending,
     approveStudent,
     rejectPending,

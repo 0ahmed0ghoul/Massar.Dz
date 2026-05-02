@@ -323,7 +323,7 @@ export default function CompanyCompleteProfilePage() {
                         <FileText className="h-12 w-12 text-[#639922]" />
                         <button
                           type="button"
-                          onClick={() => removeFile("certificate")}
+                          onClick={() => removeFile("registrationCertificate")}
                           className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground"
                         >
                           <XCircle className="h-3 w-3" />
@@ -334,7 +334,7 @@ export default function CompanyCompleteProfilePage() {
                       <input
                         type="file"
                         accept="image/*,.pdf"
-                        onChange={(e) => handleFileChange("certificate", e.target.files?.[0] || null)}
+                        onChange={(e) => handleFileChange("registrationCertificate", e.target.files?.[0] || null)}
                         className="hidden"
                         id="cert-upload"
                       />

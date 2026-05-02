@@ -49,7 +49,7 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
   const emailMatch = isMatch(importedStudent.email, profile.email);
   const wilayaMatch = isMatch(importedStudent.wilaya, profile.wilaya);
   const specialityMatch = isMatch(importedStudent.speciality, profile.speciality);
-  const specialtyTypeMatch = isMatch(importedStudent.specialtyType, profile.specialtyType);
+  const specialityTypeMatch = isMatch(importedStudent.specialityType, profile.specialityType);
   const academicYearsMatch = isMatch(importedStudent.academicYears, profile.academicYears);
   const degreeLevelMatch = isMatch(importedStudent.degreeLevel, profile.degreeLevel);
 
@@ -99,8 +99,8 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityMatch)}`}>{importedStudent.speciality}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-foreground/50">Specialty Type</dt>
-                <dd className={`rounded px-2 py-0.5 ${getBgClass(specialtyTypeMatch)}`}>{importedStudent.specialtyType || '—'}</dd>
+                <dt className="text-foreground/50">speciality Type</dt>
+                <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityTypeMatch)}`}>{importedStudent.specialityType || '—'}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
                 <dt className="text-foreground/50">Academic Years</dt>
@@ -142,8 +142,8 @@ export function VerifyMatchModal({ open, onOpenChange, invitation, students, onA
                 <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityMatch)}`}>{profile.speciality}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
-                <dt className="text-foreground/50">Specialty Type</dt>
-                <dd className={`rounded px-2 py-0.5 ${getBgClass(specialtyTypeMatch)}`}>{profile.specialtyType}</dd>
+                <dt className="text-foreground/50">speciality Type</dt>
+                <dd className={`rounded px-2 py-0.5 ${getBgClass(specialityTypeMatch)}`}>{profile.specialityType}</dd>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-1">
                 <dt className="text-foreground/50">Academic Years</dt>

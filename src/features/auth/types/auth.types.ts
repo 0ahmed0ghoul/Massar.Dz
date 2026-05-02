@@ -9,11 +9,11 @@ export interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
 
-  // Approval flow helpers
-  isProfileComplete: boolean;      // registration_step === "complete"
-  isPendingApproval: boolean;      // registration_step === "pending_approval"
-  needsProfileCompletion: boolean; // registration_step === "pending_profile"
-  isApproved: boolean;             // registration_step === "approved" (for company/university)
+  // Approval flow helpers (based on is_completed and is_verified columns)
+  isProfileComplete: boolean;      // For UI: true for students; for others, is_completed === true
+  isPendingApproval: boolean;      // Company/university: is_completed === true && is_verified !== true
+  needsProfileCompletion: boolean; // Company/university: is_completed !== true
+  isApproved: boolean;             // Students: true always; Company/university: is_completed === true && is_verified === true
 
   // Actions
   signIn: (email: string, password: string) => Promise<void>;

@@ -3,34 +3,58 @@ import { NavigateFunction } from "react-router-dom";
 import { Profile } from "@/domain/profile.types";
 
 export function redirectByProfile(navigate: NavigateFunction, profile: Profile) {
-  // 1. Students / graduates / professionals – immediate dashboard
+  // Students / graduates / professionals – immediate dashboard (always approved)
   if (profile.role === "student" || profile.role === "graduate" || profile.role === "professional") {
-    // For safety, they should have registration_step === "complete"
     navigate("/student/dashboard");
     return;
   }
-  // 2. Company or University
-  if (profile.role === "company_admin" || profile.role === "university_admin") {
-    const step = profile.registration_step;
-    if (step === "pending_profile") {
-      // User hasn't completed the profile form yet
+
+  // Company
+  if (profile.role === "company_admin") {
+    if (!profile.is_completed) {
+      // Hasn't completed the profile form yet
       navigate("/complete-profile");
       return;
     }
-    if (step === "pending_approval") {
+    if (profile.is_completed && !profile.is_verified) {
       // Profile submitted, waiting for admin review
       navigate("/pending-approval");
       return;
     }
-    if (step === "approved") {
+    if (profile.is_completed && profile.is_verified) {
       // Admin approved – full access
-      navigate("/dashboard");
+      navigate("/dashboard/company");
       return;
     }
-    // Fallback (should not happen)
-    navigate("/dashboard");
+    // Fallback
+    navigate("/dashboard/company");
     return;
   }
-  // Super admin or other roles
-  navigate("/dashboard/admin");
+
+  // University
+  if (profile.role === "university_admin") {
+    if (!profile.is_completed) {
+      navigate("/complete-profile");
+      return;
+    }
+    if (profile.is_completed && !profile.is_verified) {
+      navigate("/pending-approval");
+      return;
+    }
+    if (profile.is_completed && profile.is_verified) {
+      navigate("/university/dashboard");
+      return;
+    }
+    navigate("/university/dashboard");
+    return;
+  }
+
+  // Super admin
+  if (profile.role === "super_admin") {
+    navigate("/dashboard/admin");
+    return;
+  }
+
+  // Default fallback
+  navigate("/");
 }

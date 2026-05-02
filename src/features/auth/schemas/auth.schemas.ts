@@ -39,8 +39,6 @@ export const universitySchema = z.object({
   email:          z.string().email("Enter a valid institutional email"),
   password,
   wilaya:           z.string().min(2, "At least 2 characters"),
-  department: z.string().min(1, "Department required"),
-  position: z.string().min(1, "Position required"),
 });
 
 export type StudentFields    = z.infer<typeof studentSchema>;

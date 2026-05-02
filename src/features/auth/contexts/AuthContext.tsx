@@ -24,15 +24,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ─────────────────────────────────────────────────────────────
   // Derived values
   // ─────────────────────────────────────────────────────────────
-  const role = useMemo<UserRole | null>(() => state.profile?.role as UserRole || null, [state.profile]);
+  const role = useMemo<UserRole | null>(
+    () => state.profile?.role as UserRole || null,
+    [state.profile]
+  );
   const isLoading = state.authLoading || state.profileLoading;
   const isAuthenticated = !!state.user;
 
-  // Registration / approval status helpers
-  const isProfileComplete = state.profile?.registration_step === "complete";
-  const isPendingApproval  = state.profile?.registration_step === "pending_approval";
-  const needsProfileCompletion = state.profile?.registration_step === "pending_profile";
-  const isApproved = state.profile?.registration_step === "approved";
+  // Student is always considered approved immediately, no need for extra checks.
+  // For company/university: approved only if both completed and verified.
+  const isApproved = useMemo(() => {
+    if (!state.profile) return false;
+    if (state.profile.role === "student") {
+      return true; // students are approved upon registration
+    }
+    // For company/university
+    return state.profile.is_completed === true && state.profile.is_verified === true;
+  }, [state.profile]);
+
+  // Only companies/universities need to complete their profile (upload docs, etc.)
+  const needsProfileCompletion = useMemo(() => {
+    if (!state.profile) return false;
+    if (state.profile.role === "student") return false;
+    // Company/university: if not completed yet
+    return state.profile.is_completed !== true;
+  }, [state.profile]);
+
+  // Pending approval is only for companies/universities that are completed but not yet verified.
+  const isPendingApproval = useMemo(() => {
+    if (!state.profile) return false;
+    if (state.profile.role === "student") return false;
+    return state.profile.is_completed === true && state.profile.is_verified !== true;
+  }, [state.profile]);
+
+  // Profile completely filled (for students, we don't use this field to block access)
+  const isProfileComplete = useMemo(() => {
+    if (!state.profile) return false;
+    if (state.profile.role === "student") return true; // students always considered "complete" for UI purposes
+    return state.profile.is_completed === true;
+  }, [state.profile]);
 
   // ─────────────────────────────────────────────────────────────
   // Load profile with retry
@@ -107,7 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, profileData: Partial<Profile>) => {
-    // Pass the whole profileData (including role, university/company fields, etc.)
     await authService.signUp(email, password, profileData);
   };
 
@@ -124,9 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // Complete profile (for company/university after email verification)
-  // ─────────────────────────────────────────────────────────────
   const completeProfile = async (additionalData: any, fileUrls?: { logo?: string; certificate?: string }) => {
     if (!state.user) throw new Error("No user logged in");
 
@@ -134,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...additionalData,
       logo_url: fileUrls?.logo || null,
       certificate_url: fileUrls?.certificate || null,
-      registration_step: "pending_approval",
+      is_completed: true,
     };
     await updateProfile(updates);
   };

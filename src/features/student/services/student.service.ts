@@ -23,10 +23,10 @@ const REQUIRED_STUDENT_FIELDS: (keyof Profile)[] = [
   "email",
   "degree_level",
   "university_name",
-  "specialty",
+  "speciality",
   "wilaya",
   "academic_year",
-  "specialty_type",
+  "speciality_type",
   "student_id"
 ];
 

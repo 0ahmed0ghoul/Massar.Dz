@@ -26,6 +26,8 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
     companyName: profile?.company_name || "",
     industry: profile?.industry || "",
     companyDescription: profile?.company_description || "",
+    companyType:profile?.company_type,
+    email:profile?.email,
   });
 
   const [docs, setDocs] = useState<DocsState>({
@@ -47,7 +49,7 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
       reader.onerror = reject;
     });
 
-  const handleFileChange = async (field: "logo" | "certificate", file: File | null) => {
+  const handleFileChange = async (field: "logo" | "registrationCertificate", file: File | null) => {
     if (!file) return;
     console.log(`File uploaded for ${field}:`, file);
     setDocs((prev) => ({ ...prev, [field]: file }));
@@ -55,7 +57,7 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
     setPreviewUrls((prev) => ({ ...prev, [field]: url }));
   };
 
-  const removeFile = (field: "logo" | "certificate") => {
+  const removeFile = (field: "logo" | "registrationCertificate") => {
     setDocs((prev) => ({ ...prev, [field]: null }));
     setPreviewUrls((prev) => ({ ...prev, [field]: "" }));
   };

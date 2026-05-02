@@ -7,7 +7,10 @@ import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
 import { PasswordInput } from "../PasswordInput";
 import { FieldError } from "../FieldError";
 import { universitySchema, UniversityFields } from "../../schemas/auth.schemas";
-import { ALGERIAN_UNIVERSITIES, ALGERIAN_WILAYAS } from "../../constants/algeria.constants";
+import {
+  ALGERIAN_UNIVERSITIES,
+  ALGERIAN_WILAYAS,
+} from "../../constants/algeria.constants";
 import { SearchableSelect } from "../searchable-select";
 
 interface UniversityFormProps {
@@ -15,8 +18,10 @@ interface UniversityFormProps {
   onSubmit: (data: UniversityFields) => void;
 }
 
-const labelCls = "text-muted-foreground text-xs font-medium uppercase tracking-wider";
-const inputCls = "border-border bg-card/30 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-primary/20";
+const labelCls =
+  "text-muted-foreground text-xs font-medium uppercase tracking-wider";
+const inputCls =
+  "border-border bg-card/30 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-primary/20";
 const errorInputCls = "border-destructive/50 focus:border-destructive/70";
 
 export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
@@ -38,8 +43,18 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
   });
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-      {/* University name - searchable select with Controller */}
+    <form
+      className="space-y-4"
+      onSubmit={handleSubmit(
+        (data) => {
+          console.log("FORM SUBMITTED ✅", data);
+          onSubmit(data);
+        },
+        (errors) => {
+          console.log("FORM ERRORS ❌", errors);
+        }
+      )}
+    >
       <div>
         <Label className={labelCls}>University name *</Label>
         <div className="mt-1.5">
@@ -51,6 +66,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
                 options={ALGERIAN_UNIVERSITIES}
                 value={field.value || ""}
                 onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur} // ✅ ADD THIS
                 placeholder="Select or search your university..."
                 emptyMessage="No university found."
               />
@@ -67,7 +83,9 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
           <Input
             placeholder="Jane"
             {...register("firstName")}
-            className={`mt-1.5 ${inputCls} ${errors.firstName ? errorInputCls : ""}`}
+            className={`mt-1.5 ${inputCls} ${
+              errors.firstName ? errorInputCls : ""
+            }`}
           />
           <FieldError message={errors.firstName?.message} />
         </div>
@@ -76,7 +94,9 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
           <Input
             placeholder="Doe"
             {...register("lastName")}
-            className={`mt-1.5 ${inputCls} ${errors.lastName ? errorInputCls : ""}`}
+            className={`mt-1.5 ${inputCls} ${
+              errors.lastName ? errorInputCls : ""
+            }`}
           />
           <FieldError message={errors.lastName?.message} />
         </div>
@@ -122,6 +142,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
                 options={ALGERIAN_WILAYAS}
                 value={field.value || ""}
                 onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur} // ✅ ADD THIS
                 placeholder="Select or search your wilaya..."
                 emptyMessage="No wilaya found."
               />

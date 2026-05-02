@@ -32,17 +32,12 @@ export interface Profile {
   last_name: string | null;
   full_name?: string; // derived from first_name + last_name
   avatar_url: string | null;
-  status: string; // active / pending / rejected
   created_at: string;
   updated_at: string;
-
   // Approval flow fields
-  registration_step: RegistrationStep;
-  status: "pending" | "approved" | "rejected" | null;
+  status: string | null;
   verification_docs: any; // JSONB
-  is_completed: boolean;
   completed_at: string | null;
-
   // Student / Graduate specific
   degree_level: string | null;        // bachelor, master, phd, bootcamp
   university_name: string | null;
@@ -52,9 +47,7 @@ export interface Profile {
   student_id: string | null;
   student_card_url: string | null;
   academic_year: string | null;
-  specialty: string | null;
-  specialty_type: "LMD" | "ING" | "PRO" | null;
-
+  speciality_type: "LMD" | "ING" | "PRO" | null;
   // Professional specific
   current_role: string | null;
   current_company: string | null;
@@ -66,7 +59,6 @@ export interface Profile {
   company_name: string | null;
   company_type: CompanyType | null;
   industry: string | null;
-  registration_number: string | null;
   company_description: string | null;
   logo_url: string | null;
   certificate_url: string | null;
@@ -78,7 +70,6 @@ export interface Profile {
 
   // Common location fields
   wilaya: string | null;
-  wilaya: string | null;
 
   // Subscription
   is_premium: boolean;
@@ -89,6 +80,8 @@ export interface Profile {
   phone: string | null;
   university_connection_status: boolean | null;
   is_completed?: boolean;
+  is_verified?:boolean;
+  candidate_type: string | null;
 }
 
 // Helper type for creating/updating a profile

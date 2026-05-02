@@ -23,7 +23,7 @@ export interface University {
     email: string;
     speciality: string;       
     wilaya?: string;
-    specialtyType?: 'ENG' | 'PRO' | 'LMD';
+    specialityType?: 'ENG' | 'PRO' | 'LMD';
     academicYears?: string;
     degreeLevel?: string;
     status: 'studying' | 'graduated';
@@ -39,7 +39,7 @@ export interface University {
     studentIdCardImage: string;  
     wilaya: string;
     speciality: string;
-    specialtyType: 'ENG' | 'PRO' | 'LMD';
+    specialityType: 'ENG' | 'PRO' | 'LMD';
     academicYears: string;
     degreeLevel: string;
     email?: string;               

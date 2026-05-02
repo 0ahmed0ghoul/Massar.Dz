@@ -26,12 +26,12 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
     profile.email,
     profile.degree_level,
     profile.university_name,
-    profile.specialty,
+    profile.speciality,
     profile.wilaya,
     profile.avatar_url,
     profile.resume_url,
     profile.academic_year,
-    profile.specialty_type,
+    profile.speciality_type,
     profile.student_card_url,
     profile.student_id,
   ];
@@ -53,9 +53,9 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   const academicInfoComplete = !!(
     profile.degree_level &&
     profile.university_name &&
-    profile.specialty &&
+    profile.speciality &&
     profile.academic_year &&
-    profile.specialty_type
+    profile.speciality_type
   );
 
   const documentsComplete = !!(

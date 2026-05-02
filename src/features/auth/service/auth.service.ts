@@ -1,5 +1,4 @@
 import { Profile } from "@/domain/profile.types";
-import { UniversityConnectionCard } from "@/features/student/components/UniversityConnectionCard";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 
@@ -7,7 +6,6 @@ import type { User } from "@supabase/supabase-js";
 // TYPES
 // ─────────────────────────────────────────────
 
-export type RegistrationStep = "pending_profile" | "complete" | "pending_approval" | "approved";
 export type VerificationStatus = "pending" | "approved" | "rejected" | null;
 export type CompanyType = "startup" | "private" | "government";
 
@@ -52,14 +50,11 @@ export interface CompanyFormData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   industry: string;
   registrationNumber?: string;
-  location: string;
   wilaya: string;
   companyDescription: string;
 }
-
 
 export interface UniversityFormData {
   universityName: string;
@@ -70,7 +65,6 @@ export interface UniversityFormData {
   department: string;
   position: string;
   wilaya: string;
-  wilaya: string;           // stored as wilaya in DB
   rectorName: string;
   website: string;
 }
@@ -103,7 +97,6 @@ class AuthService {
         data: {
           role: profileData.role,
           full_name: profileData.full_name,
-          registration_step: profileData.registration_step,
         },
       },
     });
@@ -118,14 +111,18 @@ class AuthService {
 
     if (!authData.user) throw new Error("User creation failed.");
 
+    // Determine initial is_completed based on role (students are automatically "completed" for access, but we set false)
+    // For students, is_completed = false initially (they can still access dashboard via AuthContext logic).
+    // For companies/universities, is_completed = false, is_verified = false.
     const { error: profileError } = await supabase.from("profiles").insert({
       id: authData.user.id,
       email: cleanEmail,
       role: profileData.role,
-      candidate_type: profileData.candidate_type || null, 
-      university_connection_status : false ,
-      registration_step: profileData.registration_step,
+      candidate_type: profileData.candidate_type || null,
+      university_connection_status: false,
       status: "pending",
+      is_completed: false,               // initially false for all
+      is_verified: false,                // initially false for all
       first_name: profileData.first_name || null,
       last_name: profileData.last_name || null,
       degree_level: profileData.degree_level || null,
@@ -141,7 +138,6 @@ class AuthService {
       years_of_experience: profileData.years_of_experience || null,
       looking_for: profileData.looking_for || null,
       skills: profileData.skills || null,
-      registration_number: profileData.registration_number || null,
     });
 
     if (profileError) {
@@ -199,90 +195,75 @@ class AuthService {
     return data;
   }
 
-  // Called after email verification for Company / University
-  async completeProfile(userId: string, additionalData: any, fileUrls?: { logo?: string; certificate?: string }) {
-    const updates: any = {
-      ...additionalData,
-      logo_url: fileUrls?.logo || null,
-      certificate_url: fileUrls?.certificate || null,
-      registration_step: "pending_approval",
-      status: "pending",
-    };
-    return this.updateProfile(userId, updates);
-  }
-
   // ─────────────────────────────────────────────
-  // MARK PROFILE COMPLETED (used by CompleteProfilePage)
+  // MARK PROFILE COMPLETED (used by Company/University after filling)
   // ─────────────────────────────────────────────
   async markProfileCompleted(userId: string, additionalData: any, verificationDocs: any) {
     const updates: any = {
       ...additionalData,
       verification_docs: verificationDocs,
       is_completed: true,
-      status: "pending",
       completed_at: new Date().toISOString(),
-      registration_step: "pending_approval",
     };
     return this.updateProfile(userId, updates);
   }
 
   // ─────────────────────────────────────────────
+  // ADMIN ACTIONS
+  // ─────────────────────────────────────────────
+  async approveCompanyUniversity(userId: string) {
+    return this.updateProfile(userId, { is_verified: true, status: "active" });
+  }
+
+  // ─────────────────────────────────────────────
   // REGISTER (COMPATIBLE WITH useRegister)
   // ─────────────────────────────────────────────
-
   async registerUser(params: {
     email: string;
     password: string;
     role: RegisterRole;
     profile: any;
   }) {
-    const needsProfileCompletion = params.role === "company_admin" || params.role === "university_admin";
-    const registrationStep = needsProfileCompletion ? "pending_profile" : "complete";
-
     const profileData: Partial<Profile> = {
       role: params.role,
-      registration_step: registrationStep,
       first_name: params.profile.firstName ?? null,
       last_name: params.profile.lastName ?? null,
       email: params.email,
     };
 
+    // Role-specific fields
     if (params.role === "student") {
-      profileData.candidate_type = params.profile.candidateType; // ✅ new
+      profileData.candidate_type = params.profile.candidateType;
       profileData.degree_level = params.profile.degreeLevel;
       profileData.university_name = params.profile.university;
       profileData.department = params.profile.department;
       profileData.graduation_year = params.profile.graduationYear;
-      profileData.speciality = params.profile.speciality;        // ✅ specialty
-      profileData.skills = params.profile.skills;      // ✅ skills array
+      profileData.speciality = params.profile.speciality;
+      profileData.skills = params.profile.skills;
     } else if (params.role === "graduate") {
-      profileData.candidate_type = params.profile.candidateType; // ✅ new
+      profileData.candidate_type = params.profile.candidateType;
       profileData.graduation_year = params.profile.graduationYear;
       profileData.university_name = params.profile.university;
       profileData.degree_level = params.profile.degree;
-      profileData.speciality = params.profile.speciality;        // ✅ specialty
-      profileData.skills = params.profile.skills;      // ✅ skills array
+      profileData.speciality = params.profile.speciality;
+      profileData.skills = params.profile.skills;
     } else if (params.role === "professional") {
-      profileData.candidate_type = params.profile.candidateType; // ✅ new
+      profileData.candidate_type = params.profile.candidateType;
       profileData.current_role = params.profile.currentRole;
       profileData.current_company = params.profile.company;
       profileData.years_of_experience = params.profile.yearsOfExperience;
       profileData.skills = params.profile.skills;
       profileData.looking_for = params.profile.lookingFor;
-      profileData.skills = params.profile.skills; // array of string
     } else if (params.role === "company_admin") {
       profileData.company_name = params.profile.companyName;
       profileData.company_type = params.profile.companyType;
       profileData.industry = params.profile.industry;
-      profileData.registration_number = params.profile.registrationNumber;
       profileData.wilaya = params.profile.location;
     } else if (params.role === "university_admin") {
       profileData.university_name = params.profile.universityName;
       profileData.department = params.profile.department;
       profileData.position = params.profile.position;
       profileData.wilaya = params.profile.wilaya;
-
-
     }
 
     return this.signUp(params.email, params.password, profileData);
@@ -291,7 +272,6 @@ class AuthService {
   // ─────────────────────────────────────────────
   // UTILS
   // ─────────────────────────────────────────────
-
   async checkEmailExists(email: string): Promise<boolean> {
     const { data } = await supabase
       .from("profiles")

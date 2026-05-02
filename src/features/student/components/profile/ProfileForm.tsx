@@ -79,10 +79,10 @@ const ProfileForm = ({
     email: profile?.email || "",
     degree_level: profile?.degree_level || "",
     university_name: profile?.university_name || "",
-    specialty: profile?.specialty || "",
+    speciality: profile?.speciality || "",
     wilaya: profile?.wilaya || "",
     academic_year: profile?.academic_year || "",
-    specialty_type: profile?.specialty_type || "",
+    speciality_type: profile?.speciality_type || "",
     student_id: profile?.student_id || "",
     skills: parseSkills(profile?.skills),
   });
@@ -94,10 +94,10 @@ const ProfileForm = ({
       email: profile?.email || "",
       degree_level: profile?.degree_level || "",
       university_name: profile?.university_name || "",
-      specialty: profile?.specialty || "",
+      speciality: profile?.speciality || "",
       wilaya: profile?.wilaya || "",
       academic_year: profile?.academic_year || "",
-      specialty_type: profile?.specialty_type || "",
+      speciality_type: profile?.speciality_type || "",
       student_id: profile?.student_id || "",
       skills: parseSkills(profile?.skills),
       });
@@ -401,17 +401,17 @@ const ProfileForm = ({
                 isFilled={isFilled(localForm.degree_level)}
               />
               <SelectField
-                label="Specialty type"
+                label="speciality type"
                 icon={<Award className="h-4 w-4" />}
-                value={localForm.specialty_type}
-                onChange={(value) => updateField("specialty_type", value)}
+                value={localForm.speciality_type}
+                onChange={(value) => updateField("speciality_type", value)}
                 options={[
                   { value: "", label: "Select type" },
                   { value: "LMD", label: "LMD (Licence-Master-Doctorat)" },
                   { value: "ING", label: "Ingénieur (Engineer)" },
                   { value: "PRO", label: "Professionnel" },
                 ]}
-                isFilled={isFilled(localForm.specialty_type)}
+                isFilled={isFilled(localForm.speciality_type)}
               />
               <InputField
                 label="University"
@@ -439,12 +439,12 @@ const ProfileForm = ({
               />
               <div className="md:col-span-2">
                 <InputField
-                  label="Specialty / Major"
+                  label="speciality / Major"
                   icon={<BookOpen className="h-4 w-4" />}
-                  value={localForm.specialty}
-                  onChange={(value) => updateField("specialty", value)}
+                  value={localForm.speciality}
+                  onChange={(value) => updateField("speciality", value)}
                   placeholder="Computer Science, Business, etc."
-                  isFilled={isFilled(localForm.specialty)}
+                  isFilled={isFilled(localForm.speciality)}
                 />
               </div>
               <InputField

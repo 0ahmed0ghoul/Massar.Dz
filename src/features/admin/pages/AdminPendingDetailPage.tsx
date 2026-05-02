@@ -35,7 +35,7 @@ console.log(verificationDocs)
       ok = await approveStudent(profile);
     } else {
       const newRole = isUniversity ? "university_admin" : "company_admin";
-      ok = await approvePending(profile, newRole);
+      ok = await approvePending(profile);
     }
     if (ok) navigate("/dashboard/admin/pending");
     setLoading(false);
@@ -161,7 +161,6 @@ console.log(verificationDocs)
                     <div className="sm:col-span-2"><label className="text-xs uppercase tracking-wider text-foreground/40">Company Name</label><p className="mt-1 text-foreground">{profile.company_name || '—'}</p></div>
                     <div><label className="text-xs uppercase tracking-wider text-foreground/40">Company Type</label><p className="mt-1 text-foreground">{profile.company_type || '—'}</p></div>
                     <div><label className="text-xs uppercase tracking-wider text-foreground/40">Industry</label><p className="mt-1 text-foreground flex items-center gap-1"><Briefcase className="h-3 w-3 text-foreground/40" /> {profile.industry || '—'}</p></div>
-                    <div><label className="text-xs uppercase tracking-wider text-foreground/40">Registration Number</label><p className="mt-1 text-foreground">{profile.registration_number || '—'}</p></div>
                     <div className="sm:col-span-2"><label className="text-xs uppercase tracking-wider text-foreground/40">Company Description</label><p className="mt-1 text-foreground/80">{profile.company_description || '—'}</p></div>
                   </>
                 )}
@@ -177,11 +176,11 @@ console.log(verificationDocs)
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">University</label><p className="mt-1 text-foreground">{profile.university_name || '—'}</p></div>
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">Department</label><p className="mt-1 text-foreground">{profile.department || '—'}</p></div>
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">Degree Level</label><p className="mt-1 text-foreground">{profile.degree_level || '—'}</p></div>
-                <div><label className="text-xs uppercase tracking-wider text-foreground/40">Specialty / Major</label><p className="mt-1 text-foreground">{profile.specialty || profile.major || '—'}</p></div>
+                <div><label className="text-xs uppercase tracking-wider text-foreground/40">speciality / Major</label><p className="mt-1 text-foreground">{profile.speciality || profile.major || '—'}</p></div>
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">Academic Year</label><p className="mt-1 text-foreground">{profile.academic_year || '—'}</p></div>
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">Graduation Year</label><p className="mt-1 text-foreground">{profile.graduation_year || '—'}</p></div>
                 <div><label className="text-xs uppercase tracking-wider text-foreground/40">Student ID</label><p className="mt-1 text-foreground">{profile.student_id || '—'}</p></div>
-                <div><label className="text-xs uppercase tracking-wider text-foreground/40">Specialty Type</label><p className="mt-1 text-foreground">{profile.specialty_type || '—'}</p></div>
+                <div><label className="text-xs uppercase tracking-wider text-foreground/40">speciality Type</label><p className="mt-1 text-foreground">{profile.speciality_type || '—'}</p></div>
               </div>
             </div>
           )}
