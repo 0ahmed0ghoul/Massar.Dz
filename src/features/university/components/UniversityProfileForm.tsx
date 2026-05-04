@@ -5,14 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, Save } from 'lucide-react';
-import { University } from '../types/university';
-import logo from '@/assets/univ-guelma.png';
+import { UniversityProfile } from '../services/universityProfile.service';
 
 interface Props {
-  university: University;
+  university: UniversityProfile;
   saving: boolean;
   uploadingLogo: boolean;
-  updateUniversity: (updates: Partial<University>) => Promise<void>;
+  updateUniversity: (updates: Partial<UniversityProfile>) => Promise<void>;
   uploadLogo: (file: File) => Promise<void>;
   deleteLogo: () => void;
 }
@@ -26,14 +25,14 @@ export default function UniversityProfileForm({
   deleteLogo,
 }: Props) {
   const [formData, setFormData] = useState({
-    name: university.name,
-    address: university.address,
-    wilaya: university.wilaya,
-    phone: university.phone,
-    email: university.email,
+    university_name: university.university_name || '',
+    rector_name: university.rector_name || '',
+    department: university.department || '',
+    position: university.position || '',
+    wilaya: university.wilaya || '',
+    email: university.email || '',
     website: university.website || '',
-    establishedYear: university.establishedYear || '',
-    description: university.description || '',
+    description: university.company_description || '', // store description in company_description
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -43,13 +42,14 @@ export default function UniversityProfileForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateUniversity({
-      name: formData.name,
-      address: formData.address,
+      university_name: formData.university_name,
+      rector_name: formData.rector_name,
+      department: formData.department,
+      position: formData.position,
       wilaya: formData.wilaya,
-      phone: formData.phone,
       email: formData.email,
-      website: formData.website || undefined,
-      description: formData.description || undefined,
+      website: formData.website,
+      company_description: formData.description,
     });
   };
 
@@ -64,9 +64,9 @@ export default function UniversityProfileForm({
         {/* Logo section */}
         <div className="flex flex-col items-center gap-3 md:w-1/3">
           <div className="relative">
-            {university.logo ? (
+            {university.verification_docs ? (
               <div className="relative">
-                <img src={logo} alt="Logo" className="h-24 w-24 rounded-full object-cover border border-white/20" />
+                <img src={university.verification_docs.logo} alt="Logo" className="h-24 w-24 rounded-full object-cover border border-white/20" />
                 <button
                   type="button"
                   onClick={deleteLogo}
@@ -95,22 +95,26 @@ export default function UniversityProfileForm({
         <div className="flex-1 space-y-4">
           <div>
             <Label className="text-foreground/80">University Name *</Label>
-            <Input name="name" value={formData.name} onChange={handleChange} required className="bg-white/10 border-white/20 text-foreground" />
+            <Input name="university_name" value={formData.university_name} onChange={handleChange} required className="bg-white/10 border-white/20 text-foreground" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-foreground/80">Address</Label>
-              <Input name="address" value={formData.address} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
+              <Label className="text-foreground/80">Rector / President</Label>
+              <Input name="rector_name" value={formData.rector_name} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
+            </div>
+            <div>
+              <Label className="text-foreground/80">Department</Label>
+              <Input name="department" value={formData.department} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label className="text-foreground/80">Your Position</Label>
+              <Input name="position" value={formData.position} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
+            </div>
             <div>
               <Label className="text-foreground/80">Wilaya (State)</Label>
               <Input name="wilaya" value={formData.wilaya} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
-            </div>
-            <div>
-              <Label className="text-foreground/80">Phone</Label>
-              <Input name="phone" value={formData.phone} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -122,10 +126,6 @@ export default function UniversityProfileForm({
               <Label className="text-foreground/80">Website</Label>
               <Input name="website" value={formData.website} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
             </div>
-          </div>
-          <div>
-            <Label className="text-foreground/80">Established Year</Label>
-            <Input name="establishedYear" type="number" value={formData.establishedYear} onChange={handleChange} className="bg-white/10 border-white/20 text-foreground" />
           </div>
           <div>
             <Label className="text-foreground/80">Description</Label>

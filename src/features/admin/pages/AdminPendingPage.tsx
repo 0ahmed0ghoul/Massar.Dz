@@ -1,47 +1,56 @@
 // features/admin/pages/AdminPendingPage.tsx
 import { useEffect, useState } from "react";
 import { RefreshCw, School, Building2, Shield, Clock, GraduationCap } from "lucide-react";
-import { useAdmin } from "../hooks/useAdmin";
+import { usePendingVerification } from "../hooks/usePendingVerification";
 import { PendingList } from "../components/PendingList";
-import { Profile } from "../services/admin.service";
 import { PendingFilter } from "../constants/admin.constants";
+import { Profile } from "../types/verification.types";
 
 export const AdminPendingPage = () => {
-  const { fetchPendingProfiles, fetchPendingStudents, approvePending, rejectPending, approveStudent, rejectStudent, actionLoading, loading } = useAdmin();
+  const {
+    fetchPendingInstitutions,
+    fetchPendingStudents,
+    approveInstitution,
+    approveStudent,
+    rejectProfile,
+    actionLoading,
+    loading,
+  } = usePendingVerification();
+
   const [institutionProfiles, setInstitutionProfiles] = useState<Profile[]>([]);
   const [studentProfiles, setStudentProfiles] = useState<Profile[]>([]);
   const [filter, setFilter] = useState<PendingFilter>("all");
 
   const loadPending = async () => {
     const [institutions, students] = await Promise.all([
-      fetchPendingProfiles(),
+      fetchPendingInstitutions(),
       fetchPendingStudents(),
     ]);
-    setInstitutionProfiles(institutions);
-    setStudentProfiles(students);
+    if (institutions) setInstitutionProfiles(institutions);
+    if (students) setStudentProfiles(students);
   };
 
   useEffect(() => {
     loadPending();
   }, []);
 
-  const handleApprove = async (profile: Profile) => {
-    const ok = await approvePending(profile);
+  const handleApproveInstitution = async (profile: Profile) => {
+    const ok = await approveInstitution(profile);
     if (ok) loadPending();
   };
 
-  const handleReject = async (profile: Profile) => {
-    const ok = await rejectPending(profile);
+  const handleRejectInstitution = async (profile: Profile) => {
+    const ok = await rejectProfile(profile);
     if (ok) loadPending();
   };
 
-  const handleVerifyStudent = async (profile: Profile) => {
-    const ok = await approveStudent(profile);
+  const handleApproveStudent = async (profile: Profile) => {
+    const ok = await approveStudent(profile, false); // No invitation from list
     if (ok) loadPending();
   };
 
   const handleRejectStudent = async (profile: Profile) => {
-    const ok = await rejectStudent(profile);
+    const ok = await rejectProfile(profile);
     if (ok) loadPending();
   };
 
@@ -69,13 +78,11 @@ export const AdminPendingPage = () => {
 
   return (
     <div className="relative min-h-screen bg-background">
-      {/* Background grid & glow (same as before) */}
       <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
 
       <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <div className="flex items-center gap-3">
@@ -100,7 +107,6 @@ export const AdminPendingPage = () => {
           </button>
         </div>
 
-        {/* Filter Tabs */}
         <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-1 backdrop-blur-sm">
           {(["all", "university_admin", "company_admin", "students"] as PendingFilter[]).map((f) => (
             <button
@@ -129,7 +135,6 @@ export const AdminPendingPage = () => {
           ))}
         </div>
 
-        {/* Pending List Card */}
         <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
           <div className="p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
@@ -149,14 +154,16 @@ export const AdminPendingPage = () => {
             <PendingList
               profiles={displayedProfiles}
               actionLoading={actionLoading}
-              onApprove={filter === "students" ? handleVerifyStudent : handleApprove}
-              onReject={filter === "students" ? handleRejectStudent : handleReject}
+              onApprove={(profile) =>
+                filter === "students" ? handleApproveStudent(profile) : handleApproveInstitution(profile)
+              }
+              onReject={(profile) =>
+                filter === "students" ? handleRejectStudent(profile) : handleRejectInstitution(profile)
+              }
               loading={loading}
             />
           </div>
         </div>
-
-
       </div>
     </div>
   );

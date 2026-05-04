@@ -2,19 +2,40 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Users, UserPlus, CheckCircle2, XCircle, Eye } from 'lucide-react';
-import { Invitation, Student } from '../types/university';
-import { VerifyMatchModal } from './VerifyMatchModal';
+import { ConnectedStudent, PendingRequest } from '../services/universityProfile.service';
+import { VerifyMatchModal } from './VerifyMatchModal'; // assume it expects old types – we'll adapt
 
+// Map PendingRequest to the shape expected by VerifyMatchModal
+const mapToInvitation = (req: PendingRequest) => ({
+  id: req.id,
+  studentId: req.student_id,
+  profileData: {
+    firstName: req.first_name,
+    lastName: req.last_name,
+    email: req.email,
+    studentId: req.student_id_number,
+    speciality: req.speciality,
+    department: req.department,
+    degreeLevel: req.degree_level,
+    academicYears: req.academic_year,
+    wilaya: req.wilaya,
+    avatarUrl: req.avatar_url,
+    studentCardUrl: req.student_card_url,
+    resumeUrl: req.resume_url,
+  },
+  createdAt: req.created_at,
+  status: 'pending',
+});
 
 interface Props {
-  connectedStudents: Student[];
-  pendingRequests: Invitation[];
-  onAccept: (invitationId: string, studentId: string) => void;
-  onReject: (invitationId: string, studentId: string) => void;
+  connectedStudents: ConnectedStudent[];
+  pendingRequests: PendingRequest[];
+  onAccept: (requestId: string, studentId: string) => void;
+  onReject: (requestId: string, studentId: string) => void;
 }
 
 export default function UniversityConnectionsCard({ connectedStudents, pendingRequests, onAccept, onReject }: Props) {
-  const [selectedInvitation, setSelectedInvitation] = useState<Invitation | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<PendingRequest | null>(null);
 
   return (
     <div className="space-y-6">
@@ -32,8 +53,8 @@ export default function UniversityConnectionsCard({ connectedStudents, pendingRe
             {connectedStudents.map((student) => (
               <div key={student.id} className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-white/[0.02] p-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{student.firstName} {student.lastName}</p>
-                  <p className="text-xs text-foreground/40">{student.email} • {student.studentId}</p>
+                  <p className="text-sm font-medium text-foreground">{student.first_name} {student.last_name}</p>
+                  <p className="text-xs text-foreground/40">{student.email} • {student.student_id}</p>
                 </div>
                 <span className="text-xs text-[#639922] flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> Connected
@@ -60,18 +81,18 @@ export default function UniversityConnectionsCard({ connectedStudents, pendingRe
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {req.profileData?.firstName} {req.profileData?.lastName}
+                      {req.first_name} {req.last_name}
                     </p>
                     <p className="text-xs text-foreground/40">
-                      {req.profileData?.email} • {req.profileData?.speciality}
+                      {req.email} • {req.speciality}
                     </p>
-                    <p className="text-xs text-foreground/30 mt-1">Sent: {new Date(req.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-foreground/30 mt-1">Sent: {new Date(req.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => setSelectedInvitation(req)} className="bg-[#639922] text-foreground">
+                    <Button size="sm" onClick={() => setSelectedRequest(req)} className="bg-[#639922] text-foreground">
                       <Eye className="mr-1 h-3 w-3" /> Verify
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => onReject(req.id, req.studentId)} className="border-white/20 text-foreground/80">
+                    <Button size="sm" variant="outline" onClick={() => onReject(req.id, req.student_id)} className="border-white/20 text-foreground/80">
                       <XCircle className="mr-1 h-3 w-3" /> Reject
                     </Button>
                   </div>
@@ -82,20 +103,32 @@ export default function UniversityConnectionsCard({ connectedStudents, pendingRe
         )}
       </div>
 
-      {/* Comparison Modal for verification */}
-      {selectedInvitation && (
+      {/* Verification Modal */}
+      {selectedRequest && (
         <VerifyMatchModal
-          open={!!selectedInvitation}
-          onOpenChange={() => setSelectedInvitation(null)}
-          invitation={selectedInvitation}
-          students={connectedStudents} // we need the full student list; we could pass from parent or fetch again
+          open={!!selectedRequest}
+          onOpenChange={() => setSelectedRequest(null)}
+          invitation={mapToInvitation(selectedRequest)}
+          students={connectedStudents.map(s => ({
+            id: s.id,
+            firstName: s.first_name,
+            lastName: s.last_name,
+            email: s.email,
+            studentId: s.student_id,
+            speciality: s.speciality,
+            department: s.department,
+            degreeLevel: s.degree_level,
+            academicYears: s.academic_year,
+            wilaya: s.wilaya,
+            avatarUrl: s.avatar_url,
+          }))}
           onAccept={() => {
-            onAccept(selectedInvitation.id, selectedInvitation.studentId);
-            setSelectedInvitation(null);
+            onAccept(selectedRequest.id, selectedRequest.student_id);
+            setSelectedRequest(null);
           }}
           onReject={() => {
-            onReject(selectedInvitation.id, selectedInvitation.studentId);
-            setSelectedInvitation(null);
+            onReject(selectedRequest.id, selectedRequest.student_id);
+            setSelectedRequest(null);
           }}
         />
       )}

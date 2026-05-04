@@ -23,6 +23,7 @@ interface SearchableSelectProps {
   onBlur?: () => void;
   placeholder: string;
   emptyMessage?: string;
+  className?:string;
 }
 
 export function SearchableSelect({

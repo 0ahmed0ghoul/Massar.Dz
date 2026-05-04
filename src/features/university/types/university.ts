@@ -54,3 +54,25 @@ export interface University {
     status: 'pending' | 'accepted' | 'rejected';
     createdAt: string;
   }
+  export interface InvitationWithStudent {
+    id: string;
+    student_id: string;
+    university_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    invited_by: string | null;
+    created_at: string;
+    updated_at: string;
+    profile: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      student_id: string;
+      speciality: string | null;
+      department: string | null;
+      degree_level: string | null;
+      academic_year: string | null;
+      wilaya: string;
+      avatar_url: string | null;
+    } | null; 
+  }

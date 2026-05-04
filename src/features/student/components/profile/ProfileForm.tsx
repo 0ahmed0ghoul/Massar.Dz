@@ -23,12 +23,12 @@ import {
 import { studentService } from "@/features/student/services/student.service";
 import { SkillsInput } from "@/features/auth/components/skills-input";
 import { toast } from "sonner";
-
+import { SearchableSelect } from "@/features/auth/components/searchable-select";
+import { Label } from "@/components/ui/label";
 
 const parseSkills = (skills: any): string[] => {
   if (!skills) return [];
   if (Array.isArray(skills)) return skills;
-
   if (typeof skills === "string") {
     try {
       return JSON.parse(skills);
@@ -36,7 +36,6 @@ const parseSkills = (skills: any): string[] => {
       return [];
     }
   }
-
   return [];
 };
 
@@ -100,8 +99,27 @@ const ProfileForm = ({
       speciality_type: profile?.speciality_type || "",
       student_id: profile?.student_id || "",
       skills: parseSkills(profile?.skills),
-      });
+    });
   }, [profile]);
+
+  const [universities, setUniversities] = useState<{ id: string; name: string }[]>([]);
+  const [loadingUnis, setLoadingUnis] = useState(false);
+
+  // Fetch verified universities on mount
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      setLoadingUnis(true);
+      try {
+        const list = await studentService.getVerifiedUniversities();
+        setUniversities(list);
+      } catch (err) {
+        console.error("Failed to load universities:", err);
+      } finally {
+        setLoadingUnis(false);
+      }
+    };
+    fetchUniversities();
+  }, []);
 
   const updateField = (field: string, value: any) => {
     setLocalForm((prev) => ({ ...prev, [field]: value }));
@@ -124,10 +142,8 @@ const ProfileForm = ({
     const wasComplete = await studentService.isProfileComplete(profile.id);
     await updateProfile(changedFields);
 
-  
     if (profile?.role === "student") {
       const isNowComplete = await studentService.ensureProfileCompleted(profile.id);
-
       if (!wasComplete && isNowComplete) {
         toast.success(
           "✅ Profile completed! Massar team will verify your account. If legit, a connection invitation will be sent to your university.",
@@ -137,7 +153,7 @@ const ProfileForm = ({
     }
   };
 
-  // File handlers (unchanged – keep your existing implementations)
+  // File handlers (unchanged)
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !uploadAvatar) return;
@@ -341,7 +357,7 @@ const ProfileForm = ({
           )}
         </div>
 
-        {/* Personal Information – unchanged */}
+        {/* Personal Information */}
         <div>
           <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-foreground">
             <User className="h-5 w-5 text-[#639922]" />
@@ -378,7 +394,7 @@ const ProfileForm = ({
           </div>
         </div>
 
-        {/* Academic Information – unchanged except skills section */}
+        {/* Academic Information */}
         {isStudent && (
           <div>
             <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-foreground">
@@ -401,7 +417,7 @@ const ProfileForm = ({
                 isFilled={isFilled(localForm.degree_level)}
               />
               <SelectField
-                label="speciality type"
+                label="Speciality type"
                 icon={<Award className="h-4 w-4" />}
                 value={localForm.speciality_type}
                 onChange={(value) => updateField("speciality_type", value)}
@@ -413,14 +429,28 @@ const ProfileForm = ({
                 ]}
                 isFilled={isFilled(localForm.speciality_type)}
               />
-              <InputField
-                label="University"
-                icon={<Building2 className="h-4 w-4" />}
-                value={localForm.university_name}
-                onChange={(value) => updateField("university_name", value)}
-                placeholder="University of Science"
-                isFilled={isFilled(localForm.university_name)}
-              />
+
+              {/* University - searchable select (full width) */}
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-foreground/80">University</Label>
+                  {isFilled(localForm.university_name) ? (
+                    <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5 text-red-500" />
+                  )}
+                </div>
+                <div className="mt-1.5">
+                  <SearchableSelect
+                    options={universities.map((u) => u.name)}
+                    value={localForm.university_name || ""}
+                    onChange={(val) => updateField("university_name", val)}
+                    placeholder="Select your university..."
+                    emptyMessage={loadingUnis ? "Loading..." : "No verified universities found"}
+                  />
+                </div>
+              </div>
+
               <SelectField
                 label="Academic year"
                 icon={<Calendar className="h-4 w-4" />}
@@ -437,9 +467,10 @@ const ProfileForm = ({
                 ]}
                 isFilled={isFilled(localForm.academic_year)}
               />
+
               <div className="md:col-span-2">
                 <InputField
-                  label="speciality / Major"
+                  label="Speciality / Major"
                   icon={<BookOpen className="h-4 w-4" />}
                   value={localForm.speciality}
                   onChange={(value) => updateField("speciality", value)}
@@ -447,6 +478,7 @@ const ProfileForm = ({
                   isFilled={isFilled(localForm.speciality)}
                 />
               </div>
+
               <InputField
                 label="Student ID"
                 icon={<Hash className="h-4 w-4" />}
@@ -465,7 +497,7 @@ const ProfileForm = ({
               />
             </div>
 
-            {/* ✅ Skills Section – with key to force re-render */}
+            {/* Skills Section */}
             <div className="mt-5">
               <label className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-foreground/50">
                 <span className="flex items-center gap-2">
@@ -479,7 +511,7 @@ const ProfileForm = ({
                 )}
               </label>
               <SkillsInput
-                key={JSON.stringify(localForm.skills)} // forces re-render when skills change
+                key={JSON.stringify(localForm.skills)}
                 value={localForm.skills}
                 onChange={(skillsArray) => updateField("skills", skillsArray)}
                 placeholder="e.g., React, Python, Project Management"
@@ -491,7 +523,7 @@ const ProfileForm = ({
           </div>
         )}
 
-        {/* Save button – unchanged */}
+        {/* Save button */}
         <div className="flex justify-end pt-4">
           <button
             onClick={handleSave}
@@ -563,7 +595,12 @@ const SelectField = ({ label, icon, value, onChange, options, isFilled }) => (
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4 text-foreground/40"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>

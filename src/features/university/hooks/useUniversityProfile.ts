@@ -1,133 +1,113 @@
-// hooks/useUniversityProfile.ts
-import { useState, useEffect } from 'react';
-import { University, Student, Invitation } from '../types/university';
-
-const STORAGE_KEYS = {
-  UNIVERSITY_PROFILE: 'university_profile',
-  STUDENTS: 'university_students',
-  INVITATIONS: 'university_invitations',
-};
-
-const DEFAULT_UNIVERSITY: University = {
-  id: 'uni_001',
-  name: 'University of Guelma',
-  logo: 'src/assets/univ-guelma.png',
-  address: '123 University Blvd',
-  wilaya: 'Guelma',
-  phone: '+213 21 123456',
-  email: 'contact@univ-guelma.dz',
-  website: 'https://www.univ-guelma.dz',
-  establishedYear: 1990,
-  description: 'Leading institution for higher education and research.',
-};
+// features/university/hooks/useUniversityProfile.ts
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { universityProfileService, UniversityProfile, ConnectedStudent, PendingRequest } from "../services/universityProfile.service";
 
 export function useUniversityProfile() {
-  const [university, setUniversity] = useState<University | null>(null);
-  const [connectedStudents, setConnectedStudents] = useState<Student[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Invitation[]>([]);
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+
+  const [university, setUniversity] = useState<UniversityProfile | null>(null);
+  const [connectedStudents, setConnectedStudents] = useState<ConnectedStudent[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  // Load data on mount
+  const universityId = profile?.id; // university admin's profile ID
+
+  const loadAllData = useCallback(async () => {
+    if (!universityId) return;
+    setLoading(true);
+    try {
+      const [uni, connected, pending] = await Promise.all([
+        universityProfileService.getUniversityProfile(universityId),
+        universityProfileService.getConnectedStudents(universityId),
+        universityProfileService.getPendingRequests(universityId),
+      ]);
+      setUniversity(uni);
+      setConnectedStudents(connected);
+      setPendingRequests(pending);
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [universityId, toast]);
+
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [loadAllData]);
 
-  const loadAllData = () => {
-    setLoading(true);
-    // Load university profile
-    const storedUni = localStorage.getItem(STORAGE_KEYS.UNIVERSITY_PROFILE);
-    if (storedUni) {
-      setUniversity(JSON.parse(storedUni));
-    } else {
-      // Seed default university
-      localStorage.setItem(STORAGE_KEYS.UNIVERSITY_PROFILE, JSON.stringify(DEFAULT_UNIVERSITY));
-      setUniversity(DEFAULT_UNIVERSITY);
-    }
-
-    // Load students and invitations
-    const students: Student[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
-    const invitations: Invitation[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVITATIONS) || '[]');
-
-    // Filter connected students (connectionStatus === 'connected')
-    const connected = students.filter(s => s.connectionStatus === 'connected');
-    setConnectedStudents(connected);
-
-    // Filter pending invitations for this university
-    const pending = invitations.filter(inv => inv.universityId === university?.id && inv.status === 'pending');
-    setPendingRequests(pending);
-
-    setLoading(false);
-  };
-
-  // Update university details
-  const updateUniversity = async (updates: Partial<University>) => {
-    if (!university) return;
+  const updateUniversity = useCallback(async (updates: Partial<UniversityProfile>) => {
+    if (!universityId) return;
     setSaving(true);
-    const updated = { ...university, ...updates };
-    localStorage.setItem(STORAGE_KEYS.UNIVERSITY_PROFILE, JSON.stringify(updated));
-    setUniversity(updated);
-    setSaving(false);
-  };
+    try {
+      await universityProfileService.updateUniversityProfile(universityId, updates);
+      setUniversity((prev) => (prev ? { ...prev, ...updates } : null));
+      toast({ title: "Success", description: "Profile updated" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }, [universityId, toast]);
 
-  // Upload logo (converts to base64)
-  const uploadLogo = async (file: File) => {
-    if (!university) return;
+  const uploadLogo = useCallback(async (file: File) => {
+    if (!universityId) return;
     setUploadingLogo(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const logoBase64 = reader.result as string;
-      const updated = { ...university, logo: logoBase64 };
-      localStorage.setItem(STORAGE_KEYS.UNIVERSITY_PROFILE, JSON.stringify(updated));
-      setUniversity(updated);
+    try {
+      const logoUrl = await universityProfileService.uploadLogo(universityId, file);
+      // Get current verification_docs
+      const currentDocs = university?.verification_docs || {};
+      const updatedDocs = { ...currentDocs, logo: logoUrl };
+      await updateUniversity({ verification_docs: updatedDocs });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
       setUploadingLogo(false);
-    };
-    reader.readAsDataURL(file);
-  };
+    }
+  }, [universityId, university, updateUniversity, toast]);
 
-  const deleteLogo = () => {
-    if (!university) return;
-    const updated = { ...university, logo: undefined };
-    localStorage.setItem(STORAGE_KEYS.UNIVERSITY_PROFILE, JSON.stringify(updated));
-    setUniversity(updated);
-  };
+  const deleteLogo = useCallback(async () => {
+    if (!university?.verification_docs?.logo) return;
+    setUploadingLogo(true);
+    try {
+      const currentDocs = university.verification_docs || {};
+      const { logo, ...remainingDocs } = currentDocs; // remove logo field
+      await updateUniversity({ verification_docs: remainingDocs });
+      // Optionally delete the file from storage (if you want to free space)
+      if (university.verification_docs.logo) {
+        await universityProfileService.deleteLogo(university.verification_docs.logo);
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingLogo(false);
+    }
+  }, [university, updateUniversity, toast]);
 
-  // Accept a connection request (reuse logic from useUniversityData)
-  const acceptRequest = (invitationId: string, studentId: string) => {
-    // Update invitation status
-    const invitations: Invitation[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVITATIONS) || '[]');
-    const updatedInvitations = invitations.map(inv =>
-      inv.id === invitationId ? { ...inv, status: 'accepted' } : inv
-    );
-    localStorage.setItem(STORAGE_KEYS.INVITATIONS, JSON.stringify(updatedInvitations));
+  const acceptRequest = useCallback(async (requestId: string, studentId: string) => {
+    try {
+      await universityProfileService.acceptRequest(requestId, studentId);
+      toast({ title: "Success", description: "Connection accepted" });
+      await loadAllData(); // refresh lists
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  }, [loadAllData, toast]);
 
-    // Update student connection status
-    const students: Student[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
-    const updatedStudents = students.map(s =>
-      s.id === studentId ? { ...s, connectionStatus: 'connected' } : s
-    );
-    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
-
-    // Reload data
-    loadAllData();
-  };
-
-  const rejectRequest = (invitationId: string, studentId: string) => {
-    const invitations: Invitation[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVITATIONS) || '[]');
-    const updatedInvitations = invitations.map(inv =>
-      inv.id === invitationId ? { ...inv, status: 'rejected' } : inv
-    );
-    localStorage.setItem(STORAGE_KEYS.INVITATIONS, JSON.stringify(updatedInvitations));
-
-    const students: Student[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENTS) || '[]');
-    const updatedStudents = students.map(s =>
-      s.id === studentId ? { ...s, connectionStatus: 'none' } : s
-    );
-    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
-
-    loadAllData();
-  };
+  const rejectRequest = useCallback(async (requestId: string, studentId: string) => {
+    try {
+      await universityProfileService.rejectRequest(requestId, studentId);
+      toast({ title: "Success", description: "Connection rejected" });
+      await loadAllData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  }, [loadAllData, toast]);
 
   return {
     university,
@@ -141,5 +121,6 @@ export function useUniversityProfile() {
     pendingRequests,
     acceptRequest,
     rejectRequest,
+    refresh: loadAllData,
   };
 }

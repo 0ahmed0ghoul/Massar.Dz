@@ -19,7 +19,7 @@ import UniversityDashboard from "@/features/university/pages/Dashboard";
 import CertificatePage from "@/features/student/pages/CertificatePage";
 import PendingRoute from "./PendingRoute";
 import ProfilePage from "@/features/student/pages/ProfilePage";
-import InvitationsPage from "@/features/university/pages/InvitaionPage";
+import InvitationsPage from "@/features/university/pages/InvitaionsPage";
 import UniversityProfilePage from "@/features/university/pages/ProfilePage";
 import CompanyProfilePage from "@/features/company/pages/CompanyProfilePage";
 import CompanyApplicationsPage from "@/features/company/pages/ApplicationsPage";

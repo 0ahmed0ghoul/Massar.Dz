@@ -14,6 +14,6 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   rejected: { label: "Rejected", color: "#EF4444" },
 };
 
-export type RoleFilter = "all" | "student" | "company_admin" | "university_admin" | "university_admin";
+export type RoleFilter = "all" | "student" | "professional"| "company_admin" | "university_admin" | "university_admin";
 export type StatusFilter = "all" | "active" | "pending" | "rejected";
 export type PendingFilter = "all" | "university_admin" | "company_admin" | "students";

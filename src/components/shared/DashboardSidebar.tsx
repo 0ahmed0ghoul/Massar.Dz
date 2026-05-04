@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, ChevronLeft, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet } from "lucide-react";
+import { X, ChevronLeft, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -38,7 +38,7 @@ const navMap: Record<UserRole, any[]> = {
   university_admin: [
     { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
     { title: "Profile", url: "/university/dashboard/profile", icon: User },
-    { title: "Students", url: "/university/dashboard/students", icon: Users },
+    { title: "Students Database", url: "/university/dashboard/students", icon: Database },
     { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
   ],
   super_admin: [

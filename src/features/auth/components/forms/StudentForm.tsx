@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,8 +24,9 @@ import { PasswordInput } from "../PasswordInput";
 import { FieldError } from "../FieldError";
 import { studentSchema, StudentFields } from "../../schemas/auth.schemas";
 import { SkillsInput } from "../skills-input";
-
-
+import { SearchableSelect } from "../searchable-select";
+import { authService } from "../../service/auth.service";
+import { UNIVERSITY_DEPARTMENTS } from "../../constants/university.constants";
 
 type StudentStatus = "studying" | "graduated" | "self_taught";
 
@@ -41,14 +42,17 @@ const errorInputCls = "border-destructive/50 focus:border-destructive/70";
 export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
   const [status, setStatus] = useState<StudentStatus>("studying");
   const [skills, setSkills] = useState<string[]>([]);
+  const [universities, setUniversities] = useState<{ id: string; name: string }[]>([]);
+  const [loadingUnis, setLoadingUnis] = useState(false);
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    watch,
     setValue,
     clearErrors,
+    formState: { errors },
   } = useForm<StudentFields>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
@@ -67,9 +71,24 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
     },
   });
 
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      setLoadingUnis(true);
+      try {
+        const data = await authService.getVerifiedUniversities();
+        setUniversities(data);
+      } catch (err) {
+        console.error("Failed to load universities:", err);
+      } finally {
+        setLoadingUnis(false);
+      }
+    };
+    fetchUniversities();
+  }, []);
+
   const handleStatusChange = (newStatus: StudentStatus) => {
     setStatus(newStatus);
-    setValue("candidateType", newStatus); 
+    setValue("candidateType", newStatus);
     if (newStatus === "studying") {
       setValue("university", "");
       setValue("degree", "");
@@ -84,7 +103,6 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
       setValue("skills", []);
       clearErrors(["university", "department", "skills"]);
     } else {
-      // self_taught
       setValue("university", "");
       setValue("department", "");
       setValue("degree", "");
@@ -94,6 +112,8 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
       clearErrors(["university", "department", "degree", "graduationYear"]);
     }
   };
+
+  const selectedUniversity = watch("university");
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -112,23 +132,14 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
                 key={option.id}
                 type="button"
                 onClick={() => handleStatusChange(option.id as StudentStatus)}
-                className={`relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-all duration-200
-                  ${
-                    isActive
-                      ? "border-primary/60 bg-primary/10 shadow-md shadow-primary/10"
-                      : "border-border bg-card/30 hover:bg-card/50 hover:border-border/70"
-                  }`}
+                className={`relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-all duration-200 ${
+                  isActive
+                    ? "border-primary/60 bg-primary/10 shadow-md shadow-primary/10"
+                    : "border-border bg-card/30 hover:bg-card/50 hover:border-border/70"
+                }`}
               >
-                <option.icon
-                  className={`h-5 w-5 ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
-                />
-                <span
-                  className={`text-xs font-medium ${
-                    isActive ? "text-primary" : "text-foreground/70"
-                  }`}
-                >
+                <option.icon className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                <span className={`text-xs font-medium ${isActive ? "text-primary" : "text-foreground/70"}`}>
                   {option.label}
                 </span>
               </button>
@@ -141,24 +152,12 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label className={labelCls}>First name</Label>
-          <Input
-            placeholder="Jane"
-            {...register("firstName")}
-            className={`mt-1.5 ${inputCls} ${
-              errors.firstName ? errorInputCls : ""
-            }`}
-          />
+          <Input {...register("firstName")} className={`mt-1.5 ${inputCls} ${errors.firstName ? errorInputCls : ""}`} />
           <FieldError message={errors.firstName?.message} />
         </div>
         <div>
           <Label className={labelCls}>Last name</Label>
-          <Input
-            placeholder="Doe"
-            {...register("lastName")}
-            className={`mt-1.5 ${inputCls} ${
-              errors.lastName ? errorInputCls : ""
-            }`}
-          />
+          <Input {...register("lastName")} className={`mt-1.5 ${inputCls} ${errors.lastName ? errorInputCls : ""}`} />
           <FieldError message={errors.lastName?.message} />
         </div>
       </div>
@@ -166,23 +165,14 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
       {/* Email */}
       <div>
         <Label className={labelCls}>Email</Label>
-        <Input
-          type="email"
-          placeholder="you@example.com"
-          {...register("email")}
-          className={`mt-1.5 ${inputCls} ${errors.email ? errorInputCls : ""}`}
-        />
+        <Input type="email" {...register("email")} className={`mt-1.5 ${inputCls} ${errors.email ? errorInputCls : ""}`} />
         <FieldError message={errors.email?.message} />
       </div>
 
       {/* Password */}
       <div>
         <Label className={labelCls}>Password</Label>
-        <PasswordInput
-          id="password"
-          {...register("password")}
-          className={`mt-1.5 ${errors.password ? errorInputCls : ""}`}
-        />
+        <PasswordInput id="password" {...register("password")} className={`mt-1.5 ${errors.password ? errorInputCls : ""}`} />
         <FieldError message={errors.password?.message} />
       </div>
 
@@ -198,34 +188,36 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
         >
           {status === "studying" && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label className={labelCls}>University / Institution *</Label>
-                  <div className="relative mt-1.5">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                    <Input
-                      placeholder="University of Algiers"
-                      className={`pl-9 ${inputCls} ${
-                        errors.university ? errorInputCls : ""
-                      }`}
-                      {...register("university")}
-                    />
-                  </div>
-                  <FieldError message={errors.university?.message} />
-                </div>
-                <div>
-                  <Label className={labelCls}>Department / Faculty</Label>
-                  <Input
-                    placeholder="Computer Science"
-                    {...register("department")}
-                    className={`mt-1.5 ${inputCls} ${
-                      errors.department ? errorInputCls : ""
-                    }`}
+              {/* University - full width */}
+              <div>
+                <Label className={labelCls}>University / Institution *</Label>
+                <div className="relative mt-1.5">
+                  <SearchableSelect
+                    options={universities.map(u => u.name)}
+                    value={selectedUniversity || ""}
+                    onChange={(val) => setValue("university", val, { shouldValidate: true })}
+                    placeholder="Select or search your university..."
+                    emptyMessage={loadingUnis ? "Loading..." : "No universities found"}
+                    className="pl-10 focus:border-[#639922] focus:ring-1 focus:ring-[#639922]/50"
                   />
-                  <FieldError message={errors.department?.message} />
                 </div>
+                <FieldError message={errors.university?.message} />
               </div>
 
+              {/* Department - full width (using constant) */}
+              <div>
+                <Label className={labelCls}>Department / Faculty</Label>
+                <SearchableSelect
+                  options={UNIVERSITY_DEPARTMENTS}
+                  value={watch("department") || ""}
+                  onChange={(val) => setValue("department", val, { shouldValidate: true })}
+                  placeholder="Select department..."
+                  emptyMessage="No department found"
+                />
+                <FieldError message={errors.department?.message} />
+              </div>
+
+              {/* Education Level + Expected Graduation Year - two columns */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className={labelCls}>Current Education Level *</Label>
@@ -233,27 +225,18 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
                     name="degreeLevel"
                     control={control}
                     render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          className={`mt-1.5 border-border bg-card/30 ${
-                            errors.degreeLevel ? errorInputCls : ""
-                          }`}
-                        >
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className={`mt-1.5 border-border bg-card/30 ${errors.degreeLevel ? errorInputCls : ""}`}>
                           <SelectValue placeholder="Select level" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-card border-border">
                           {[
                             ["bachelor", "Bachelor's"],
                             ["master", "Master's"],
                             ["phd", "PhD"],
                             ["bootcamp", "Bootcamp"],
                           ].map(([v, label]) => (
-                            <SelectItem key={v} value={v}>
-                              {label}
-                            </SelectItem>
+                            <SelectItem key={v} value={v}>{label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -263,18 +246,12 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
                 </div>
                 <div>
                   <Label className={labelCls}>Expected Graduation Year</Label>
-                  <Input
-                    placeholder="2025"
-                    {...register("graduationYear")}
-                    className={`mt-1.5 ${inputCls} ${
-                      errors.graduationYear ? errorInputCls : ""
-                    }`}
-                  />
+                  <Input placeholder="2025" {...register("graduationYear")} className={`mt-1.5 ${inputCls} ${errors.graduationYear ? errorInputCls : ""}`} />
                   <FieldError message={errors.graduationYear?.message} />
                 </div>
               </div>
 
-              {/* Optional skills for students */}
+              {/* Skills */}
               <div>
                 <Label className={labelCls}>Skills (optional)</Label>
                 <Controller
@@ -299,59 +276,45 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
 
           {status === "graduated" && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label className={labelCls}>University *</Label>
-                  <div className="relative mt-1.5">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                    <Input
-                      placeholder="University of Algiers"
-                      className={`pl-9 ${inputCls} ${
-                        errors.university ? errorInputCls : ""
-                      }`}
-                      {...register("university")}
-                    />
-                  </div>
-                  <FieldError message={errors.university?.message} />
+              {/* University - full width */}
+              <div>
+                <Label className={labelCls}>University *</Label>
+                <div className="relative mt-1.5">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40 z-10" />
+                  <SearchableSelect
+                    options={universities.map(u => u.name)}
+                    value={selectedUniversity || ""}
+                    onChange={(val) => setValue("university", val, { shouldValidate: true })}
+                    placeholder="Select your university..."
+                    emptyMessage={loadingUnis ? "Loading..." : "No universities found"}
+                    className="pl-10 focus:border-[#639922] focus:ring-1 focus:ring-[#639922]/50"
+                  />
                 </div>
+                <FieldError message={errors.university?.message} />
+              </div>
+
+              {/* Degree + Speciality (two columns) */}
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className={labelCls}>Degree *</Label>
-                  <Input
-                    placeholder="Bachelor's in Computer Science"
-                    {...register("degree")}
-                    className={`mt-1.5 ${inputCls} ${
-                      errors.degree ? errorInputCls : ""
-                    }`}
-                  />
+                  <Input placeholder="Bachelor's in Computer Science" {...register("degree")} className={`mt-1.5 ${inputCls} ${errors.degree ? errorInputCls : ""}`} />
                   <FieldError message={errors.degree?.message} />
                 </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label className={labelCls}>speciality / Field</Label>
-                  <Input
-                    placeholder="Artificial Intelligence"
-                    {...register("speciality")}
-                    className={`mt-1.5 ${inputCls} ${
-                      errors.speciality ? errorInputCls : ""
-                    }`}
-                  />
+                  <Label className={labelCls}>Speciality / Field</Label>
+                  <Input placeholder="Artificial Intelligence" {...register("speciality")} className={`mt-1.5 ${inputCls} ${errors.speciality ? errorInputCls : ""}`} />
                   <FieldError message={errors.speciality?.message} />
-                </div>
-                <div>
-                  <Label className={labelCls}>Graduation Year *</Label>
-                  <Input
-                    placeholder="2023"
-                    {...register("graduationYear")}
-                    className={`mt-1.5 ${inputCls} ${
-                      errors.graduationYear ? errorInputCls : ""
-                    }`}
-                  />
-                  <FieldError message={errors.graduationYear?.message} />
                 </div>
               </div>
 
-              {/* Optional skills for graduates */}
+              {/* Graduation Year - full width */}
+              <div>
+                <Label className={labelCls}>Graduation Year *</Label>
+                <Input placeholder="2023" {...register("graduationYear")} className={`mt-1.5 ${inputCls} ${errors.graduationYear ? errorInputCls : ""}`} />
+                <FieldError message={errors.graduationYear?.message} />
+              </div>
+
+              {/* Skills */}
               <div>
                 <Label className={labelCls}>Skills (optional)</Label>
                 <Controller
@@ -377,12 +340,9 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
           {status === "self_taught" && (
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
               <Sparkles className="mx-auto h-8 w-8 text-primary mb-2" />
-              <p className="text-sm font-medium text-foreground">
-                Self‑taught & independent learners
-              </p>
+              <p className="text-sm font-medium text-foreground">Self‑taught & independent learners</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Tell us about your technical skills (press Enter or comma to
-                add)
+                Tell us about your technical skills (press Enter or comma to add)
               </p>
               <div className="mt-3">
                 <Controller
@@ -400,9 +360,7 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
                   )}
                 />
                 <FieldError message={errors.skills?.message} />
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Add your key technical or soft skills
-                </p>
+                <p className="text-[10px] text-muted-foreground mt-2">Add your key technical or soft skills</p>
               </div>
             </div>
           )}
@@ -414,14 +372,7 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
         disabled={isLoading}
         className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground transition-all duration-300 group"
       >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <>
-            <span>Continue</span>
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </>
-        )}
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><span>Continue</span><ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></>}
       </Button>
     </form>
   );

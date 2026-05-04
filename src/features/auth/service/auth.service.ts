@@ -288,6 +288,20 @@ class AuthService {
     await new Promise((r) => setTimeout(r, 800));
     return true;
   }
+  async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_verified_universities');
+      if (error) throw error;
+  
+      return (data || []).map((u: any) => ({
+        id: u.id,
+        name: u.university_name, // ✅ FIX HERE
+      }));
+    } catch (error) {
+      console.error("Error fetching verified universities:", error);
+      return [];
+    }
+  }
 }
 
 export const authService = new AuthService();

@@ -57,6 +57,18 @@ export const studentService = {
     return data || [];
   },
 
+  async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_verified_universities');
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching verified universities:", error);
+      return [];
+    }
+  },
+
   async getApplications(studentId: string): Promise<ApplicationWithJob[]> {
     const { data, error } = await supabase
       .from("applications")
