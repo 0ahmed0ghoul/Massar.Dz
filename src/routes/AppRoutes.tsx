@@ -44,6 +44,7 @@ import CompanyCompleteProfilePage from "@/features/auth/pages/CompanyCompletePro
 import PricingPage from "@/features/landing/pages/PricingPage";
 import PaymentPage from "@/features/landing/pages/PaymentPage";
 import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
+import NotFound from "@/pages/NotFound";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -186,6 +187,7 @@ const AppRoutes = () => {
           />
         </Route>
       </Route>
+      <Route path="*" element={<NotFound/>} />
     </Routes>
   );
 };
