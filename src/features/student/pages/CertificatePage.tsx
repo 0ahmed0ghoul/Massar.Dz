@@ -16,9 +16,11 @@ import { useCertificates } from "../hooks/useCertificates";
 import { Certificate, CertificateType } from "../types/certificate.types";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
+import { useStudentType } from "@/features/auth/hooks/useStudentType";
 
 export default function CertificatePage() {
   const { user } = useAuth();
+  const { type: candidateType, loading: typeLoading } = useStudentType();
   const [universityConnectionStatus, setUniversityConnectionStatus] = useState<string | null>(null);
   const [connectionLoading, setConnectionLoading] = useState(true);
   
@@ -30,10 +32,13 @@ export default function CertificatePage() {
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
-  // Fetch university connection status
+  // Fetch university connection status (only needed for studying students)
   useEffect(() => {
     async function fetchConnectionStatus() {
-      if (!user) return;
+      if (!user || candidateType !== 'studying') {
+        setConnectionLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from("university_connections")
         .select("status")
@@ -44,11 +49,13 @@ export default function CertificatePage() {
       setConnectionLoading(false);
     }
     fetchConnectionStatus();
-  }, [user]);
+  }, [user, candidateType]);
 
   const isConnected = universityConnectionStatus === "accepted";
+  const isStudying = candidateType === 'studying';
+  const isGraduated = candidateType === 'graduated';
+  const isSelfTaught = candidateType === 'self_taught';
 
-  // Handle scan success
   const handleScanSuccess = async (decodedText: string) => {
     try {
       const url = new URL(decodedText);
@@ -134,7 +141,9 @@ export default function CertificatePage() {
     return acc;
   }, {} as Record<string, Certificate[]>);
 
-  if (loading || connectionLoading) {
+  const isLoading = loading || typeLoading || connectionLoading;
+
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -163,14 +172,31 @@ export default function CertificatePage() {
           <Button onClick={() => setShowAddModal(true)} className="bg-[#639922] text-black">
             <Plus className="w-4 h-4 mr-2" /> Add Certificate
           </Button>
-          {isConnected ? (
-            <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20">
-              <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
-            </Button>
-          ) : (
+
+          {isStudying && (
+            isConnected ? (
+              <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20">
+                <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
+              </Button>
+            ) : (
+              <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                You need to be connected to a university department to claim a graduation certificate.
+              </div>
+            )
+          )}
+
+          {isGraduated && (
             <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              You need to be connected to a university department to request official certificates.
+              <Award className="h-4 w-4" />
+              As a graduate, you can upload your graduation certificate manually using "Add Certificate".
+            </div>
+          )}
+
+          {isSelfTaught && (
+            <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Self‑taught learners can add skills certificates and achievements.
             </div>
           )}
         </div>

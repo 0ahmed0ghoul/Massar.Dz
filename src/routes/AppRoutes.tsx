@@ -45,6 +45,7 @@ import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
 import NotFound from "@/pages/NotFound";
 import UniversityChatPage from "@/features/university/pages/chat";
 import CertificateRequestsPage from "@/features/university/pages/CertificateRequests";
+import SkillsPage from "@/features/student/pages/SkillsPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -109,6 +110,10 @@ const AppRoutes = () => {
             <Route
               path="/student/dashboard/certificate"
               element={<CertificatePage />}
+            />
+                        <Route
+              path="/student/dashboard/skills"
+              element={<SkillsPage />}
             />
           </Route>
         </Route>

@@ -272,6 +272,16 @@ class AuthService {
   // ─────────────────────────────────────────────
   // UTILS
   // ─────────────────────────────────────────────
+  async getCurrentStudentType(userId: string): Promise<'studying' | 'graduated' | 'self_taught' | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('candidate_type')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error || !data) return null;
+    return data.candidate_type as any;
+  }
+  
   async checkEmailExists(email: string): Promise<boolean> {
     const { data } = await supabase
       .from("profiles")

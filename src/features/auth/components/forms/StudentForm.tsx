@@ -280,7 +280,6 @@ export function StudentForm({ isLoading, onSubmit }: StudentFormProps) {
               <div>
                 <Label className={labelCls}>University *</Label>
                 <div className="relative mt-1.5">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40 z-10" />
                   <SearchableSelect
                     options={universities.map(u => u.name)}
                     value={selectedUniversity || ""}

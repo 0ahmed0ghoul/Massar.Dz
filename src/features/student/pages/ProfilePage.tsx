@@ -1,4 +1,5 @@
 // pages/ProfilePage.tsx
+import { useStudentType } from "@/features/auth/hooks/useStudentType";
 import ProfileForm from "../components/profile/ProfileForm";
 import { UniversityConnectionCard } from "../components/UniversityConnectionCard";
 import { useProfilePage } from "../hooks/useProfilePage";
@@ -20,6 +21,7 @@ const ProfilePage = () => {
     deleteStudentCard,
     requestUniversityConnection,
   } = useProfilePage();
+  const { type: studentType, loading: typeLoading } = useStudentType();
 
   if (loading) {
     return (
@@ -69,11 +71,13 @@ const ProfilePage = () => {
         </div>
 
         {/* University Connection Card */}
-        <UniversityConnectionCard
-          profile={profile}
-          onRequestConnection={requestUniversityConnection}
-          isRequesting={false} // you can replace with a dedicated state if needed
-        />
+        {studentType === 'studying' && (
+      <UniversityConnectionCard
+        profile={profile}
+        onRequestConnection={requestUniversityConnection}
+        isRequesting={false}         
+      />
+    )}
 
         {/* Help card */}
         <div className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 backdrop-blur-sm sm:p-6">

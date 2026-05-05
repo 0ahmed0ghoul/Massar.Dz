@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, ChevronLeft, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, MessageCircleMoreIcon, LucidePartyPopper } from "lucide-react";
+import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -13,44 +13,51 @@ interface DashboardSidebarProps {
   notificationCount: number;
   isProfileComplete: boolean;
   pendingCount: number;
+  candidateType?: "studying" | "graduated" | "self_taught" | null;
 }
 
 type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
 
-const navMap: Record<UserRole, any[]> = {
-  student: [
-    { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
-    { title: "Profile", url: "/student/dashboard/profile", icon: User },
-    { title: "Certificates", url: "/student/dashboard/certificate", icon: Paperclip },
-    { title: "Job Feed", url: "/student/dashboard/jobs", icon: Briefcase },
-    { title: "Applications", url: "/student/dashboard/applications", icon: FileText },
-    { title: "Saved Jobs", url: "/student/dashboard/saved", icon: Heart },
-    { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMore },
-    { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
-  ],
-  company_admin: [
-    { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
-    { title: "Profile", url: "/dashboard/company/profile", icon: User },
-    { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
-    { title: "Applications", url: "/dashboard/company/applications", icon: FileText },
-    { title: "Talent", url: "/dashboard/company/talent", icon: Star },
-  ],
-  university_admin: [
-    { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
-    { title: "Profile", url: "/university/dashboard/profile", icon: User },
-    { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
-    { title: "Students Database", url: "/university/dashboard/students", icon: Database },
-    { title: "Chat", url: "/university/dashboard/chat", icon: MessageCircleMoreIcon },
-    { title: "Certificates", url: "/university/dashboard/certifictes", icon:  LucidePartyPopper },
-  ],
-  super_admin: [
-    { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
-    { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
-    { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
-    { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
+// Base nav maps – we'll filter student items later
+const studentBaseItems = [
+  { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
+  { title: "Profile", url: "/student/dashboard/profile", icon: User },
+  { title: "Skills", url: "/student/dashboard/skills", icon: Sparkle },
+  { title: "Certificates", url: "/student/dashboard/certificate", icon: Paperclip },
+  { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMore },
+  { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
+];
 
-  ],
-};
+// Studying students get Experience and maybe other future items
+const studyingOnlyItems = [
+  { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
+];
+
+// Graduated and self-taught students do NOT get Experience, university connection, etc.
+
+const companyItems = [
+  { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
+  { title: "Profile", url: "/dashboard/company/profile", icon: User },
+  { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
+  { title: "Applications", url: "/dashboard/company/applications", icon: FileText },
+  { title: "Talent", url: "/dashboard/company/talent", icon: Star },
+];
+
+const universityItems = [
+  { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
+  { title: "Profile", url: "/university/dashboard/profile", icon: User },
+  { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
+  { title: "Students Database", url: "/university/dashboard/students", icon: Database },
+  { title: "Chat", url: "/university/dashboard/chat", icon: MessageCircleMore },
+  { title: "Certificates", url: "/university/dashboard/certificates", icon: LucidePartyPopper },
+];
+
+const adminItems = [
+  { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
+  { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
+  { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
+  { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
+];
 
 const roleLabels: Record<UserRole, string> = {
   student: "Student",
@@ -67,8 +74,24 @@ export function DashboardSidebar({
   notificationCount,
   isProfileComplete,
   pendingCount,
+  candidateType,
 }: DashboardSidebarProps) {
-  const items = navMap[role];
+  let items: { title: string; url: string; icon: any }[] = [];
+
+  if (role === "student") {
+    items = [...studentBaseItems];
+    // Only add "Experience" for studying students
+    if (candidateType === "studying") {
+      items = [...studentBaseItems, ...studyingOnlyItems];
+    }
+  } else if (role === "company_admin") {
+    items = companyItems;
+  } else if (role === "university_admin") {
+    items = universityItems;
+  } else if (role === "super_admin") {
+    items = adminItems;
+  }
+
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -81,8 +104,6 @@ export function DashboardSidebar({
 
   const sidebarWidth = isCollapsed ? "w-20" : "w-64";
   const mobileWidth = "w-full";
-
-  // Separate badge for notifications (only when > 0)
   const showNotificationBadge = notificationCount > 0;
 
   return (

@@ -1,4 +1,4 @@
-// components/profile/ProfileForm.tsx
+// components/profile/ProfileForm.tsx (updated)
 import { useEffect, useState, useRef } from "react";
 import {
   Camera,
@@ -72,18 +72,28 @@ const ProfileForm = ({
   const cvInputRef = useRef<HTMLInputElement>(null);
   const studentCardInputRef = useRef<HTMLInputElement>(null);
 
+  // Determine student subtype
+  const candidateType = profile?.role === "student" ? profile.candidate_type : null;
+  const isStudying = candidateType === "studying";
+  const isGraduated = candidateType === "graduated";
+  const isSelfTaught = candidateType === "self_taught";
+
   const [localForm, setLocalForm] = useState({
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
     email: profile?.email || "",
+    // Common for studying & graduated
     degree_level: profile?.degree_level || "",
     university_name: profile?.university_name || "",
     speciality: profile?.speciality || "",
     wilaya: profile?.wilaya || "",
+    skills: parseSkills(profile?.skills),
+    // Studying only
     academic_year: profile?.academic_year || "",
     speciality_type: profile?.speciality_type || "",
     student_id: profile?.student_id || "",
-    skills: parseSkills(profile?.skills),
+    // Graduated only
+    graduation_year: profile?.graduation_year || "",
   });
 
   useEffect(() => {
@@ -98,6 +108,7 @@ const ProfileForm = ({
       academic_year: profile?.academic_year || "",
       speciality_type: profile?.speciality_type || "",
       student_id: profile?.student_id || "",
+      graduation_year: profile?.graduation_year || "",
       skills: parseSkills(profile?.skills),
     });
   }, [profile]);
@@ -105,7 +116,6 @@ const ProfileForm = ({
   const [universities, setUniversities] = useState<{ id: string; name: string }[]>([]);
   const [loadingUnis, setLoadingUnis] = useState(false);
 
-  // Fetch verified universities on mount
   useEffect(() => {
     const fetchUniversities = async () => {
       setLoadingUnis(true);
@@ -230,9 +240,9 @@ const ProfileForm = ({
           Complete Your Profile
         </h2>
 
-        {/* Upload sections – unchanged */}
+        {/* Upload sections – only show student card for studying */}
         <div className="grid gap-5 md:grid-cols-3">
-          {/* Avatar */}
+          {/* Avatar (always) */}
           <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
             <div className="relative">
               {profile?.avatar_url ? (
@@ -272,7 +282,7 @@ const ProfileForm = ({
             </div>
           </div>
 
-          {/* CV */}
+          {/* CV – for all students (studying, graduated, self‑taught) */}
           {isStudent && (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
@@ -314,8 +324,8 @@ const ProfileForm = ({
             </div>
           )}
 
-          {/* Student Card */}
-          {isStudent && (
+          {/* Student Card – only for studying students */}
+          {isStudent && isStudying && (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-all hover:border-[#639922]/30">
               <div className="relative">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#639922]/20 to-[#639922]/5">
@@ -394,131 +404,165 @@ const ProfileForm = ({
           </div>
         </div>
 
-        {/* Academic Information */}
+        {/* Academic / Professional Information (conditional) */}
         {isStudent && (
           <div>
             <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold text-foreground">
               <GraduationCap className="h-5 w-5 text-[#639922]" />
-              Academic Information
+              {isSelfTaught ? "Skills & Portfolio" : "Academic Information"}
             </h3>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <SelectField
-                label="Degree level"
-                icon={<GraduationCap className="h-4 w-4" />}
-                value={localForm.degree_level}
-                onChange={(value) => updateField("degree_level", value)}
-                options={[
-                  { value: "", label: "Select degree" },
-                  { value: "bachelor", label: "Bachelor's" },
-                  { value: "master", label: "Master's" },
-                  { value: "phd", label: "PhD" },
-                  { value: "license", label: "License" },
-                ]}
-                isFilled={isFilled(localForm.degree_level)}
-              />
-              <SelectField
-                label="Speciality type"
-                icon={<Award className="h-4 w-4" />}
-                value={localForm.speciality_type}
-                onChange={(value) => updateField("speciality_type", value)}
-                options={[
-                  { value: "", label: "Select type" },
-                  { value: "LMD", label: "LMD (Licence-Master-Doctorat)" },
-                  { value: "ING", label: "Ingénieur (Engineer)" },
-                  { value: "PRO", label: "Professionnel" },
-                ]}
-                isFilled={isFilled(localForm.speciality_type)}
-              />
-
-              {/* University - searchable select (full width) */}
-              <div className="md:col-span-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-foreground/80">University</Label>
-                  {isFilled(localForm.university_name) ? (
-                    <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-3.5 w-3.5 text-red-500" />
-                  )}
-                </div>
-                <div className="mt-1.5">
-                  <SearchableSelect
-                    options={universities.map((u) => u.name)}
-                    value={localForm.university_name || ""}
-                    onChange={(val) => updateField("university_name", val)}
-                    placeholder="Select your university..."
-                    emptyMessage={loadingUnis ? "Loading..." : "No verified universities found"}
+              {isStudying && (
+                <>
+                  <SelectField
+                    label="Degree level"
+                    icon={<GraduationCap className="h-4 w-4" />}
+                    value={localForm.degree_level}
+                    onChange={(value) => updateField("degree_level", value)}
+                    options={[
+                      { value: "", label: "Select degree" },
+                      { value: "bachelor", label: "Bachelor's" },
+                      { value: "master", label: "Master's" },
+                      { value: "phd", label: "PhD" },
+                      { value: "license", label: "License" },
+                    ]}
+                    isFilled={isFilled(localForm.degree_level)}
                   />
+                  <SelectField
+                    label="Speciality type"
+                    icon={<Award className="h-4 w-4" />}
+                    value={localForm.speciality_type}
+                    onChange={(value) => updateField("speciality_type", value)}
+                    options={[
+                      { value: "", label: "Select type" },
+                      { value: "LMD", label: "LMD (Licence-Master-Doctorat)" },
+                      { value: "ING", label: "Ingénieur (Engineer)" },
+                      { value: "PRO", label: "Professionnel" },
+                    ]}
+                    isFilled={isFilled(localForm.speciality_type)}
+                  />
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">University</Label>
+                      {isFilled(localForm.university_name) ? <CheckCircle className="h-3.5 w-3.5 text-green-500" /> : <XCircle className="h-3.5 w-3.5 text-red-500" />}
+                    </div>
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={universities.map((u) => u.name)}
+                        value={localForm.university_name || ""}
+                        onChange={(val) => updateField("university_name", val)}
+                        placeholder="Select your university..."
+                        emptyMessage={loadingUnis ? "Loading..." : "No verified universities found"}
+                      />
+                    </div>
+                  </div>
+                  <SelectField
+                    label="Academic year"
+                    icon={<Calendar className="h-4 w-4" />}
+                    value={localForm.academic_year}
+                    onChange={(value) => updateField("academic_year", value)}
+                    options={[
+                      { value: "", label: "Select year" },
+                      { value: "1", label: "1st Year" },
+                      { value: "2", label: "2nd Year" },
+                      { value: "3", label: "3rd Year" },
+                      { value: "4", label: "4th Year" },
+                      { value: "5", label: "5th Year" },
+                      { value: "graduate", label: "Graduate" },
+                    ]}
+                    isFilled={isFilled(localForm.academic_year)}
+                  />
+                  <div className="md:col-span-2">
+                    <InputField
+                      label="Speciality / Major"
+                      icon={<BookOpen className="h-4 w-4" />}
+                      value={localForm.speciality}
+                      onChange={(value) => updateField("speciality", value)}
+                      placeholder="Computer Science, Business, etc."
+                      isFilled={isFilled(localForm.speciality)}
+                    />
+                  </div>
+                  <InputField
+                    label="Student ID"
+                    icon={<Hash className="h-4 w-4" />}
+                    value={localForm.student_id}
+                    onChange={(value) => updateField("student_id", value)}
+                    placeholder="202301234"
+                    isFilled={isFilled(localForm.student_id)}
+                  />
+                  <InputField
+                    label="Wilaya (State)"
+                    icon={<MapPin className="h-4 w-4" />}
+                    value={localForm.wilaya}
+                    onChange={(value) => updateField("wilaya", value)}
+                    placeholder="Algiers, Oran, etc."
+                    isFilled={isFilled(localForm.wilaya)}
+                  />
+                </>
+              )}
+
+              {isGraduated && (
+                <>
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">University</Label>
+                      {isFilled(localForm.university_name) ? <CheckCircle className="h-3.5 w-3.5 text-green-500" /> : <XCircle className="h-3.5 w-3.5 text-red-500" />}
+                    </div>
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={universities.map((u) => u.name)}
+                        value={localForm.university_name || ""}
+                        onChange={(val) => updateField("university_name", val)}
+                        placeholder="Select your university..."
+                        emptyMessage={loadingUnis ? "Loading..." : "No verified universities found"}
+                      />
+                    </div>
+                  </div>
+                  <InputField
+                    label="Degree title"
+                    icon={<GraduationCap className="h-4 w-4" />}
+                    value={localForm.degree_level}
+                    onChange={(value) => updateField("degree_level", value)}
+                    placeholder="Bachelor's in Computer Science"
+                    isFilled={isFilled(localForm.degree_level)}
+                  />
+                  <InputField
+                    label="Speciality / Field"
+                    icon={<BookOpen className="h-4 w-4" />}
+                    value={localForm.speciality}
+                    onChange={(value) => updateField("speciality", value)}
+                    placeholder="Artificial Intelligence"
+                    isFilled={isFilled(localForm.speciality)}
+                  />
+                  <InputField
+                    label="Graduation Year"
+                    icon={<Calendar className="h-4 w-4" />}
+                    value={localForm.graduation_year}
+                    onChange={(value) => updateField("graduation_year", value)}
+                    placeholder="2023"
+                    isFilled={isFilled(localForm.graduation_year)}
+                  />
+                  <InputField
+                    label="Wilaya (State)"
+                    icon={<MapPin className="h-4 w-4" />}
+                    value={localForm.wilaya}
+                    onChange={(value) => updateField("wilaya", value)}
+                    placeholder="Algiers, Oran, etc."
+                    isFilled={isFilled(localForm.wilaya)}
+                  />
+                </>
+              )}
+
+              {isSelfTaught && (
+                <div className="md:col-span-2">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+                    <p className="text-sm text-foreground/70">
+                      As a self‑taught learner, your academic background is not required.
+                      Focus on showcasing your skills below.
+                    </p>
+                  </div>
                 </div>
-              </div>
-
-              <SelectField
-                label="Academic year"
-                icon={<Calendar className="h-4 w-4" />}
-                value={localForm.academic_year}
-                onChange={(value) => updateField("academic_year", value)}
-                options={[
-                  { value: "", label: "Select year" },
-                  { value: "1", label: "1st Year" },
-                  { value: "2", label: "2nd Year" },
-                  { value: "3", label: "3rd Year" },
-                  { value: "4", label: "4th Year" },
-                  { value: "5", label: "5th Year" },
-                  { value: "graduate", label: "Graduate" },
-                ]}
-                isFilled={isFilled(localForm.academic_year)}
-              />
-
-              <div className="md:col-span-2">
-                <InputField
-                  label="Speciality / Major"
-                  icon={<BookOpen className="h-4 w-4" />}
-                  value={localForm.speciality}
-                  onChange={(value) => updateField("speciality", value)}
-                  placeholder="Computer Science, Business, etc."
-                  isFilled={isFilled(localForm.speciality)}
-                />
-              </div>
-
-              <InputField
-                label="Student ID"
-                icon={<Hash className="h-4 w-4" />}
-                value={localForm.student_id}
-                onChange={(value) => updateField("student_id", value)}
-                placeholder="202301234"
-                isFilled={isFilled(localForm.student_id)}
-              />
-              <InputField
-                label="Wilaya (State)"
-                icon={<MapPin className="h-4 w-4" />}
-                value={localForm.wilaya}
-                onChange={(value) => updateField("wilaya", value)}
-                placeholder="Algiers, Oran, etc."
-                isFilled={isFilled(localForm.wilaya)}
-              />
-            </div>
-
-            {/* Skills Section */}
-            <div className="mt-5">
-              <label className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-foreground/50">
-                <span className="flex items-center gap-2">
-                  <Award className="h-4 w-4" />
-                  Skills
-                </span>
-                {isFilled(localForm.skills) ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                ) : (
-                  <XCircle className="h-3.5 w-3.5 text-red-500" />
-                )}
-              </label>
-              <SkillsInput
-                key={JSON.stringify(localForm.skills)}
-                value={localForm.skills}
-                onChange={(skillsArray) => updateField("skills", skillsArray)}
-                placeholder="e.g., React, Python, Project Management"
-              />
-              <p className="mt-1 text-xs text-muted-foreground/60">
-                Add your key technical or soft skills (press Enter or comma to add)
-              </p>
+              )}
             </div>
           </div>
         )}
@@ -595,12 +639,7 @@ const SelectField = ({ label, icon, value, onChange, options, isFilled }) => (
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg
-          className="h-4 w-4 text-foreground/40"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>

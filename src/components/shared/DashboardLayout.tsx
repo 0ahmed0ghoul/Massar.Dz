@@ -1,4 +1,3 @@
-// layouts/DashboardLayout.tsx
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
@@ -27,13 +26,14 @@ const DashboardLayout = ({ role }: Props) => {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
 
+  // Candidate type from profile (only for student)
+  const candidateType = role === "student" ? (profile?.candidate_type as "studying" | "graduated" | "self_taught" | null) : null;
+
   // Fetch unread notification count with error handling
   useEffect(() => {
     if (!user) return;
     const fetchUnreadCount = async () => {
       try {
-        // Adjust column name if needed (maybe 'profile_id' or 'user_id')
-        // Using 'user_id' as fallback, but if it fails, we set to 0
         const { count, error } = await supabase
           .from("notifications")
           .select("*", { count: "exact", head: true })
@@ -52,7 +52,6 @@ const DashboardLayout = ({ role }: Props) => {
     };
     fetchUnreadCount();
 
-    // Optional: subscribe to changes, but with error handling
     let channel: any;
     try {
       channel = supabase
@@ -77,7 +76,6 @@ const DashboardLayout = ({ role }: Props) => {
     if (role !== "super_admin") return;
     const fetchPendingCount = async () => {
       try {
-        // Adjust column names if needed
         const { count: pendingInstitutions, error: instError } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true })
@@ -132,6 +130,7 @@ const DashboardLayout = ({ role }: Props) => {
         notificationCount={notificationCount}
         isProfileComplete={isProfileComplete}
         pendingCount={pendingCount}
+        candidateType={candidateType}
       />
       <div className="flex-1 flex flex-col">
         <header className="h-14 flex items-center justify-between border-b border-white/10 px-4">

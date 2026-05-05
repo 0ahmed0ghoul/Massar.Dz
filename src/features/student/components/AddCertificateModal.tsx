@@ -10,6 +10,24 @@ import { Upload, X, AlertCircle, CheckCircle2, Loader2, WifiOff, Sparkles, FileT
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
+import { useStudentType } from "@/features/auth/hooks/useStudentType";
+
+// --- Configuration moved inline for clarity (or import from constants)
+const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string; isUniversity: boolean }[] = [
+  { value: "stars", label: "Stars Certificate", icon: "⭐", isUniversity: true },
+  { value: "major", label: "Major Certificate", icon: "🎓", isUniversity: true },
+  { value: "hackathon", label: "Hackathon / Competition", icon: "🏆", isUniversity: false },
+  { value: "english", label: "English Certificate", icon: "🌐", isUniversity: false },
+  { value: "self_taught", label: "Self‑Taught / Online Course", icon: "📚", isUniversity: false },
+];
+
+const STAR_ACHIEVEMENTS = [
+  { id: "major", label: "Major Excellence", description: "Being top of your major" },
+  { id: "delegate", label: "Student Delegate", description: "Active student representation" },
+  { id: "internship", label: "Internship Completion", description: "Completed an internship" },
+  { id: "club", label: "Club Participation", description: "Active member of a student club" },
+  { id: "language", label: "Language Certificate", description: "Official language certificate (TOEFL, IELTS, etc.)" },
+];
 
 type CertificateType = "stars" | "major" | "hackathon" | "english" | "self_taught";
 
@@ -28,24 +46,9 @@ interface AddCertificateModalProps {
   }) => void;
 }
 
-const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string; isUniversity: boolean }[] = [
-  { value: "stars", label: "Stars Certificate", icon: "⭐", isUniversity: true },
-  { value: "major", label: "Major Certificate", icon: "🎓", isUniversity: true },
-  { value: "hackathon", label: "Hackathon / Competition", icon: "🏆", isUniversity: false },
-  { value: "english", label: "English Certificate", icon: "🌐", isUniversity: false },
-  { value: "self_taught", label: "Self‑Taught / Online Course", icon: "📚", isUniversity: false },
-];
-
-const STAR_ACHIEVEMENTS = [
-  { id: "major", label: "Major Excellence", description: "Being top of your major" },
-  { id: "delegate", label: "Student Delegate", description: "Active student representation" },
-  { id: "internship", label: "Internship Completion", description: "Completed an internship" },
-  { id: "club", label: "Club Participation", description: "Active member of a student club" },
-  { id: "language", label: "Language Certificate", description: "Official language certificate (TOEFL, IELTS, etc.)" },
-];
-
 export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificateModalProps) {
   const { user, profile } = useAuth();
+  const { type: studentType, loading: studentTypeLoading } = useStudentType();
   const [type, setType] = useState<CertificateType>("stars");
   const [title, setTitle] = useState("");
   const [issuer, setIssuer] = useState("");
@@ -62,11 +65,29 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
   const [checkingPending, setCheckingPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check university connection
+  // Determine available certificate types based on student type
+  const availableTypes = CERTIFICATE_TYPES.filter(opt => {
+    if (opt.isUniversity) {
+      return studentType === "studying";
+    }
+    return true; // non-university types always available
+  });
+
+  // Reset to a valid default type if current type becomes unavailable
+  useEffect(() => {
+    if (open && availableTypes.length > 0) {
+      const isCurrentAvailable = availableTypes.some(opt => opt.value === type);
+      if (!isCurrentAvailable) {
+        setType(availableTypes[0].value);
+      }
+    }
+  }, [open, availableTypes, type]);
+
+  // Check university connection only for studying students and when type is university
   useEffect(() => {
     if (!open) return;
     const isUni = type === "stars" || type === "major";
-    if (isUni) {
+    if (isUni && studentType === "studying") {
       const checkConnection = async () => {
         setCheckingConnection(true);
         try {
@@ -92,11 +113,11 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       setConnectionStatus(null);
       setCheckingConnection(false);
     }
-  }, [open, type, user, profile]);
+  }, [open, type, user, profile, studentType]);
 
-  // Check if there's already a pending request for the selected university certificate type
+  // Check pending requests only for studying students and university certificates
   useEffect(() => {
-    if (!open || !user || !(type === "stars" || type === "major")) {
+    if (!open || !user || !(type === "stars" || type === "major") || studentType !== "studying") {
       setHasPendingRequest(false);
       return;
     }
@@ -114,10 +135,11 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       setCheckingPending(false);
     };
     checkPending();
-  }, [open, user, type]);
+  }, [open, user, type, studentType]);
 
   const reset = () => {
-    setType("stars");
+    const defaultType = availableTypes.length > 0 ? availableTypes[0].value : "hackathon";
+    setType(defaultType);
     setTitle("");
     setIssuer("");
     setIssueDate("");
@@ -219,6 +241,11 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       const isUni = type === "stars" || type === "major";
 
       if (isUni) {
+        if (studentType !== "studying") {
+          setError("University certificates are only available for currently studying students.");
+          setIsLoading(false);
+          return;
+        }
         if (!connectionStatus) {
           setError("You need to be connected to your university to request this certificate.");
           setIsLoading(false);
@@ -273,6 +300,7 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
 
   const canProceed = (() => {
     if (isUniversityCertificate) {
+      if (studentType !== "studying") return false;
       if (!hasConnection) return false;
       if (hasPendingRequest) return false;
       if (type === "stars") {
@@ -302,7 +330,7 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
   };
 
   const renderFormContent = () => {
-    // Self‑claimed certificates
+    // Non-university certificates
     if (!isUniversityCertificate) {
       return (
         <>
@@ -354,7 +382,19 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       );
     }
 
-    // University certificates: check connection status
+    // University certificates – only shown for studying students
+    if (studentType !== "studying") {
+      return (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-amber-400 mb-2" />
+          <p className="text-sm font-medium text-amber-300">Not available</p>
+          <p className="text-xs text-foreground/50 mt-1">
+            University certificates are only accessible to currently studying students.
+          </p>
+        </div>
+      );
+    }
+
     if (checkingConnection) {
       return (
         <div className="flex items-center justify-center gap-2 text-amber-400 text-sm p-4">
@@ -375,7 +415,6 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       );
     }
 
-    // Connected: now check if there's a pending request
     if (hasPendingRequest && !checkingPending) {
       return (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
@@ -388,7 +427,6 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       );
     }
 
-    // Connected and no pending request – show form
     return (
       <>
         <div className="rounded-xl bg-[#639922]/10 border border-[#639922]/30 p-3 text-center">
@@ -473,6 +511,19 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
     );
   };
 
+  // If student type is still loading, show a loader modal
+  if (studentTypeLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg border-white/10 bg-gradient-to-b from-[#121316] to-[#0c0d10] text-foreground">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-[#639922]" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-lg border-white/10 bg-gradient-to-b from-[#121316] to-[#0c0d10] text-foreground max-h-[90vh] overflow-y-auto p-0">
@@ -493,7 +544,7 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className="bg-[#181b1f] border-white/10">
-                {CERTIFICATE_TYPES.map(opt => (
+                {availableTypes.map(opt => (
                   <SelectItem key={opt.value} value={opt.value} className="focus:bg-[#639922]/20">
                     <span className="mr-2">{opt.icon}</span> {opt.label}
                   </SelectItem>
