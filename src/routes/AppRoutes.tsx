@@ -25,8 +25,6 @@ import CompanyProfilePage from "@/features/company/pages/CompanyProfilePage";
 import CompanyApplicationsPage from "@/features/company/pages/ApplicationsPage";
 import TalentPage from "@/features/company/pages/TalentPage";
 import CompanyJobsPage from "@/features/company/pages/JobsPage";
-import { InboxPage } from "@/features/messaging/pages/InboxPage";
-import { ConversationPage } from "@/features/messaging/pages/ConversationPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
 import MessagesPage from "@/features/student/pages/MessagesPage";
 import JobsPage from "@/features/jobs/pages/JobsPage";
@@ -45,6 +43,8 @@ import PricingPage from "@/features/landing/pages/PricingPage";
 import PaymentPage from "@/features/landing/pages/PaymentPage";
 import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
 import NotFound from "@/pages/NotFound";
+import UniversityChatPage from "@/features/university/pages/chat";
+import CertificateRequestsPage from "@/features/university/pages/CertificateRequests";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -159,12 +159,17 @@ const AppRoutes = () => {
                 path="/university/dashboard/invitations"
                 element={<InvitationsPage />}
               />
+                            <Route
+                path="/university/dashboard/chat"
+                element={<UniversityChatPage />}
+              />
+                            <Route
+                path="university/dashboard/certifictes"
+                element={<CertificateRequestsPage />}
+              />
             </Route>
           </Route>
         </Route>
-
-        <Route path="/messages" element={<InboxPage />} />
-        <Route path="/messages/:id" element={<ConversationPage />} />
 
         {/* ================= ADMIN ================= */}
         <Route element={<DashboardLayout role="super_admin" />}>

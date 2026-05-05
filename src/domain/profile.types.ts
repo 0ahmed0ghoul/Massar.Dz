@@ -52,7 +52,7 @@ export interface Profile {
   // Professional specific
   current_role: string | null;
   current_company: string | null;
-  years_of_experience: string | null; // e.g., "5"
+  years_of_experience: number | null; // e.g., "5"
   looking_for: LookingFor | null;
   skills: string | null;               // comma‑separated or plain text
 
@@ -79,7 +79,7 @@ export interface Profile {
   // Other
   resume_url: string | null;
   phone: string | null;
-  university_connection_status: boolean | null;
+  university_connection_status: string;
   is_completed?: boolean;
   is_verified?:boolean;
   candidate_type: string | null;

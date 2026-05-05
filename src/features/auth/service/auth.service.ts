@@ -119,7 +119,7 @@ class AuthService {
       email: cleanEmail,
       role: profileData.role,
       candidate_type: profileData.candidate_type || null,
-      university_connection_status: false,
+      university_connection_status: "none",
       status: "pending",
       is_completed: false,               // initially false for all
       is_verified: false,                // initially false for all

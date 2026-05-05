@@ -12,6 +12,7 @@ export interface Profile {
     degree_level?: string;
     wilaya?: string;
     created_at: string;
+    speciality_type : string;
     is_completed?: boolean;
     is_verified?: boolean;
     university_connection_status?:string

@@ -1,193 +1,282 @@
-// hooks/useMessages.ts
-import { useEffect, useState, useCallback } from "react";
+// hooks/useMessaging.ts
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { Tables } from "@/types/database";
+import { chatService, Message } from "@/features/university/services/chat.service";
+import { studentChatService } from "@/features/student/services/studentChat.service";
 
-type Conversation = Tables<"conversations"> & {
-  otherParty: {
-    id: string;
-    name: string;
-    role: "student" | "university";
-  };
-};
+export interface Conversation {
+  id: string;
+  otherPartyAvatar?: string;
+  otherPartyId: string;
+  otherPartyName: string;
+  otherPartyRole: 'university' | 'company' | 'student';
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+}
 
-type Message = Tables<"messages">;
+export const useMessaging = () => {
+  const { user, profile } = useAuth();
 
-// Mock conversations
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "conv-001",
-    student_id: "student-123",
-    university_id: "uni-456",
-    last_message: "When will I receive the admission decision?",
-    last_message_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    otherParty: {
-      id: "uni-456",
-      name: "University of Algiers",
-      role: "university",
-    },
-  },
-  {
-    id: "conv-002",
-    student_id: "student-123",
-    university_id: "uni-789",
-    last_message: "Thank you for your application!",
-    last_message_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    otherParty: {
-      id: "uni-789",
-      name: "USTHB",
-      role: "university",
-    },
-  },
-];
-
-// Mock messages for each conversation
-const MOCK_MESSAGES: Record<string, Message[]> = {
-  "conv-001": [
-    {
-      id: "msg-001",
-      conversation_id: "conv-001",
-      sender_id: "student-123",
-      receiver_id: "uni-456",
-      content: "Hello, I applied for Computer Science last week. What's the status?",
-      is_read: true,
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "msg-002",
-      conversation_id: "conv-001",
-      sender_id: "uni-456",
-      receiver_id: "student-123",
-      content: "Your application is being reviewed. We'll notify you within 2 weeks.",
-      is_read: true,
-      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "msg-003",
-      conversation_id: "conv-001",
-      sender_id: "student-123",
-      receiver_id: "uni-456",
-      content: "When will I receive the admission decision?",
-      is_read: false,
-      created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    },
-  ],
-  "conv-002": [
-    {
-      id: "msg-004",
-      conversation_id: "conv-002",
-      sender_id: "uni-789",
-      receiver_id: "student-123",
-      content: "Thank you for your application! Please submit your transcripts.",
-      is_read: true,
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "msg-005",
-      conversation_id: "conv-002",
-      sender_id: "student-123",
-      receiver_id: "uni-789",
-      content: "I've uploaded the documents. Anything else?",
-      is_read: true,
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "msg-006",
-      conversation_id: "conv-002",
-      sender_id: "uni-789",
-      receiver_id: "student-123",
-      content: "Thank you for your application!",
-      is_read: false,
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-  ],
-};
-
-export const useMessages = () => {
-  const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch conversations for current user
-  useEffect(() => {
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  // ─────────────────────────────────────────────
+  // Load conversations
+  // ─────────────────────────────────────────────
+  const loadConversations = useCallback(async () => {
     if (!user) return;
 
-    const fetchConversations = async () => {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // For mock, we assume user is a student with id "student-123"
-      // In real app, filter by user.id and map otherParty based on role
-      setConversations(MOCK_CONVERSATIONS);
-      setLoading(false);
-    };
+    setLoadingConversations(true);
+    try {
+      if (profile?.role === "student") {
+        const university = await studentChatService.getConnectedUniversity(user.id);
 
-    fetchConversations();
-  }, [user]);
+        const convs: Conversation[] = university
+          ? [
+              {
+                id: university.id,
+                otherPartyId: university.id,
+                otherPartyAvatar: university.universityAvatar,
+                otherPartyName: university.universityName,
+                otherPartyRole: "university",
+                lastMessage: university.lastMessage,
+                lastMessageAt: university.lastMessageAt,
+                unreadCount: university.unreadCount,
+              },
+            ]
+          : [];
 
-  // Fetch messages when a conversation is selected
-  useEffect(() => {
-    if (!selectedConversationId) {
-      setMessages([]);
-      return;
+        setConversations(convs);
+      }
+
+      if (profile?.role === "university_admin") {
+        const participants = await chatService.getConnectedStudents(user.id);
+
+        const convs: Conversation[] = participants.map((p) => ({
+          id: p.id,
+          otherPartyId: p.id,
+          otherPartyAvatar: p.avatar_url,
+          otherPartyName: p.full_name,
+          otherPartyRole: "student",
+          lastMessage: p.last_message || null,
+          lastMessageAt: p.last_message_time || null,
+          unreadCount: p.unread_count,
+        }));
+
+        setConversations(convs);
+      }
+    } catch (error) {
+      console.error("Failed to load conversations", error);
+    } finally {
+      setLoadingConversations(false);
     }
+  }, [user, profile]);
 
-    const fetchMessages = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setMessages(MOCK_MESSAGES[selectedConversationId] || []);
-    };
+  // ─────────────────────────────────────────────
+  // Load messages (IMPORTANT FIX)
+  // ─────────────────────────────────────────────
+  const loadMessages = useCallback(async (otherPartyId: string) => {
+    if (!user) return;
 
-    fetchMessages();
-  }, [selectedConversationId]);
+    setLoadingMessages(true);
+    try {
+      let msgs: Message[] = [];
 
-  const sendMessage = useCallback(
-    async (content: string) => {
-      if (!selectedConversationId || !user || !content.trim()) return;
+      if (profile?.role === "student") {
+        msgs = await studentChatService.getMessages(user.id, otherPartyId);
+        await studentChatService.markAsRead(user.id, otherPartyId);
+      } else {
+        msgs = await chatService.getMessages(user.id, otherPartyId);
+        await chatService.markAsRead(user.id, otherPartyId);
+      }
 
-      const conversation = conversations.find((c) => c.id === selectedConversationId);
-      if (!conversation) return;
+      setMessages(msgs);
+      setSelectedConversationId(otherPartyId);
 
-      // Determine receiver_id
-      const receiverId = user.id === conversation.student_id
-        ? conversation.university_id
-        : conversation.student_id;
-
-      const newMessage: Message = {
-        id: `msg-${Date.now()}`,
-        conversation_id: selectedConversationId,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        content: content.trim(),
-        is_read: false,
-        created_at: new Date().toISOString(),
-      };
-
-      // Optimistically add to messages
-      setMessages((prev) => [...prev, newMessage]);
-
-      // Update conversation's last message
+      // reset unread count
       setConversations((prev) =>
         prev.map((c) =>
-          c.id === selectedConversationId
-            ? { ...c, last_message: content.trim(), last_message_at: new Date().toISOString() }
+          c.id === otherPartyId ? { ...c, unreadCount: 0 } : c
+        )
+      );
+    } catch (error) {
+      console.error("Failed to load messages", error);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, [user, profile]);
+
+  // ─────────────────────────────────────────────
+  // Send message
+  // ─────────────────────────────────────────────
+  const sendMessage = useCallback(async (receiverId: string, content: string) => {
+    if (!user || !content.trim()) return;
+
+    setSending(true);
+    try {
+      let newMsg: Message;
+
+      if (profile?.role === "student") {
+        newMsg = await studentChatService.sendMessage(user.id, receiverId, content);
+      } else {
+        newMsg = await chatService.sendMessage(user.id, receiverId, content);
+      }
+
+      setMessages((prev) => [...prev, newMsg]);
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === receiverId
+            ? {
+                ...c,
+                lastMessage: content,
+                lastMessageAt: newMsg.created_at,
+              }
             : c
         )
       );
 
-      // In a real app, you would POST to API here
+      return newMsg;
+    } catch (error) {
+      console.error("Failed to send message", error);
+      throw error;
+    } finally {
+      setSending(false);
+    }
+  }, [user, profile]);
+
+  // ─────────────────────────────────────────────
+  // Send with file
+  // ─────────────────────────────────────────────
+  const sendMessageWithFile = useCallback(
+    async (receiverId: string, content: string, file?: File) => {
+      if (!user) return;
+      if (!content.trim() && !file) return;
+
+      setUploading(true);
+      try {
+        let newMsg: Message;
+
+        if (profile?.role === "student") {
+          newMsg = await studentChatService.sendMessageWithFile(user.id, receiverId, content, file);
+        } else {
+          newMsg = await chatService.sendMessageWithFile(user.id, receiverId, content, file);
+        }
+
+        setMessages((prev) => [...prev, newMsg]);
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === receiverId
+              ? {
+                  ...c,
+                  lastMessage: newMsg.content,
+                  lastMessageAt: newMsg.created_at,
+                }
+              : c
+          )
+        );
+
+        return newMsg;
+      } catch (error) {
+        console.error("Failed to send message with file", error);
+        throw error;
+      } finally {
+        setUploading(false);
+      }
     },
-    [selectedConversationId, user, conversations]
+    [user, profile]
   );
+
+  // ─────────────────────────────────────────────
+  // Start conversation (USE THIS IN UI)
+  // ─────────────────────────────────────────────
+  const startConversation = useCallback(async (otherPartyId: string) => {
+    await loadMessages(otherPartyId);
+  }, [loadMessages]);
+
+  // ─────────────────────────────────────────────
+  // Real-time updates (FIXED)
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    const handleNewMessage = (message: Message) => {
+      const otherId =
+        message.sender_id === user.id
+          ? message.receiver_id
+          : message.sender_id;
+
+      // If open conversation → append
+      if (selectedConversationId === otherId) {
+        setMessages((prev) => [...prev, message]);
+
+        if (profile?.role === "student") {
+          studentChatService.markAsRead(user.id, otherId);
+        } else {
+          chatService.markAsRead(user.id, otherId);
+        }
+      } else {
+        // Update conversation list
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === otherId
+              ? {
+                  ...c,
+                  unreadCount: (c.unreadCount || 0) + 1,
+                  lastMessage: message.content,
+                  lastMessageAt: message.created_at,
+                }
+              : c
+          )
+        );
+      }
+    };
+
+    let channel: any;
+
+    if (profile?.role === "student") {
+      channel = studentChatService.subscribeToMessages(user.id, handleNewMessage);
+    } else {
+      channel = chatService.subscribeToMessages(user.id, handleNewMessage);
+    }
+
+    return () => {
+      if (profile?.role === "student") {
+        studentChatService.unsubscribe();
+      } else {
+        chatService.unsubscribe();
+      }
+    };
+  }, [user, profile, selectedConversationId]);
+
+  // ─────────────────────────────────────────────
+  // Init
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   return {
     conversations,
     messages,
     selectedConversationId,
+    loadingConversations,
+    loadingMessages,
+    sending,
+    uploading,
     setSelectedConversationId,
+    loadConversations,
+    loadMessages,
+    startConversation,
     sendMessage,
-    loading,
+    sendMessageWithFile,
   };
 };

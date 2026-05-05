@@ -82,8 +82,8 @@ export const useNotifications = () => {
       // 2. Profile completion → waiting for verification
       // ------------------------------------------------------------------
       const isProfileComplete = profile.is_completed === true;
-      const verificationStatus = profile.status; // 'pending', 'approved', 'rejected', null
-      const universityConnectionStatus = profile.university_connection_status; // 'pending', 'connected', null
+      const verificationStatus = profile.status; 
+      const universityConnectionStatus = profile.university_connection_status; 
 
       if (isProfileComplete && (verificationStatus === 'pending' || verificationStatus === null)) {
         notifs.push({

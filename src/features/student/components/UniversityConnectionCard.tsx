@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/types/database";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { useMessaging } from "@/features/messaging/hooks/useMessaging";
 
 type Profile = Tables<"profiles">;
 
@@ -11,31 +10,20 @@ interface UniversityConnectionCardProps {
   profile: Profile;
   onRequestConnection: () => Promise<void>;
   isRequesting?: boolean;
-  universityId?: string; // optional – if not provided, try to get from profile
 }
 
 export const UniversityConnectionCard = ({
   profile,
   onRequestConnection,
   isRequesting = false,
-  universityId,
 }: UniversityConnectionCardProps) => {
-  const isVerified = profile.isVerified === true;
-  const isConnected = profile.university_connection_status === true;
-  const { user } = useAuth();
-  const { startConversation } = useMessaging();
+  const isVerified = profile.is_verified === true;
+  const isConnected = profile.university_connection_status === "accepted";
   const navigate = useNavigate();
 
-  const handleMessage = async () => {
-    if (!user) return;
-    // Determine university ID: either from prop or from profile.university_id
-    const targetUniversityId = universityId || (profile as any).university_id;
-    if (!targetUniversityId) {
-      console.error("University ID not available");
-      return;
-    }
-    const conversation = await startConversation(user.id, targetUniversityId);
-    navigate(`/messages/${conversation.id}`);
+  const handleMessage = () => {
+    // Navigate to messages page - the student's only university conversation will be auto-selected
+    navigate("/student/dashboard/messages");
   };
 
   return (
@@ -71,8 +59,8 @@ export const UniversityConnectionCard = ({
             </div>
           </div>
           <div className="flex shrink-0 gap-3">
-            {/* Message button – always visible if university ID exists */}
-            {(universityId || (profile as any).university_id) && (
+            {/* Message button – always visible if connected */}
+            {isConnected && (
               <button
                 onClick={handleMessage}
                 className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-white/10"

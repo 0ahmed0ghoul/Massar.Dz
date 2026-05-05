@@ -1,11 +1,10 @@
 // pages/student/CertificatePage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Award, GraduationCap, Star, Trophy, Users, 
   Plus, Scan, ShieldCheck, XCircle, CheckCircle,
-  Calendar, FileText, ExternalLink, X, Eye
+  Calendar, FileText, Eye, Building2
 } from "lucide-react";
-import { useUniversityData } from "@/features/university/hooks/useUniversityData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +14,14 @@ import { AddCertificateModal } from "../components/AddCertificateModal";
 import { CertificateDetailModal } from "../components/CertificateDetailModal";
 import { useCertificates } from "../hooks/useCertificates";
 import { Certificate, CertificateType } from "../types/certificate.types";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function CertificatePage() {
+  const { user } = useAuth();
+  const [universityConnectionStatus, setUniversityConnectionStatus] = useState<string | null>(null);
+  const [connectionLoading, setConnectionLoading] = useState(true);
+  
   const { certificates, loading, addCertificate, claimGraduationCertificate, refresh } = useCertificates();
   
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,6 +30,25 @@ export default function CertificatePage() {
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
+  // Fetch university connection status
+  useEffect(() => {
+    async function fetchConnectionStatus() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("university_connections")
+        .select("status")
+        .eq("student_id", user.id)
+        .maybeSingle();
+      if (error) console.error("Error fetching connection:", error);
+      setUniversityConnectionStatus(data?.status || null);
+      setConnectionLoading(false);
+    }
+    fetchConnectionStatus();
+  }, [user]);
+
+  const isConnected = universityConnectionStatus === "accepted";
+
+  // Handle scan success
   const handleScanSuccess = async (decodedText: string) => {
     try {
       const url = new URL(decodedText);
@@ -33,7 +57,6 @@ export default function CertificatePage() {
         setScanResult({ success: false, message: "Invalid QR code: no token found." });
         return;
       }
-
       const newCert = await claimGraduationCertificate(token);
       if (newCert) {
         setScanResult({ success: true, message: "Graduation certificate claimed successfully! 🎓" });
@@ -57,8 +80,13 @@ export default function CertificatePage() {
     files?: Record<string, File>;
     achievements?: string[];
   }) => {
-    // For non-university certificates, take the first file (key "certificate")
-    // For university certificates, we don't upload a file here (handled separately)
+    // For university certificates (major/stars) we only refresh the list – the request is stored in certificate_requests
+    if (request.type === "stars" || request.type === "major") {
+      refresh();
+      return;
+    }
+
+    // Self‑claimed certificates: add directly
     let file: File | undefined;
     if (request.files) {
       const firstKey = Object.keys(request.files)[0];
@@ -106,7 +134,7 @@ export default function CertificatePage() {
     return acc;
   }, {} as Record<string, Certificate[]>);
 
-  if (loading) {
+  if (loading || connectionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -128,18 +156,23 @@ export default function CertificatePage() {
             <ShieldCheck className="w-6 h-6 text-[#639922]" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">My Certificates</h1>
-          <p className="text-foreground/40 mt-2 text-sm">
-            Manage all your academic and professional achievements in one place
-          </p>
+          <p className="text-foreground/40 mt-2 text-sm">Manage your academic achievements</p>
         </div>
 
-        <div className="flex flex-wrap justify-end gap-3 mb-6">
-          <Button onClick={() => setShowAddModal(true)} className="bg-[#639922] text-black hover:bg-[#7fb82c]">
+        <div className="mb-6 flex flex-wrap gap-3 justify-between items-center">
+          <Button onClick={() => setShowAddModal(true)} className="bg-[#639922] text-black">
             <Plus className="w-4 h-4 mr-2" /> Add Certificate
           </Button>
-          <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20 text-foreground/80 hover:bg-white/10">
-            <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
-          </Button>
+          {isConnected ? (
+            <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20">
+              <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
+            </Button>
+          ) : (
+            <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              You need to be connected to a university department to request official certificates.
+            </div>
+          )}
         </div>
 
         {showScanner && (

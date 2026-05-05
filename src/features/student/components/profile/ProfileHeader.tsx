@@ -72,7 +72,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   if (!basicInfoComplete) currentStepIndex = 0;
   else if (!academicInfoComplete) currentStepIndex = 1;
   else if (!documentsComplete) currentStepIndex = 2;
-  else if (!profile.isVerified) currentStepIndex = 3;
+  else if (!profile.is_verified) currentStepIndex = 3;
   else if (!profile.university_connection_status)
     currentStepIndex = 4;
   else currentStepIndex = 5;
@@ -113,7 +113,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       description: "Admin review",
       icon: <Shield className="h-4 w-4" />,
       status: allFieldsComplete
-        ? profile.isVerified
+        ? profile.is_verified
           ? "completed"
           : "current"
         : "locked",
@@ -123,8 +123,8 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       title: "Connection",
       description: "University link",
       icon: <LinkIcon className="h-4 w-4" />,
-      status: profile.isVerified
-        ? profile.university_connection_status
+      status: profile.is_verified
+        ? profile.university_connection_status === "accepted"
           ? "completed"
           : "current"
         : "locked",
@@ -134,7 +134,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       title: "Ready",
       description: "Certificates",
       icon: <Award className="h-4 w-4" />,
-      status: profile.university_connection_status
+      status: profile.university_connection_status === "accepted"
         ? "completed"
         : "locked",
     },
@@ -167,7 +167,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                   </div>
                 )}
 
-                {profile.isVerified && (
+                {profile.is_verified && (
                   <div className="absolute -bottom-1 -right-1 rounded-full bg-[#639922] border-2 border-[#0b0c0e] p-1">
                     <CheckCircle2 className="h-4 w-4 text-foreground" />
                   </div>
@@ -188,7 +188,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                 <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-2">
                   <span className="inline-flex items-center gap-1 rounded-full border border-[#639922]/30 bg-[#639922]/10 px-3 py-1 text-xs text-[#639922]">
                     <Shield className="h-3 w-3" />
-                    {profile.isVerified
+                    {profile.is_verified
                       ? "Verified"
                       : "Unverified"}
                   </span>
@@ -196,13 +196,13 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                   <span
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
-                      profile.university_connection_status
+                      profile.university_connection_status === "accepted"
                         ? "border-[#639922]/30 bg-[#639922]/10 text-[#639922]"
                         : "border-white/10 bg-white/5 text-foreground/40"
                     )}
                   >
                     <Building2 className="h-3 w-3" />
-                    {profile.university_connection_status
+                    {profile.university_connection_status === "accepted"
                       ? "Connected"
                       : "Not Connected"}
                   </span>

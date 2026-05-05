@@ -1,4 +1,4 @@
-// components/AddCertificateModal.tsx (updated)
+// components/AddCertificateModal.tsx
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, X, AlertCircle, CheckCircle2, Loader2, Wifi, WifiOff, Sparkles, FileText } from "lucide-react";
+import { Upload, X, AlertCircle, CheckCircle2, Loader2, WifiOff, Sparkles, FileText, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -28,21 +28,20 @@ interface AddCertificateModalProps {
   }) => void;
 }
 
-const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string }[] = [
-  { value: "stars", label: "Stars Certificate", icon: "⭐" },
-  { value: "major", label: "Major Certificate", icon: "🎓" },
-  { value: "hackathon", label: "Hackathon / Competition", icon: "🏆" },
-  { value: "english", label: "English Certificate", icon: "🌐" },
-  { value: "self_taught", label: "Self‑Taught / Online Course", icon: "📚" },
+const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string; isUniversity: boolean }[] = [
+  { value: "stars", label: "Stars Certificate", icon: "⭐", isUniversity: true },
+  { value: "major", label: "Major Certificate", icon: "🎓", isUniversity: true },
+  { value: "hackathon", label: "Hackathon / Competition", icon: "🏆", isUniversity: false },
+  { value: "english", label: "English Certificate", icon: "🌐", isUniversity: false },
+  { value: "self_taught", label: "Self‑Taught / Online Course", icon: "📚", isUniversity: false },
 ];
 
 const STAR_ACHIEVEMENTS = [
-  { id: "club", label: "Club participation/leadership", description: "Active role in a university club" },
-  { id: "language", label: "Foreign language certificate", description: "e.g., TOEFL, IELTS, DELF" },
-  { id: "internship", label: "Completed internship", description: "Proof of internship completion" },
-  { id: "promotionDelegate", label: "Promotion delegate", description: "Class representative or delegate" },
-  { id: "volunteering", label: "Volunteering", description: "Community service or volunteer work" },
-  { id: "research", label: "Research / publication", description: "Research paper or academic publication" },
+  { id: "major", label: "Major Excellence", description: "Being top of your major" },
+  { id: "delegate", label: "Student Delegate", description: "Active student representation" },
+  { id: "internship", label: "Internship Completion", description: "Completed an internship" },
+  { id: "club", label: "Club Participation", description: "Active member of a student club" },
+  { id: "language", label: "Language Certificate", description: "Official language certificate (TOEFL, IELTS, etc.)" },
 ];
 
 export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificateModalProps) {
@@ -53,35 +52,33 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
   const [issueDate, setIssueDate] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [credentialId, setCredentialId] = useState("");
-
-  // University certificate states
-  const [studentCardFile, setStudentCardFile] = useState<File | null>(null);
-  const [selectedAchievements, setSelectedAchievements] = useState<string[]>([]);
-  const [achievementFiles, setAchievementFiles] = useState<Record<string, File>>({});
-
-  // Non‑university certificate file
+  const [selectedStars, setSelectedStars] = useState<string[]>([]);
+  const [starProofs, setStarProofs] = useState<Record<string, File>>({});
   const [genericFile, setGenericFile] = useState<File | null>(null);
-
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<boolean | null>(null);
   const [checkingConnection, setCheckingConnection] = useState(true);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [checkingPending, setCheckingPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check university connection when modal opens and type is university‑related
+  // Check university connection
   useEffect(() => {
     if (!open) return;
-    if (type === "stars" || type === "major") {
+    const isUni = type === "stars" || type === "major";
+    if (isUni) {
       const checkConnection = async () => {
         setCheckingConnection(true);
         try {
           if (profile?.university_connection_status !== undefined) {
-            setConnectionStatus(profile.university_connection_status);
+            setConnectionStatus(profile.university_connection_status === "accepted");
           } else {
             const { data, error } = await supabase
               .from("profiles")
               .select("university_connection_status")
               .eq("id", user?.id)
               .single();
-            if (!error && data) setConnectionStatus(data.university_connection_status);
+            if (!error && data) setConnectionStatus(data.university_connection_status === "accepted");
             else setConnectionStatus(false);
           }
         } catch {
@@ -97,6 +94,28 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
     }
   }, [open, type, user, profile]);
 
+  // Check if there's already a pending request for the selected university certificate type
+  useEffect(() => {
+    if (!open || !user || !(type === "stars" || type === "major")) {
+      setHasPendingRequest(false);
+      return;
+    }
+    const checkPending = async () => {
+      setCheckingPending(true);
+      const { data, error } = await supabase
+        .from("certificate_requests")
+        .select("id")
+        .eq("student_id", user.id)
+        .eq("type", type)
+        .eq("status", "pending")
+        .maybeSingle();
+      if (!error && data) setHasPendingRequest(true);
+      else setHasPendingRequest(false);
+      setCheckingPending(false);
+    };
+    checkPending();
+  }, [open, user, type]);
+
   const reset = () => {
     setType("stars");
     setTitle("");
@@ -104,75 +123,193 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
     setIssueDate("");
     setExpiryDate("");
     setCredentialId("");
-    setStudentCardFile(null);
-    setSelectedAchievements([]);
-    setAchievementFiles({});
+    setSelectedStars([]);
+    setStarProofs({});
     setGenericFile(null);
+    setError(null);
     setConnectionStatus(null);
     setCheckingConnection(false);
+    setHasPendingRequest(false);
+    setCheckingPending(false);
+  };
+
+  const getUniversityName = async () => {
+    if (!user) return "University";
+    const { data: connection } = await supabase
+      .from("university_connections")
+      .select("university_id")
+      .eq("student_id", user.id)
+      .eq("status", "accepted")
+      .maybeSingle();
+    if (connection) {
+      const { data: uniProfile } = await supabase
+        .from("profiles")
+        .select("university_name")
+        .eq("id", connection.university_id)
+        .single();
+      return uniProfile?.university_name || "University";
+    }
+    return "University";
+  };
+
+  const uploadProofFile = async (userId: string, file: File, starType: string): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/stars/${starType}_${Date.now()}.${fileExt}`;
+    const filePath = `certificate-requests/${fileName}`;
+    const { error: uploadError } = await supabase.storage
+      .from("student-files")
+      .upload(filePath, file);
+    if (uploadError) throw new Error(uploadError.message);
+    const { data: { publicUrl } } = supabase.storage
+      .from("student-files")
+      .getPublicUrl(filePath);
+    return publicUrl;
+  };
+
+  const submitUniversityRequest = async () => {
+    if (!user) throw new Error("Not authenticated");
+    const universityName = await getUniversityName();
+
+    if (type === "stars") {
+      if (selectedStars.length < 3) {
+        setError("You must select at least 3 achievements to earn the Stars Certificate.");
+        return false;
+      }
+      const proofUrls: Record<string, string> = {};
+      for (const star of selectedStars) {
+        const file = starProofs[star];
+        if (!file) {
+          setError(`Please upload proof for "${STAR_ACHIEVEMENTS.find(a => a.id === star)?.label}".`);
+          return false;
+        }
+        const url = await uploadProofFile(user.id, file, star);
+        proofUrls[star] = url;
+      }
+      const { error: insertError } = await supabase.from("certificate_requests").insert({
+        student_id: user.id,
+        type: "stars",
+        achievements: selectedStars,
+        proof_urls: proofUrls,
+        status: "pending",
+        title: `Stars Certificate - ${universityName}`,
+        issuer: universityName,
+        issue_date: new Date().toISOString().split("T")[0],
+      });
+      if (insertError) throw new Error(insertError.message);
+    } else if (type === "major") {
+      const { error: insertError } = await supabase.from("certificate_requests").insert({
+        student_id: user.id,
+        type: "major",
+        status: "pending",
+        title: `Major Certificate - ${universityName}`,
+        issuer: universityName,
+        issue_date: new Date().toISOString().split("T")[0],
+      });
+      if (insertError) throw new Error(insertError.message);
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !issuer || !issueDate) return;
-
-    if ((type === "stars" || type === "major") && !connectionStatus) {
-      alert("You need to be connected to your university to request this certificate.");
-      return;
-    }
-
+    setError(null);
     setIsLoading(true);
-    const files: Record<string, File> = {};
-    if (type === "major" && studentCardFile) files["studentCard"] = studentCardFile;
-    if (type === "stars") {
-      Object.entries(achievementFiles).forEach(([id, file]) => { files[id] = file; });
-    }
-    if (!(type === "stars" || type === "major") && genericFile) files["certificate"] = genericFile;
 
-    onAdd({
-      type,
-      title,
-      issuer,
-      issueDate,
-      expiryDate: expiryDate || undefined,
-      credentialId: credentialId || undefined,
-      files: Object.keys(files).length ? files : undefined,
-      achievements: type === "stars" ? selectedAchievements : undefined,
-    });
-    reset();
-    onOpenChange(false);
-    setIsLoading(false);
+    try {
+      const isUni = type === "stars" || type === "major";
+
+      if (isUni) {
+        if (!connectionStatus) {
+          setError("You need to be connected to your university to request this certificate.");
+          setIsLoading(false);
+          return;
+        }
+        if (hasPendingRequest) {
+          setError("You already have a pending request for this certificate.");
+          setIsLoading(false);
+          return;
+        }
+        await submitUniversityRequest();
+        onAdd({
+          type,
+          title: "",
+          issuer: "",
+          issueDate: "",
+          expiryDate: "",
+          credentialId: "",
+          achievements: type === "stars" ? selectedStars : undefined,
+        });
+        reset();
+        onOpenChange(false);
+      } else {
+        if (!title || !issuer || !issueDate) {
+          setError("Please fill in title, issuer, and issue date.");
+          setIsLoading(false);
+          return;
+        }
+        const files: Record<string, File> = {};
+        if (genericFile) files["certificate"] = genericFile;
+        onAdd({
+          type,
+          title,
+          issuer,
+          issueDate,
+          expiryDate,
+          credentialId,
+          files: Object.keys(files).length ? files : undefined,
+        });
+        reset();
+        onOpenChange(false);
+      }
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isUniversityCertificate = type === "stars" || type === "major";
   const hasConnection = connectionStatus === true;
-  const canProceed = title && issuer && issueDate &&
-    (!isUniversityCertificate || hasConnection) &&
-    (type !== "major" || studentCardFile) &&
-    (type !== "stars" || selectedAchievements.length > 0 || Object.keys(achievementFiles).length > 0);
 
-  const toggleAchievement = (id: string) => {
-    setSelectedAchievements(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-    if (selectedAchievements.includes(id) && achievementFiles[id]) {
-      const newFiles = { ...achievementFiles };
-      delete newFiles[id];
-      setAchievementFiles(newFiles);
+  const canProceed = (() => {
+    if (isUniversityCertificate) {
+      if (!hasConnection) return false;
+      if (hasPendingRequest) return false;
+      if (type === "stars") {
+        return selectedStars.length >= 3 && selectedStars.every(s => starProofs[s]);
+      }
+      return true; // major
+    } else {
+      return !!(title && issuer && issueDate);
     }
+  })();
+
+  const toggleStar = (starId: string) => {
+    setSelectedStars(prev =>
+      prev.includes(starId) ? prev.filter(s => s !== starId) : [...prev, starId]
+    );
   };
 
-  // Helper to render the form content based on connection and type
+  const handleStarProof = (starId: string, file: File | null) => {
+    if (!file) return;
+    setStarProofs(prev => ({ ...prev, [starId]: file }));
+  };
+
+  const removeStarProof = (starId: string) => {
+    const newProofs = { ...starProofs };
+    delete newProofs[starId];
+    setStarProofs(newProofs);
+  };
+
   const renderFormContent = () => {
-    // For non‑university certificates, always show the full form
+    // Self‑claimed certificates
     if (!isUniversityCertificate) {
       return (
         <>
-          {/* Basic information */}
           <div className="space-y-4">
             <div>
               <Label>Certificate title *</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Bachelor's in Computer Science" className="bg-white/[0.02] border-white/10 focus:border-[#639922]/50" />
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Bachelor’s in Computer Science" className="bg-white/[0.02] border-white/10" />
             </div>
             <div>
               <Label>Issuing organization *</Label>
@@ -190,11 +327,9 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
             </div>
             <div>
               <Label>Credential ID (optional)</Label>
-              <Input value={credentialId} onChange={e => setCredentialId(e.target.value)} placeholder="e.g., STARS-2024-001" className="bg-white/[0.02] border-white/10" />
+              <Input value={credentialId} onChange={e => setCredentialId(e.target.value)} placeholder="e.g., CERT-001" className="bg-white/[0.02] border-white/10" />
             </div>
           </div>
-
-          {/* Simple file upload */}
           <div className="rounded-xl border border-white/10 p-4 space-y-2">
             <Label className="text-sm font-medium">Attach certificate file (optional)</Label>
             <div className="flex items-center gap-3">
@@ -219,7 +354,7 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       );
     }
 
-    // University certificates: show only if connected, otherwise show a message
+    // University certificates: check connection status
     if (checkingConnection) {
       return (
         <div className="flex items-center justify-center gap-2 text-amber-400 text-sm p-4">
@@ -240,79 +375,49 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
       );
     }
 
-    // Connected – show the full form
+    // Connected: now check if there's a pending request
+    if (hasPendingRequest && !checkingPending) {
+      return (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-amber-400 mb-2" />
+          <p className="text-sm font-medium text-amber-300">Request Already Pending</p>
+          <p className="text-xs text-foreground/50 mt-1">
+            You have already requested the {type === "stars" ? "Stars" : "Major"} Certificate. Please wait for the university to review your request.
+          </p>
+        </div>
+      );
+    }
+
+    // Connected and no pending request – show form
     return (
       <>
-        {/* Success message */}
         <div className="rounded-xl bg-[#639922]/10 border border-[#639922]/30 p-3 text-center">
           <p className="text-sm font-medium text-[#a8d85a]">
             ✅ Connected to your university – you can request this certificate.
           </p>
         </div>
 
-        {/* Basic information */}
-        <div className="space-y-4">
-          <div>
-            <Label>Certificate title *</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Bachelor's in Computer Science" className="bg-white/[0.02] border-white/10 focus:border-[#639922]/50" />
-          </div>
-          <div>
-            <Label>Issuing organization *</Label>
-            <Input value={issuer} onChange={e => setIssuer(e.target.value)} placeholder="e.g., University of Algiers" className="bg-white/[0.02] border-white/10" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Issue date *</Label>
-              <Input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} className="bg-white/[0.02] border-white/10" />
-            </div>
-            <div>
-              <Label>Expiry date (optional)</Label>
-              <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} className="bg-white/[0.02] border-white/10" />
-            </div>
-          </div>
-          <div>
-            <Label>Credential ID (optional)</Label>
-            <Input value={credentialId} onChange={e => setCredentialId(e.target.value)} placeholder="e.g., STARS-2024-001" className="bg-white/[0.02] border-white/10" />
-          </div>
-        </div>
-
-        {/* Specific fields for major or stars */}
         {type === "major" && (
           <div className="rounded-xl border border-[#639922]/30 bg-[#639922]/5 p-4 space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium">
-              <FileText className="h-4 w-4 text-[#639922]" />
-              Student card * (required)
+              <ShieldCheck className="h-4 w-4 text-[#639922]" />
+              Student Information
             </Label>
-            <div className="flex items-center gap-3">
-              <input type="file" accept=".pdf,image/*" onChange={e => setStudentCardFile(e.target.files?.[0] || null)} className="hidden" id="student-card" />
-              <Button type="button" variant="outline" asChild className="border-white/20 hover:bg-white/10">
-                <label htmlFor="student-card" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" /> Upload
-                </label>
-              </Button>
-              {studentCardFile && (
-                <div className="flex items-center gap-1 text-sm text-foreground/60">
-                  <span className="truncate max-w-[150px]">{studentCardFile.name}</span>
-                  <button type="button" onClick={() => setStudentCardFile(null)} className="text-red-400 hover:text-red-300">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-            <p className="text-xs text-foreground/30">PDF, JPG, PNG (max 5MB)</p>
+            <p className="text-sm text-foreground/70">Your student card is already on file. No additional upload required.</p>
+            <p className="text-xs text-foreground/40">The university will verify your enrollment before issuing the certificate.</p>
           </div>
         )}
 
         {type === "stars" && (
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#639922]" />
-              Achievements (select all that apply)
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              Achievements (select at least 3)
             </Label>
             <div className="space-y-3">
               {STAR_ACHIEVEMENTS.map(ach => {
-                const isSelected = selectedAchievements.includes(ach.id);
-                const hasFile = !!achievementFiles[ach.id];
+                const isSelected = selectedStars.includes(ach.id);
+                const hasFile = !!starProofs[ach.id];
                 return (
                   <div key={ach.id} className={cn(
                     "rounded-xl border transition-all",
@@ -321,13 +426,13 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
                     <div className="p-3">
                       <div className="flex items-start gap-3">
                         <Checkbox
-                          id={ach.id}
+                          id={`star-${ach.id}`}
                           checked={isSelected}
-                          onCheckedChange={() => toggleAchievement(ach.id)}
+                          onCheckedChange={() => toggleStar(ach.id)}
                           className="mt-1"
                         />
                         <div className="flex-1">
-                          <label htmlFor={ach.id} className="font-medium text-sm cursor-pointer">{ach.label}</label>
+                          <label htmlFor={`star-${ach.id}`} className="font-medium text-sm cursor-pointer">{ach.label}</label>
                           <p className="text-xs text-foreground/40 mt-0.5">{ach.description}</p>
                         </div>
                         {hasFile && <CheckCircle2 className="h-4 w-4 text-[#639922]" />}
@@ -336,10 +441,10 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
                         <div className="mt-3 ml-6">
                           <input type="file" accept=".pdf,image/*" onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) setAchievementFiles(prev => ({ ...prev, [ach.id]: file }));
-                          }} className="hidden" id={`file-${ach.id}`} />
+                            if (file) handleStarProof(ach.id, file);
+                          }} className="hidden" id={`proof-${ach.id}`} />
                           <Button type="button" variant="outline" size="sm" asChild className="border-white/20 text-foreground/80">
-                            <label htmlFor={`file-${ach.id}`} className="cursor-pointer">
+                            <label htmlFor={`proof-${ach.id}`} className="cursor-pointer">
                               <Upload className="h-3 w-3 mr-1" /> Upload proof
                             </label>
                           </Button>
@@ -348,12 +453,8 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
                       {isSelected && hasFile && (
                         <div className="mt-2 ml-6 flex items-center gap-2 text-xs">
                           <FileText className="h-3 w-3 text-[#639922]" />
-                          <span className="text-foreground/60">{achievementFiles[ach.id].name}</span>
-                          <button type="button" onClick={() => {
-                            const newFiles = { ...achievementFiles };
-                            delete newFiles[ach.id];
-                            setAchievementFiles(newFiles);
-                          }} className="text-red-400 hover:text-red-300">
+                          <span className="text-foreground/60 truncate max-w-[200px]">{starProofs[ach.id].name}</span>
+                          <button type="button" onClick={() => removeStarProof(ach.id)} className="text-red-400 hover:text-red-300">
                             <X className="h-3 w-3" />
                           </button>
                         </div>
@@ -363,7 +464,9 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
                 );
               })}
             </div>
-            <p className="text-xs text-foreground/30 mt-2">At least one achievement with proof is required to request a Stars certificate.</p>
+            <p className="text-xs text-foreground/40 mt-2">
+              You have selected {selectedStars.length} / 3 stars.
+            </p>
           </div>
         )}
       </>
@@ -378,12 +481,11 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
             Request a Certificate
           </DialogTitle>
           <p className="text-xs text-foreground/40 mt-1">
-            Fill in the details below. All starred fields are mandatory.
+            Select the type and provide required information.
           </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
-          {/* Certificate Type */}
           <div className="space-y-1.5">
             <Label className="text-xs font-medium text-foreground/60">Certificate type *</Label>
             <Select value={type} onValueChange={(v) => setType(v as CertificateType)}>
@@ -400,10 +502,15 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
             </Select>
           </div>
 
-          {/* Form content depends on type & connection */}
+          {error && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-red-400 text-sm flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              {error}
+            </div>
+          )}
+
           {renderFormContent()}
 
-          {/* Submit buttons */}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="border-white/10 hover:bg-white/5">Cancel</Button>
             <Button type="submit" disabled={isLoading || !canProceed} className="bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-black hover:shadow-lg transition-all">
