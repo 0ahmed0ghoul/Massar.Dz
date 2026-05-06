@@ -6,67 +6,72 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SkillsInput } from "@/features/auth/components/skills-input";
 import { Briefcase, MapPin, Calendar, DollarSign, Sparkles, ListChecks, Wrench } from "lucide-react";
-import { useCompanyData } from "../hooks/useCompanyData";
+import { JobInput } from "../service/job.service";
 
-export default function JobFormModal({ open, onOpenChange, editingJob }) {
-  const { addJob, updateJob } = useCompanyData();
-  const [form, setForm] = useState({
+interface JobFormModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingJob: any | null;
+  onSave: (job: JobInput) => Promise<void>;
+}
+
+export function JobFormModal({ open, onOpenChange, editingJob, onSave }: JobFormModalProps) {
+  const [form, setForm] = useState<JobInput>({
     title: "",
-    type: "full-time",
     description: "",
     requirements: "",
-    skills: "",
     location: "",
-    experience: "",
-    salary: "",
+    job_type: "full-time",
+    experience_level: "entry",
+    salary_min: null,
+    salary_max: null,
+    salary_currency: "DZD",
+    skills: [],
+    status: "active",
   });
 
   useEffect(() => {
     if (editingJob) {
       setForm({
         title: editingJob.title,
-        type: editingJob.type,
         description: editingJob.description,
-        requirements: editingJob.requirements.join("\n"),
-        skills: editingJob.skills.join(", "),
-        location: editingJob.location,
-        experience: editingJob.experience,
-        salary: editingJob.salary || "",
+        requirements: editingJob.requirements || "",
+        location: editingJob.location || "",
+        job_type: editingJob.job_type,
+        experience_level: editingJob.experience_level,
+        salary_min: editingJob.salary_min,
+        salary_max: editingJob.salary_max,
+        salary_currency: editingJob.salary_currency,
+        skills: editingJob.skills || [],
+        status: editingJob.status,
       });
     } else {
       setForm({
         title: "",
-        type: "full-time",
         description: "",
         requirements: "",
-        skills: "",
         location: "",
-        experience: "",
-        salary: "",
+        job_type: "full-time",
+        experience_level: "entry",
+        salary_min: null,
+        salary_max: null,
+        salary_currency: "DZD",
+        skills: [],
+        status: "active",
       });
     }
   }, [editingJob]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const jobData = {
-      title: form.title,
-      type: form.type as any,
-      description: form.description,
-      requirements: form.requirements.split("\n").filter((r) => r.trim()),
-      skills: form.skills.split(",").map((s) => s.trim()),
-      location: form.location,
-      experience: form.experience,
-      salary: form.salary || undefined,
-      active: true,
-    };
-    if (editingJob) {
-      updateJob(editingJob.id, jobData);
-    } else {
-      addJob(jobData);
-    }
+    await onSave(form);
     onOpenChange(false);
+  };
+
+  const updateField = (field: keyof JobInput, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -92,7 +97,7 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
               <Label className="text-foreground/80">Job Title *</Label>
               <Input
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => updateField("title", e.target.value)}
                 required
                 className="mt-1.5 border-white/20 bg-white/10 text-foreground placeholder:text-foreground/30"
                 placeholder="e.g., Senior Frontend Developer"
@@ -102,7 +107,7 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
               <Label className="text-foreground/80">Description *</Label>
               <Textarea
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) => updateField("description", e.target.value)}
                 rows={4}
                 required
                 className="mt-1.5 border-white/20 bg-white/10 text-foreground placeholder:text-foreground/30"
@@ -122,7 +127,7 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label className="text-foreground/80">Job Type</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <Select value={form.job_type} onValueChange={(v) => updateField("job_type", v)}>
                   <SelectTrigger className="mt-1.5 border-white/20 bg-white/10 text-foreground">
                     <SelectValue />
                   </SelectTrigger>
@@ -135,42 +140,60 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
                 </Select>
               </div>
               <div>
-                <Label className="text-foreground/80">Location</Label>
-                <div className="relative mt-1.5">
-                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
-                  <Input
-                    value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    className="border-white/20 bg-white/10 pl-9 text-foreground placeholder:text-foreground/30"
-                    placeholder="Algiers, Remote, etc."
-                  />
-                </div>
+                <Label className="text-foreground/80">Experience Level</Label>
+                <Select value={form.experience_level} onValueChange={(v) => updateField("experience_level", v)}>
+                  <SelectTrigger className="mt-1.5 border-white/20 bg-white/10 text-foreground">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-white/20 bg-[#1a1c20] text-foreground">
+                    <SelectItem value="entry">Entry Level</SelectItem>
+                    <SelectItem value="mid">Mid Level</SelectItem>
+                    <SelectItem value="senior">Senior Level</SelectItem>
+                    <SelectItem value="lead">Lead / Manager</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="text-foreground/80">Experience Required</Label>
+                <Label className="text-foreground/80">Location</Label>
                 <div className="relative mt-1.5">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   <Input
-                    value={form.experience}
-                    onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                    value={form.location || ""}
+                    onChange={(e) => updateField("location", e.target.value)}
                     className="border-white/20 bg-white/10 pl-9 text-foreground placeholder:text-foreground/30"
-                    placeholder="e.g., 3+ years"
+                    placeholder="Algiers, Remote, etc."
                   />
                 </div>
               </div>
-              <div>
-                <Label className="text-foreground/80">Salary (optional)</Label>
-                <div className="relative mt-1.5">
-                  <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
-                  <Input
-                    value={form.salary}
-                    onChange={(e) => setForm({ ...form, salary: e.target.value })}
-                    className="border-white/20 bg-white/10 pl-9 text-foreground placeholder:text-foreground/30"
-                    placeholder="e.g., 60,000 - 80,000 DZD"
-                  />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-foreground/80">Min Salary</Label>
+                  <div className="relative mt-1.5">
+                    <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                    <Input
+                      type="number"
+                      value={form.salary_min ?? ""}
+                      onChange={(e) => updateField("salary_min", e.target.value ? Number(e.target.value) : null)}
+                      className="border-white/20 bg-white/10 pl-9 text-foreground"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-foreground/80">Max Salary</Label>
+                  <div className="relative mt-1.5">
+                    <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                    <Input
+                      type="number"
+                      value={form.salary_max ?? ""}
+                      onChange={(e) => updateField("salary_max", e.target.value ? Number(e.target.value) : null)}
+                      className="border-white/20 bg-white/10 pl-9 text-foreground"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -185,20 +208,19 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
               </h3>
             </div>
             <div>
-              <Label className="text-foreground/80">Skills (comma separated) *</Label>
-              <Input
+              <Label className="text-foreground/80">Skills (press Enter or comma to add)</Label>
+              <SkillsInput
                 value={form.skills}
-                onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                required
-                className="mt-1.5 border-white/20 bg-white/10 text-foreground placeholder:text-foreground/30"
+                onChange={(skills) => updateField("skills", skills)}
                 placeholder="React, TypeScript, Node.js, etc."
+                className="mt-1.5"
               />
             </div>
             <div>
-              <Label className="text-foreground/80">Requirements (one per line)</Label>
+              <Label className="text-foreground/80">Requirements (optional)</Label>
               <Textarea
-                value={form.requirements}
-                onChange={(e) => setForm({ ...form, requirements: e.target.value })}
+                value={form.requirements || ""}
+                onChange={(e) => updateField("requirements", e.target.value)}
                 rows={4}
                 className="mt-1.5 border-white/20 bg-white/10 text-foreground placeholder:text-foreground/30"
                 placeholder="Bachelor's degree in Computer Science&#10;3+ years of React experience&#10;Strong communication skills"
@@ -206,7 +228,23 @@ export default function JobFormModal({ open, onOpenChange, editingJob }) {
             </div>
           </div>
 
-          {/* Form Actions */}
+          {/* Status (only when editing) */}
+          {editingJob && (
+            <div>
+              <Label className="text-foreground/80">Status</Label>
+              <Select value={form.status} onValueChange={(v) => updateField("status", v)}>
+                <SelectTrigger className="mt-1.5 border-white/20 bg-white/10 text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-[#1a1c20] text-foreground">
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
             <Button
               type="button"

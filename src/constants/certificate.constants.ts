@@ -1,4 +1,4 @@
-import { CertificateType } from "../types/certificate.types";
+import { CertificateType } from "../features/student/types/certificate.types";
 
 export const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string; isUniversity: boolean }[] = [
   { value: "stars", label: "Stars Certificate", icon: "⭐", isUniversity: true },

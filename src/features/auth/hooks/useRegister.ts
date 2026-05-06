@@ -2,9 +2,9 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { authService } from "../service/auth.service";
 import { useVerification } from "./useVerification";
 import { CompanyType, UserRole } from "@/domain/profile.types";
+import { authService } from "../service/auth.service";
 
 type Step = "role" | "form" | "verify";
 

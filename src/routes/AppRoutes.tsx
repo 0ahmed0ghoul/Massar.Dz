@@ -27,10 +27,10 @@ import TalentPage from "@/features/company/pages/TalentPage";
 import CompanyJobsPage from "@/features/company/pages/JobsPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
 import MessagesPage from "@/features/student/pages/MessagesPage";
-import JobsPage from "@/features/jobs/pages/JobsPage";
+import JobsPage from "@/features/landing/pages/JobsPage";
 import StudentJobsPage from "@/features/student/pages/JobsPage";
 import InternshipsPage from "@/features/internships/pages/InternshipsPage";
-import JobDetailPage from "@/features/jobs/pages/JobDetailPage";
+import JobDetailPage from "@/features/landing/pages/JobDetailPage";
 import InternshipDetailPage from "@/features/internships/pages/InternshipDetailPage";
 import AuthPage from "@/features/auth/pages/AuthPage";
 
@@ -46,6 +46,7 @@ import NotFound from "@/pages/NotFound";
 import UniversityChatPage from "@/features/university/pages/chat";
 import CertificateRequestsPage from "@/features/university/pages/CertificateRequests";
 import SkillsPage from "@/features/student/pages/SkillsPage";
+import CompanyPublicProfilePage from "@/features/landing/pages/CompanyPublicProfilePage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -76,7 +77,7 @@ const AppRoutes = () => {
       <Route path="/internships/:id" element={<InternshipDetailPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/payment/:paymentId" element={<PaymentPage />} />
-
+      <Route path="/companies/:id" element={<CompanyPublicProfilePage />} />
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
         {/* ================= STUDENT ================= */}

@@ -1,6 +1,6 @@
 // features/admin/components/AdminFilters.tsx
 import { Search, X, ChevronDown, GraduationCap, Building2, Briefcase, Users, CheckCircle2, Clock, XCircle, SlidersHorizontal } from "lucide-react";
-import { RoleFilter, StatusFilter } from "../constants/admin.constants";
+import { RoleFilter, StatusFilter } from "../../../constants/admin.constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

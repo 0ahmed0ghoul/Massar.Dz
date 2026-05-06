@@ -198,13 +198,25 @@ class AuthService {
   // ─────────────────────────────────────────────
   // MARK PROFILE COMPLETED (used by Company/University after filling)
   // ─────────────────────────────────────────────
-  async markProfileCompleted(userId: string, additionalData: any, verificationDocs: any) {
+  async markProfileCompleted(
+    userId: string,
+    additionalData: any,
+    verificationDocs: any,
+    logoUrl?: string  // NEW: optional logo URL
+  ) {
     const updates: any = {
       ...additionalData,
       verification_docs: verificationDocs,
       is_completed: true,
       completed_at: new Date().toISOString(),
     };
+    if (logoUrl) {
+      updates.avatar_url = logoUrl;
+      if (updates.verification_docs && updates.verification_docs.logo) {
+        delete updates.verification_docs.logo;
+      }
+    }
+
     return this.updateProfile(userId, updates);
   }
 
@@ -312,6 +324,37 @@ class AuthService {
       return [];
     }
   }
+async getUniversityDepartments(universityName: string): Promise<string[]> {
+  if (!universityName) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('department')
+    .eq('role', 'university_admin')
+    .eq('university_name', universityName)
+    .not('department', 'is', null);
+  if (error) {
+    console.error("Error fetching departments:", error);
+    return [];
+  }
+  // Deduplicate
+  const departments = [...new Set(data.map(d => d.department).filter(Boolean))];
+  return departments;
+}
+async uploadUniversityLogo(userId: string, file: File): Promise<string> {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+  const filePath = `university-logos/${fileName}`;
+  const { error: uploadError } = await supabase.storage
+    .from('university-files')
+    .upload(filePath, file);
+  if (uploadError) throw new Error(uploadError.message);
+  const { data: { publicUrl } } = supabase.storage
+    .from('university-files')
+    .getPublicUrl(filePath);
+  // Update profile avatar_url
+  await this.updateProfile(userId, { avatar_url: publicUrl });
+  return publicUrl;
+}
 }
 
 export const authService = new AuthService();

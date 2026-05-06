@@ -22,13 +22,9 @@ import {
 } from "lucide-react";
 import { usePayment } from "../service/usePayment";
 import { Plan } from "@/features/admin/types/payment.types";
-import {
-  COMPANY_PLANS,
-  getStudentPromotion,
-  STUDENT_PLANS,
-} from "../constants/pricing.constants";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { COMPANY_PLANS, getStudentPromotion, STUDENT_PLANS } from "@/constants/pricing.constants";
 type TabType = "student" | "company" | "all";
 
 export default function PricingPage() {

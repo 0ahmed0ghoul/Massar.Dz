@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, MessageSquare, Users } from "lucide-react";
-import { useCompanyData } from "../hooks/useCompanyData";
+import { Star, MessageSquare, Users, Loader2 } from "lucide-react";
+import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
+import { useCompanyApplications } from "@/features/company/hooks/useCompanyApplications";
 
 export default function CompanyApplicationsPage() {
-  const { jobs, getApplicationsForJob, updateApplication, addNote, setRating } = useCompanyData();
-  const [selectedJobId, setSelectedJobId] = useState<string>(jobs[0]?.id || "");
-  const applications = selectedJobId ? getApplicationsForJob(selectedJobId) : [];
+  const { jobs, loading: jobsLoading } = useCompanyJobs();
+  const [selectedJobId, setSelectedJobId] = useState<string>("");
+  const { applications, loading, updating, updateStatus, updateRating, updateNotes } = useCompanyApplications(selectedJobId || null);
 
   const statusOptions = ["pending", "reviewing", "shortlisted", "interview", "rejected", "hired"];
 
@@ -25,27 +26,39 @@ export default function CompanyApplicationsPage() {
     }
   };
 
+  if (jobsLoading) {
+    return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#639922]" /></div>;
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <div className="relative min-h-screen bg-background">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] p-8 text-center text-foreground/40 backdrop-blur-md">
+            <Users className="mx-auto h-12 w-12 mb-3 opacity-50" />
+            No jobs posted yet. Post a job to start receiving applications.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedJobId && jobs.length > 0) {
+    setSelectedJobId(jobs[0].id);
+  }
+
   return (
     <div className="relative min-h-screen bg-background">
-      {/* Grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      {/* Green glow orb */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
-      <div className="relative z-10 container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.035]" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Applicant Dashboard</h1>
           <p className="mt-1 text-sm text-foreground/40">Manage applications, shortlist candidates, and add notes.</p>
         </div>
 
-        {/* Job Selector Card */}
-        <div className="group mb-6 rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
+        <div className="group mb-6 rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all hover:border-[#639922]/30">
           <div className="p-5 sm:p-6">
             <div className="mb-4 flex items-center gap-2">
               <Users className="h-5 w-5 text-[#639922]" />
@@ -66,7 +79,11 @@ export default function CompanyApplicationsPage() {
           </div>
         </div>
 
-        {applications.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#639922]" />
+          </div>
+        ) : applications.length === 0 ? (
           <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] p-8 text-center text-foreground/40 backdrop-blur-md">
             No applications for this job yet.
           </div>
@@ -75,32 +92,35 @@ export default function CompanyApplicationsPage() {
             {applications.map((app) => (
               <div
                 key={app.id}
-                className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30"
+                className="group rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all hover:border-[#639922]/30"
               >
                 <div className="p-5 sm:p-6">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-xl font-semibold text-foreground">
-                        {app.candidate?.firstName} {app.candidate?.lastName}
+                        {app.student?.first_name} {app.student?.last_name}
                       </h3>
-                      <p className="text-xs text-foreground/40">{app.candidate?.email} • {app.candidate?.university}</p>
+                      <p className="text-xs text-foreground/40">
+                        {app.student?.email} • {app.student?.university_name || 'University not set'}
+                      </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge className="bg-blue-600/20 text-blue-400">
-                        AI Match: {app.aiMatchScore || "—"}%
-                      </Badge>
+                      {app.ai_match_score && (
+                        <Badge className="bg-blue-600/20 text-blue-400">
+                          AI Match: {app.ai_match_score}%
+                        </Badge>
+                      )}
                       <Select
                         value={app.status}
-                        onValueChange={(val) => updateApplication(app.id, { status: val as any })}
+                        onValueChange={(val) => updateStatus(app.id, val as any)}
+                        disabled={updating === app.id}
                       >
                         <SelectTrigger className="h-7 w-36 border-white/20 bg-white/10 text-xs text-foreground">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="border-white/20 bg-[#1a1c20] text-foreground">
                           {statusOptions.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s}
-                            </SelectItem>
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -120,7 +140,7 @@ export default function CompanyApplicationsPage() {
                               ? "fill-yellow-500 text-yellow-500"
                               : "text-foreground/30"
                           }`}
-                          onClick={() => setRating(app.id, r)}
+                          onClick={() => updateRating(app.id, r)}
                         />
                       ))}
                     </div>
@@ -131,16 +151,17 @@ export default function CompanyApplicationsPage() {
                         <MessageSquare className="h-3 w-3" /> Notes
                       </label>
                       <Textarea
-                        value={app.notes}
-                        onChange={(e) => addNote(app.id, e.target.value)}
+                        value={app.notes || ""}
+                        onChange={(e) => updateNotes(app.id, e.target.value)}
                         className="bg-white/10 border-white/20 text-foreground"
                         rows={3}
                         placeholder="Add interview feedback, strengths, concerns..."
+                        disabled={updating === app.id}
                       />
                     </div>
 
                     <div className="text-xs text-foreground/40">
-                      Applied on {new Date(app.appliedAt).toLocaleDateString()}
+                      Applied on {new Date(app.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 </div>

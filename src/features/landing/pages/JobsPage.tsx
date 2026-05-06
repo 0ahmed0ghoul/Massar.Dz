@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useJobs } from "@/features/jobs/hooks/useJobs";
-import JobCard from "../components/JobCard";
+import JobCard from "../../jobs/components/JobCard";
 
 const JobsPage = () => {
   const { jobs, loading } = useJobs();
@@ -20,14 +20,18 @@ const JobsPage = () => {
   const [wilayaFilter, setWilayaFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const wilayas = ["all", ...new Set(jobs.map(j => j.wilaya).filter(Boolean))];
+  // Extract unique wilayas and job types from jobs
+  const wilayas = ["all", ...new Set(jobs.map(j => j.company?.wilaya).filter(Boolean))];
   const jobTypes = ["all", ...new Set(jobs.map(j => j.job_type).filter(Boolean))];
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          job.skills?.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesWilaya = wilayaFilter === "all" || job.wilaya === wilayaFilter;
+    // Search term: job title, company name, or skills
+    const matchesSearch = searchTerm === "" ||
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (job.company?.company_name && job.company.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (Array.isArray(job.skills) && job.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())));
+
+    const matchesWilaya = wilayaFilter === "all" || job.company?.wilaya === wilayaFilter;
     const matchesType = typeFilter === "all" || job.job_type === typeFilter;
     return matchesSearch && matchesWilaya && matchesType;
   });
@@ -47,7 +51,7 @@ const JobsPage = () => {
       />
 
       {/* Glow effect */}
-      <div className="pointer-events-none fixed -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
+      <div className="pointer-events-none fixed -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
 
       <div className="relative z-10 container py-12 lg:py-20">
         {/* Back to Home button */}
@@ -63,7 +67,7 @@ const JobsPage = () => {
         {/* Header */}
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-            Discover your <span className="text-primary">next opportunity</span>
+            Discover your <span className="text-[#639922]">next opportunity</span>
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
             Browse hundreds of jobs from top companies across Algeria. Filter by location, type, and skills.
@@ -115,7 +119,7 @@ const JobsPage = () => {
         {/* Job grid */}
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#639922] border-t-transparent" />
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -134,7 +138,7 @@ const JobsPage = () => {
         {/* Floating decorative card */}
         <div className="pointer-events-none fixed bottom-8 right-8 hidden lg:block">
           <div className="w-48 rounded-2xl border border-primary/20 bg-card/60 p-3 backdrop-blur-md shadow-lg shadow-primary/20 animate-float">
-            <p className="text-xs font-semibold text-primary">🔥 Trending</p>
+            <p className="text-xs font-semibold text-[#639922]">🔥 Trending</p>
             <p className="text-sm font-medium">Full‑stack dev roles ↑42%</p>
           </div>
         </div>

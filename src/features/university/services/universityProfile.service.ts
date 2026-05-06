@@ -10,7 +10,6 @@ export interface UniversityProfile extends Profile {
   position: string | null;
   wilaya: string | null;
   verification_docs: {
-    logo?: string;
     registration_certificate?: string;
     tax_id?: string;
   };

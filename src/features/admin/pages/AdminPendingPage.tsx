@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { RefreshCw, School, Building2, Shield, Clock, GraduationCap } from "lucide-react";
 import { usePendingVerification } from "../hooks/usePendingVerification";
 import { PendingList } from "../components/PendingList";
-import { PendingFilter } from "../constants/admin.constants";
+import { PendingFilter } from "../../../constants/admin.constants";
 import { Profile } from "../types/verification.types";
 
 export const AdminPendingPage = () => {

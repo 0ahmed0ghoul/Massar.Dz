@@ -15,7 +15,7 @@ export function useUniversityProfile() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  const universityId = profile?.id; // university admin's profile ID
+  const universityId = profile?.id;
 
   const loadAllData = useCallback(async () => {
     if (!universityId) return;
@@ -60,28 +60,23 @@ export function useUniversityProfile() {
     setUploadingLogo(true);
     try {
       const logoUrl = await universityProfileService.uploadLogo(universityId, file);
-      // Get current verification_docs
-      const currentDocs = university?.verification_docs || {};
-      const updatedDocs = { ...currentDocs, logo: logoUrl };
-      await updateUniversity({ verification_docs: updatedDocs });
+      // Now update avatar_url directly (assumes service already updates)
+      setUniversity((prev) => prev ? { ...prev, avatar_url: logoUrl } : null);
+      toast({ title: "Success", description: "Logo uploaded" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setUploadingLogo(false);
     }
-  }, [universityId, university, updateUniversity, toast]);
+  }, [universityId, toast]);
 
   const deleteLogo = useCallback(async () => {
-    if (!university?.verification_docs?.logo) return;
+    if (!university?.avatar_url) return;
     setUploadingLogo(true);
     try {
-      const currentDocs = university.verification_docs || {};
-      const { logo, ...remainingDocs } = currentDocs; // remove logo field
-      await updateUniversity({ verification_docs: remainingDocs });
-      // Optionally delete the file from storage (if you want to free space)
-      if (university.verification_docs.logo) {
-        await universityProfileService.deleteLogo(university.verification_docs.logo);
-      }
+      await universityProfileService.deleteLogo(university.avatar_url);
+      await updateUniversity({ avatar_url: null });
+      toast({ title: "Success", description: "Logo removed" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -93,7 +88,7 @@ export function useUniversityProfile() {
     try {
       await universityProfileService.acceptRequest(requestId, studentId);
       toast({ title: "Success", description: "Connection accepted" });
-      await loadAllData(); // refresh lists
+      await loadAllData();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }

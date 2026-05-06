@@ -4,7 +4,7 @@ import { RefreshCw, Users } from "lucide-react";
 import { useAdmin } from "../hooks/useAdmin";
 import { AdminFilters } from "../components/AdminFilters";
 import { AccountsTable } from "../components/AccountsTable";
-import { RoleFilter, StatusFilter } from "../constants/admin.constants";
+import { RoleFilter, StatusFilter } from "../../../constants/admin.constants";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { adminService } from "../services/admin.service";

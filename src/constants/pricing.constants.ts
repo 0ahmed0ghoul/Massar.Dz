@@ -1,3 +1,10 @@
+
+export const CCP_ACCOUNT = {
+    name: 'Massar Platform',
+    accountNumber: '123456 78',
+    rib: '12345678901234567890',
+    bank: 'Algerian Post (CCP)',
+};
 // constants/pricing.constants.ts
 import { Plan } from "@/features/admin/types/payment.types";
 

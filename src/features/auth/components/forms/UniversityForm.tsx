@@ -10,7 +10,7 @@ import { universitySchema, UniversityFields } from "../../schemas/auth.schemas";
 import {
   ALGERIAN_UNIVERSITIES,
   ALGERIAN_WILAYAS,
-} from "../../constants/algeria.constants";
+} from "../../../../constants/algeria.constants";
 import { SearchableSelect } from "../searchable-select";
 
 interface UniversityFormProps {

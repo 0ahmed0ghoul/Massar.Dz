@@ -1,52 +1,72 @@
 // pages/company/CompanyProfilePage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { BadgeCheck, Upload, Building2, MapPin, Globe, Users, Briefcase } from "lucide-react";
-import { useCompanyData } from "../hooks/useCompanyData";
+import { useCompanyProfile } from "../hooks/useCompanyProfile";
 
 export default function CompanyProfilePage() {
-  const { company, updateCompany } = useCompanyData();
+  const { company, loading, saving, uploadingLogo, updateProfile, uploadLogo } = useCompanyProfile();
   const [form, setForm] = useState({
-    name: company?.name || '',
-    description: company?.description || '',
-    culture: company?.culture || '',
-    location: company?.location || '',
-    website: company?.website || '',
-    industry: company?.industry || '',
-    size: company?.size || '',
+    name: '',
+    description: '',
+    culture: '',
+    location: '',
+    website: '',
+    industry: '',
+    size: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Sync form with fetched company data
+  useEffect(() => {
+    if (company) {
+      setForm({
+        name: company.company_name || '',
+        description: company.company_description || '',
+        culture: company.company_culture || '',
+        location: company.wilaya || '',
+        website: company.website || '',
+        industry: company.industry || '',
+        size: company.company_size || '',
+      });
+    }
+  }, [company]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateCompany(form);
-    alert('Profile updated!');
+    await updateProfile({
+      company_name: form.name,
+      company_description: form.description,
+      company_culture: form.culture,
+      wilaya: form.location,
+      website: form.website,
+      industry: form.industry,
+      company_size: form.size,
+    });
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => updateCompany({ logo: reader.result as string });
-      reader.readAsDataURL(file);
+      await uploadLogo(file);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#639922] border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-background">
-      {/* Grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      {/* Green glow orb */}
+      {/* Background effects (unchanged) */}
+      <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
 
       <div className="relative z-10 container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -54,7 +74,7 @@ export default function CompanyProfilePage() {
         <div className="mb-8">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Company Profile</h1>
-            {company?.verified && (
+            {company?.is_verified && (
               <>
                 <BadgeCheck className="h-6 w-6 text-[#639922]" />
                 <span className="rounded-full bg-[#639922]/20 px-2.5 py-0.5 text-xs font-medium text-[#639922]">
@@ -81,9 +101,9 @@ export default function CompanyProfilePage() {
                 {/* Logo upload */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <div className="relative">
-                    {company?.logo ? (
+                    {company?.avatar_url ? (
                       <img
-                        src={company.logo}
+                        src={company.avatar_url}
                         alt="Company logo"
                         className="h-20 w-20 rounded-full border-2 border-white/20 object-cover"
                       />
@@ -100,6 +120,7 @@ export default function CompanyProfilePage() {
                       onChange={handleLogoUpload}
                       className="hidden"
                       id="logo-upload"
+                      disabled={uploadingLogo}
                     />
                     <label htmlFor="logo-upload">
                       <Button
@@ -107,9 +128,11 @@ export default function CompanyProfilePage() {
                         variant="outline"
                         asChild
                         className="cursor-pointer border-white/20 text-foreground hover:bg-white/10"
+                        disabled={uploadingLogo}
                       >
                         <span>
-                          <Upload className="mr-2 h-4 w-4" /> Upload Logo
+                          <Upload className="mr-2 h-4 w-4" />
+                          {uploadingLogo ? "Uploading..." : "Upload Logo"}
                         </span>
                       </Button>
                     </label>
@@ -207,14 +230,14 @@ export default function CompanyProfilePage() {
             </div>
           </div>
 
-          {/* Preview Card (optional, shows how the company appears to candidates) */}
+          {/* Preview Card */}
           <div className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-5 backdrop-blur-sm transition-all hover:border-[#639922]/30">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground/40">
               Preview (how candidates see you)
             </h3>
             <div className="flex items-center gap-3">
-              {company?.logo ? (
-                <img src={company.logo} alt="Logo" className="h-12 w-12 rounded-full object-cover" />
+              {company?.avatar_url ? (
+                <img src={company.avatar_url} alt="Logo" className="h-12 w-12 rounded-full object-cover" />
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
                   <Building2 className="h-5 w-5 text-foreground/40" />
@@ -223,7 +246,7 @@ export default function CompanyProfilePage() {
               <div>
                 <p className="font-semibold text-foreground">
                   {form.name || "Your Company Name"}
-                  {company?.verified && (
+                  {company?.is_verified && (
                     <BadgeCheck className="ml-1 inline h-4 w-4 text-[#639922]" />
                   )}
                 </p>
@@ -244,9 +267,10 @@ export default function CompanyProfilePage() {
           <div className="flex justify-end">
             <Button
               type="submit"
+              disabled={saving}
               className="bg-[#639922] text-foreground transition-all hover:bg-[#4f7a1a]"
             >
-              Save Profile
+              {saving ? "Saving..." : "Save Profile"}
             </Button>
           </div>
         </form>

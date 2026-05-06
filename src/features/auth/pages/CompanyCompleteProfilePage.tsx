@@ -27,7 +27,7 @@ import {
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useCompanyCompleteProfile } from "@/features/auth/hooks/useCompanyCompleteProfile";
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
-import { ALGERIAN_WILAYAS } from "@/features/auth/constants/algeria.constants";
+import { ALGERIAN_WILAYAS } from "@/constants/algeria.constants";
 
 
 export default function CompanyCompleteProfilePage() {

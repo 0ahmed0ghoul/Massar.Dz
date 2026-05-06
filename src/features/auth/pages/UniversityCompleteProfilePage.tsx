@@ -28,11 +28,11 @@ import {
 import { useUniversityCompleteProfile } from "@/features/auth/hooks/useUniversityCompleteProfile";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
-import { ALGERIAN_WILAYAS } from "@/features/auth/constants/algeria.constants";
+import { ALGERIAN_WILAYAS } from "@/constants/algeria.constants";
 import {
   ACADEMIC_POSITIONS,
   UNIVERSITY_DEPARTMENTS,
-} from "@/features/auth/constants/university.constants";
+} from "@/constants/university.constants";
 
 export default function UniversityCompleteProfilePage() {
   const { user, profile } = useAuth();

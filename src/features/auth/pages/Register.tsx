@@ -160,7 +160,6 @@ const Register = () => {
         )}
 
         <div className="mt-6 space-y-2 text-center text-xs text-muted-foreground/60">
-          <div>By continuing you agree to Terms & Privacy</div>
           <div className="text-sm">
             Already have an account?{" "}
             <Link

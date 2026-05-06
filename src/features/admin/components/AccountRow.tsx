@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ChevronDown, CheckCircle2, XCircle, Mail, Trash2, RefreshCw } from "lucide-react";
 import { Profile } from "../services/admin.service";
-import { ROLE_CONFIG, STATUS_CONFIG } from "../constants/admin.constants";
+import { ROLE_CONFIG, STATUS_CONFIG } from "../../../constants/admin.constants";
 
 interface AccountRowProps {
   profile: Profile;
