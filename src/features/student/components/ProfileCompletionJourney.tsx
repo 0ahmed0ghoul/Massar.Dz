@@ -1,19 +1,8 @@
 // components/ProfileCompletionJourney.tsx
 import { cn } from "@/lib/utils";
+import { ProfileCompletionJourneyProps } from "@/types/profile.types";
 import { CheckCircle2, Lock, Clock } from "lucide-react";
 import React from "react";
-
-export interface Step {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: "completed" | "current" | "pending" | "locked";
-}
-
-interface ProfileCompletionJourneyProps {
-  steps: Step[];
-}
 
 export const ProfileCompletionJourney = ({ steps }: ProfileCompletionJourneyProps) => {
   return (

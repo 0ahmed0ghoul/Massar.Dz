@@ -1,5 +1,3 @@
-// components/ProfileHeader.tsx
-import { Tables } from "@/types/database";
 import {
   UserCircle,
   Shield,
@@ -14,18 +12,16 @@ import {
 import { cn } from "@/lib/utils";
 import {
   ProfileCompletionJourney,
-  Step,
+  
 } from "../ProfileCompletionJourney";
+import { CandidateType, Profile } from "@/types/student";
+import { Step } from "@/types/profile.types";
 
-type Profile = Tables<"profiles">;
-type CandidateType = "studying" | "graduated" | "self_taught" | null;
 
 const ProfileHeader = ({ profile }: { profile: Profile }) => {
   const candidateType = profile.role === "student" ? (profile.candidate_type as CandidateType) : null;
 
-  // ------------------------------------------------------------------
   // 1. Determine required fields based on candidate type / role
-  // ------------------------------------------------------------------
   let requiredFields: (string | null | undefined)[] = [
     profile.first_name,
     profile.last_name,
@@ -96,9 +92,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   const filled = requiredFields.filter((f) => f && String(f).trim() !== "").length;
   const completeness = Math.round((filled / requiredFields.length) * 100);
 
-  // ------------------------------------------------------------------
   // 2. Build steps dynamically
-  // ------------------------------------------------------------------
   const basicInfoComplete = !!(profile.first_name && profile.last_name && profile.email);
   const documentsComplete = !!(profile.avatar_url && profile.resume_url);
   let steps: Step[] = [];
@@ -229,9 +223,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   let currentStepIndex = steps.findIndex(step => step.status === "current");
   if (currentStepIndex === -1) currentStepIndex = steps.length - 1;
 
-  // ------------------------------------------------------------------
   // 3. Render
-  // ------------------------------------------------------------------
   return (
     <div className="space-y-5">
       {/* MAIN CARD (unchanged) */}

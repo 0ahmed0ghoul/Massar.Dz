@@ -1,12 +1,12 @@
 // features/student/services/student.service.ts
+import { REQUIRED_STUDENT_FIELDS } from "@/constants/student.constants";
 import { supabase } from "@/lib/supabaseClient";
-import { Tables } from "@/types/database";
+import { Activity } from "@/types/activity";
+import { Application } from "@/types/application";
+import { Job } from "@/types/job";
+import { Profile } from "@/types/profile.types";
+import { Interview } from "@/types/student";
 
-type Job = Tables<"jobs">;
-type Application = Tables<"applications">;
-type Activity = Tables<"activities">;
-type Interview = Tables<"interviews">;
-type Profile = Tables<"profiles">;
 
 type ApplicationWithJob = Application & {
   jobs: {
@@ -16,18 +16,7 @@ type ApplicationWithJob = Application & {
   } | null;
 };
 
-const REQUIRED_STUDENT_FIELDS: (keyof Profile)[] = [
-  "first_name",
-  "last_name",
-  "email",
-  "degree_level",
-  "university_name",
-  "speciality",
-  "wilaya",
-  "academic_year",
-  "speciality_type",
-  "student_id"
-];
+
 
 // Helper: Insert activity
 async function addActivity(studentId: string, type: string, title: string, description?: string, metadata?: any) {

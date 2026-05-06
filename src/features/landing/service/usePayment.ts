@@ -1,8 +1,8 @@
 // hooks/usePayment.ts
 import { useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { PlanType } from "@/features/admin/types/payment.types";
 import { paymentService } from "@/features/admin/services/payment.service";
+import { PlanType } from "@/types/payment";
 
 
 export function usePayment() {

@@ -1,14 +1,7 @@
 // hooks/useNotifications.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-
-export interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  actionLink: string;
-  type: "warning" | "info" | "success";
-}
+import { Notification } from "@/types/notification";
 
 export const useNotifications = () => {
   const { user, profile } = useAuth();

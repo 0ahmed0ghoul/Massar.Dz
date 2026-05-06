@@ -5,11 +5,8 @@ import DashboardLayout from "@/components/shared/DashboardLayout";
 
 import Landing from "@/features/landing/pages/Landing";
 import StudentDashboard from "@/features/student/pages/DashboardPage";
-import ApplicationsPage from "@/features/student/pages/ApplicationsPage";
 import CompanyDashboard from "@/features/company/pages/CompanyDashboard";
-import Login from "@/features/auth/pages/Login";
 import NotificationsPage from "@/features/student/pages/NotificationsPage";
-import Register from "@/features/auth/pages/Register";
 import PendingApproval from "@/features/auth/pages/PendingApproval";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
 import { AdminPendingPage } from "@/features/admin/pages/AdminPendingPage";
@@ -28,10 +25,7 @@ import CompanyJobsPage from "@/features/company/pages/JobsPage";
 import { AdminPendingDetailPage } from "@/features/admin/pages/AdminPendingDetailPage";
 import MessagesPage from "@/features/student/pages/MessagesPage";
 import JobsPage from "@/features/landing/pages/JobsPage";
-import StudentJobsPage from "@/features/student/pages/JobsPage";
-import InternshipsPage from "@/features/internships/pages/InternshipsPage";
 import JobDetailPage from "@/features/landing/pages/JobDetailPage";
-import InternshipDetailPage from "@/features/internships/pages/InternshipDetailPage";
 import AuthPage from "@/features/auth/pages/AuthPage";
 
 import { useAuth } from "@/features/auth/contexts/AuthContext";
@@ -47,6 +41,8 @@ import UniversityChatPage from "@/features/university/pages/chat";
 import CertificateRequestsPage from "@/features/university/pages/CertificateRequests";
 import SkillsPage from "@/features/student/pages/SkillsPage";
 import CompanyPublicProfilePage from "@/features/landing/pages/CompanyPublicProfilePage";
+import ExperiencePage from "@/features/student/pages/ExperiencePage";
+import UniversityStatsPage from "@/features/university/pages/StatsPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -71,10 +67,8 @@ const AppRoutes = () => {
       <Route path="/register" element={<AuthPage />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
       <Route path="/complete-profile" element={<CompleteProfileRouter />} />
-      <Route path="/jobs" element={<JobsPage />} />
-      <Route path="/internships" element={<InternshipsPage />} />
-      <Route path="/jobs/:id" element={<JobDetailPage />} />
-      <Route path="/internships/:id" element={<InternshipDetailPage />} />
+      <Route path="/experience" element={<JobsPage />} />
+      <Route path="/experience/:id" element={<JobDetailPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/payment/:paymentId" element={<PaymentPage />} />
       <Route path="/companies/:id" element={<CompanyPublicProfilePage />} />
@@ -88,18 +82,12 @@ const AppRoutes = () => {
               path="/student/dashboard/profile"
               element={<ProfilePage />}
             />
+
             <Route
-              path="/student/dashboard/jobs"
-              element={<StudentJobsPage />}
+              path="/student/dashboard/experience"
+              element={<ExperiencePage />}
             />
-            <Route
-              path="/student/dashboard/applications"
-              element={<ApplicationsPage />}
-            />
-            <Route
-              path="/student/dashboard/saved"
-              element={<ApplicationsPage />}
-            />
+
             <Route
               path="/student/dashboard/notifications"
               element={<NotificationsPage />}
@@ -170,8 +158,12 @@ const AppRoutes = () => {
                 element={<UniversityChatPage />}
               />
                             <Route
-                path="university/dashboard/certifictes"
+                path="university/dashboard/certificates"
                 element={<CertificateRequestsPage />}
+              />
+                                          <Route
+                path="university/dashboard/statistics"
+                element={<UniversityStatsPage />}
               />
             </Route>
           </Route>

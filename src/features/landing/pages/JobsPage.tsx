@@ -134,25 +134,7 @@ const JobsPage = () => {
             ))}
           </div>
         )}
-
-        {/* Floating decorative card */}
-        <div className="pointer-events-none fixed bottom-8 right-8 hidden lg:block">
-          <div className="w-48 rounded-2xl border border-primary/20 bg-card/60 p-3 backdrop-blur-md shadow-lg shadow-primary/20 animate-float">
-            <p className="text-xs font-semibold text-[#639922]">🔥 Trending</p>
-            <p className="text-sm font-medium">Full‑stack dev roles ↑42%</p>
-          </div>
-        </div>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0%,100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };

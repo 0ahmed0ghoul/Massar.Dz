@@ -1,4 +1,3 @@
-// services/subscription.service.ts
 import { supabase } from "@/lib/supabaseClient";
 
 export const subscriptionService = {

@@ -1,6 +1,6 @@
 // services/payment.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { PaymentRequest, PaymentRequestWithProfile, PlanType } from "../types/payment.types";
+import { PaymentRequestWithProfile, PlanType } from "@/types/payment";
 
 export const paymentService = {
     async createPaymentRequest(

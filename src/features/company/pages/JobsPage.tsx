@@ -30,20 +30,9 @@ import { Badge } from '@/components/ui/badge';
 import { SkillsInput } from '@/features/auth/components/skills-input';
 import { Briefcase, MapPin, Clock, DollarSign, Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
 import { useCompanyJobs } from '../hooks/useCompanyJobs';
+import { EXPERIENCE_LEVELS, JOB_TYPES } from '@/constants/jobs.constant';
 
-const JOB_TYPES = [
-  { value: 'full-time', label: 'Full Time' },
-  { value: 'part-time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'internship', label: 'Internship' },
-];
 
-const EXPERIENCE_LEVELS = [
-  { value: 'entry', label: 'Entry Level' },
-  { value: 'mid', label: 'Mid Level' },
-  { value: 'senior', label: 'Senior Level' },
-  { value: 'lead', label: 'Lead / Manager' },
-];
 
 export default function JobsPage() {
   const { jobs, loading, creating, updating, deleting, createJob, updateJob, deleteJob } = useCompanyJobs();

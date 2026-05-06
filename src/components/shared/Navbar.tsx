@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles, LogOut, Moon, Sun, Home, Briefcase, GraduationCap } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { ROLES } from "@/constants/roles";
+import { ROLES } from "@/types/roles";
 import LogoIcon from "@/assets/Logo-icon.jpg";
 
 type Theme = "light" | "dark";
@@ -126,14 +126,14 @@ const Navbar = () => {
           {/* DESKTOP NAV LINKS */}
           <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
             <Link
-              to="/jobs"
+              to="/experience"
               className="relative text-sm text-muted-foreground transition-colors hover:text-foreground group"
             >
               Jobs
               <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-primary transition-all duration-200 group-hover:w-full" />
             </Link>
             <Link
-              to="/internships"
+              to="/experience"
               className="relative text-sm text-muted-foreground transition-colors hover:text-foreground group"
             >
               Internships

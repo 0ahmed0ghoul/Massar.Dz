@@ -1,31 +1,34 @@
 // pages/company/CompanyDashboard.tsx
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Users, Eye, TrendingUp, Sparkles, ArrowRight, Activity, Award, UserPlus, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Briefcase, Users, Eye, TrendingUp, Sparkles, ArrowRight, Activity, Award, UserPlus, FileText, Calendar, Loader2 } from "lucide-react";
 import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
+import { useCompanyApplicationsSummary } from "@/features/company/hooks/useCompanyApplicationsSummary";
+import { formatDistanceToNow } from "date-fns";
 
 export default function CompanyDashboard() {
-  const { jobs, loading } = useCompanyJobs();
+  const { jobs, loading: jobsLoading } = useCompanyJobs();
+  const { applications, totalCount, loading: appsLoading } = useCompanyApplicationsSummary(5);
 
   const activeJobs = jobs.filter((j) => j.status === "active").length;
   const totalJobs = jobs.length;
 
-  // Placeholder stats – replace with real data when available
   const stats = [
     {
       icon: Briefcase,
       label: "Active Jobs",
-      value: loading ? "..." : activeJobs,
+      value: jobsLoading ? "..." : activeJobs,
       desc: `${totalJobs - activeJobs} drafts`,
       trend: "+2 this month",
     },
     {
       icon: Users,
       label: "Applications",
-      value: "0",
-      desc: "0 new this week",
-      trend: "Coming soon",
+      value: appsLoading ? "..." : totalCount,
+      desc: `${applications.length} recent`,
+      trend: "Last 7 days",
     },
     {
       icon: Eye,
@@ -43,13 +46,25 @@ export default function CompanyDashboard() {
     },
   ];
 
-  if (loading) {
+  if (jobsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#639922] border-t-transparent" />
       </div>
     );
   }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "shortlisted": return "bg-green-600";
+      case "interview": return "bg-blue-600";
+      case "rejected": return "bg-red-600";
+      case "hired": return "bg-purple-600";
+      default: return "bg-yellow-600";
+    }
+  };
+
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -91,57 +106,18 @@ export default function CompanyDashboard() {
           ))}
         </div>
 
-        {/* Smart Features Card */}
+        {/* Smart Features Card (unchanged) */}
         <div className="mb-8 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-5 backdrop-blur-md lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#639922]" />
             <h2 className="text-lg font-semibold text-foreground">Smart Features</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Link to="/pricing">
-              <div className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 hover:bg-white/[0.05]">
-                <Award className="h-8 w-8 text-[#639922]" />
-                <div>
-                  <p className="font-medium text-foreground">AI Candidate Matching</p>
-                  <p className="text-xs text-foreground/40">Find top matches per job</p>
-                </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-foreground/40" />
-              </div>
-            </Link>
-            <Link to="/pricing">
-              <div className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 hover:bg-white/[0.05]">
-                <UserPlus className="h-8 w-8 text-[#639922]" />
-                <div>
-                  <p className="font-medium text-foreground">Search Talent Database</p>
-                  <p className="text-xs text-foreground/40">Filter by skills, uni, location</p>
-                </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-foreground/40" />
-              </div>
-            </Link>
-            <Link to="/dashboard/company/profile">
-              <div className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 hover:bg-white/[0.05]">
-                <FileText className="h-8 w-8 text-[#639922]" />
-                <div>
-                  <p className="font-medium text-foreground">Company Branding</p>
-                  <p className="text-xs text-foreground/40">Get verified & attract talent</p>
-                </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-foreground/40" />
-              </div>
-            </Link>
-            <Link to="dashboard/company/applications">
-              <div className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-all hover:border-[#639922]/30 hover:bg-white/[0.05]">
-                <Activity className="h-8 w-8 text-[#639922]" />
-                <div>
-                  <p className="font-medium text-foreground">Applicant Dashboard</p>
-                  <p className="text-xs text-foreground/40">Shortlist, reject, interview</p>
-                </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-foreground/40" />
-              </div>
-            </Link>
+            Coming Soon
           </div>
         </div>
 
-        {/* Recent Applications (placeholder) */}
+        {/* Recent Applications */}
         <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md">
           <div className="p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
@@ -149,11 +125,54 @@ export default function CompanyDashboard() {
                 <Users className="h-5 w-5 text-[#639922]" />
                 <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
               </div>
-              <Link to="/company/applications" className="text-xs text-[#639922] hover:text-[#7ab33e]">
+              <Link to="/company/dashboard/applications" className="text-xs text-[#639922] hover:text-[#7ab33e]">
                 View all →
               </Link>
             </div>
-            <p className="text-sm text-foreground/40">No applications yet. Once students start applying, they will appear here.</p>
+            {appsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-[#639922]" />
+              </div>
+            ) : applications.length === 0 ? (
+              <p className="text-sm text-foreground/40">No applications yet. Once students start applying, they will appear here.</p>
+            ) : (
+              <div className="space-y-4">
+                {applications.map((app) => (
+                  <div key={app.id} className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition-all hover:border-[#639922]/30">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 rounded-full border border-white/10">
+                          <AvatarFallback className="bg-[#639922]/10 text-[#639922] text-xs font-semibold">
+                            {getInitials(`${app.student?.first_name} ${app.student?.last_name}`)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {app.student?.first_name} {app.student?.last_name}
+                          </p>
+                          <p className="text-xs text-foreground/40">
+                            Applied for <span className="text-[#639922]">{app.job?.title}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(app.status)}>{app.status}</Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/40">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDistanceToNow(new Date(app.created_at), { addSuffix: true })}
+                      </span>
+                      <Link
+                        to={`/company/dashboard/applications?job=${app.job_id}&candidate=${app.student_id}`}
+                        className="text-[#639922] hover:underline"
+                      >
+                        View application →
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

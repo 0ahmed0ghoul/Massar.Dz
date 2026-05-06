@@ -1,6 +1,6 @@
 // src/features/auth/utils/redirectByProfile.ts
 import { NavigateFunction } from "react-router-dom";
-import { Profile } from "@/domain/profile.types";
+import { Profile } from "@/types/profile.types";
 
 export function redirectByProfile(navigate: NavigateFunction, profile: Profile) {
   // Students / graduates / professionals – immediate dashboard (always approved)

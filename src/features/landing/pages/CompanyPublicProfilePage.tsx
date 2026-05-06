@@ -1,6 +1,6 @@
 // pages/CompanyPublicProfilePage.tsx
 import { useParams, Link } from 'react-router-dom';
-import { Building2, MapPin, Briefcase, Users, Globe, Calendar, CheckCircle2, Loader2, Mail, Share2 } from 'lucide-react';
+import { MapPin, Briefcase, Users, Globe, Calendar, CheckCircle2, Loader2, Mail, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -60,10 +60,10 @@ export default function CompanyPublicProfilePage() {
               )}
             </div>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-foreground/60">
-              {company.company_location && (
+              {company.wilaya && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
-                  <span>{company.company_location}</span>
+                  <span>{company.wilaya}</span>
                 </div>
               )}
               {company.industry && (

@@ -1,7 +1,6 @@
-// hooks/useCertificates.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { Certificate, CertificateType } from "../types/certificate.types";
+import { Certificate, CertificateType } from "@/types/certificate";
 import { certificateService } from "../services/certificate.service";
 
 export function useCertificates() {

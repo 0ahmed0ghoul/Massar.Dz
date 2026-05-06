@@ -7,7 +7,6 @@ import {
   DollarSign,
   Briefcase,
   Calendar,
-  Building,
   Star,
   Loader2,
 } from "lucide-react";
@@ -52,6 +51,7 @@ const JobDetailPage = () => {
   }
 
   const company = job.company;
+  const companyId = company?.id || job.company_id;
   const companyName = company?.company_name || "Company";
   const companyInitials = companyName
     .split(" ")
@@ -67,6 +67,8 @@ const JobDetailPage = () => {
   const handleApply = () => {
     setApplyModalOpen(true);
   };
+
+  const companyProfileLink = `/companies/${companyId}`;
 
   return (
     <div className="relative min-h-screen bg-background transition-colors">
@@ -94,19 +96,25 @@ const JobDetailPage = () => {
         <div className="mx-auto max-w-4xl rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-md md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 rounded-xl border border-white/10">
-                <AvatarImage src={company?.avatar_url} />
-                <AvatarFallback className="bg-[#639922]/10 text-[#639922] text-sm font-semibold">
-                  {companyInitials}
-                </AvatarFallback>
-              </Avatar>
+              <Link to={companyProfileLink}>
+                <Avatar className="h-12 w-12 rounded-xl border border-white/10 transition-transform hover:scale-105">
+                  <AvatarImage src={company?.avatar_url} />
+                  <AvatarFallback className="bg-[#639922]/10 text-[#639922] text-sm font-semibold">
+                    {companyInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
               <div>
                 <h1 className="text-3xl font-extrabold text-foreground md:text-4xl">
                   {job.title}
                 </h1>
                 <div className="mt-1 flex items-center gap-2 text-foreground/60">
-                  <Building className="h-4 w-4" />
-                  <span>{companyName}</span>
+                  <Link
+                    to={companyProfileLink}
+                    className="hover:text-[#639922] transition-colors"
+                  >
+                    {companyName}
+                  </Link>
                 </div>
               </div>
             </div>

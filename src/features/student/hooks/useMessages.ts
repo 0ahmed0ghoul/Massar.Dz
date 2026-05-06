@@ -3,17 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { chatService, Message } from "@/features/university/services/chat.service";
 import { studentChatService } from "@/features/student/services/studentChat.service";
+import { Conversation } from "@/types/message";
 
-export interface Conversation {
-  id: string;
-  otherPartyAvatar?: string;
-  otherPartyId: string;
-  otherPartyName: string;
-  otherPartyRole: 'university' | 'company' | 'student';
-  lastMessage: string | null;
-  lastMessageAt: string | null;
-  unreadCount: number;
-}
 
 export const useMessaging = () => {
   const { user, profile } = useAuth();

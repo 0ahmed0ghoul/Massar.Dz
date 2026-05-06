@@ -4,11 +4,9 @@ import { Calendar, Video } from "lucide-react";
 const UpcomingInterviews = ({ interviews = [] }) => {
   // Mock data (will be used if interviews prop is empty)
   const mockInterviews = [
-    { id: 1, role: "Frontend Developer", company: "Google", date: "2024-03-20T10:00:00", type: "video" },
-    { id: 2, role: "Software Engineer", company: "Microsoft", date: "2024-03-22T14:30:00", type: "video" },
-    { id: 3, role: "Product Designer", company: "Apple", date: "2024-03-25T11:00:00", type: "video" },
-  ];
+    { id: 1, role: "", company: "", date: "2024-03-20T10:00:00", type: "video" },
 
+  ];
   const displayInterviews = interviews.length > 0 ? interviews : mockInterviews;
 
   return (

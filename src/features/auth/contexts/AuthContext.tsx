@@ -1,9 +1,9 @@
 // contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { AuthContextType, AuthState } from "../types/auth.types";
+import { AuthContextType, AuthState } from "../../../types/auth.types";
 import { authService } from "../service/auth.service";
-import { UserRole } from "@/constants/roles";
-import { Profile } from "@/domain/profile.types";
+import { UserRole } from "@/types/roles";
+import { Profile } from "@/types/profile.types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

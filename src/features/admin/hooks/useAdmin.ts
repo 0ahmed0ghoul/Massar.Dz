@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminService } from "../services/admin.service";
-import { AdminStats, Profile } from "../types/verification.types";
+import { AdminStats, Profile } from "../../../types/verification.types";
 
 export function useAdmin() {
   const [loading, setLoading] = useState(false);

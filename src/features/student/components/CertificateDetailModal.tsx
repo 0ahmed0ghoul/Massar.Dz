@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, FileText, ExternalLink, Award, User, Building2, Hash, Clock } from "lucide-react";
-import { Certificate } from "../types/certificate.types";
+import { Certificate } from "@/types/certificate";
 
 interface Props {
   open: boolean;

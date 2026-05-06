@@ -6,7 +6,6 @@ import {
   User,
   Mail,
   GraduationCap,
-  Building2,
   BookOpen,
   MapPin,
   Save,
@@ -21,10 +20,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { studentService } from "@/features/student/services/student.service";
-import { SkillsInput } from "@/features/auth/components/skills-input";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
 import { Label } from "@/components/ui/label";
+import { ProfileFormProps } from "@/types/profile.types";
 
 const parseSkills = (skills: any): string[] => {
   if (!skills) return [];
@@ -39,20 +38,6 @@ const parseSkills = (skills: any): string[] => {
   return [];
 };
 
-interface ProfileFormProps {
-  profile: any;
-  saving: boolean;
-  uploadingAvatar?: boolean;
-  uploadingCV?: boolean;
-  uploadingStudentCard?: boolean;
-  updateProfile: (updates: any) => Promise<void>;
-  uploadAvatar?: (file: File) => Promise<string | null>;
-  deleteAvatar?: () => Promise<void>;
-  uploadCV?: (file: File) => Promise<string | null>;
-  deleteCV?: () => Promise<void>;
-  uploadStudentCard?: (file: File) => Promise<string | null>;
-  deleteStudentCard?: () => Promise<void>;
-}
 
 const ProfileForm = ({
   profile,

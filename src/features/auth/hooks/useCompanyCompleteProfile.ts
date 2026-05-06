@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { authService, CompanyFormData } from "../service/auth.service";
 import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/domain/profile.types";
+import type { Profile } from "@/types/profile.types";
 
 
 

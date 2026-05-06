@@ -64,9 +64,9 @@ export default function UniversityProfileForm({
         {/* Logo section */}
         <div className="flex flex-col items-center gap-3 md:w-1/3">
           <div className="relative">
-            {university.avatar_url ? (
+            {university.verification_docs?.logo ? (
               <div className="relative">
-                <img src={university.avatar_url} alt="Logo" className="h-24 w-24 rounded-full object-cover border border-white/20" />
+                <img src={university.verification_docs.logo} alt="Logo" className="h-24 w-24 rounded-full object-cover border border-white/20" />
                 <button
                   type="button"
                   onClick={deleteLogo}

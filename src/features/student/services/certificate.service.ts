@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
-import { Certificate, CertificateType, GraduationToken } from "../types/certificate.types";
+import { Certificate, GraduationToken } from "../../../types/certificate";
 
-// Helper to log activity
 async function addActivity(userId: string, type: string, title: string, description?: string, metadata?: any) {
   try {
     await supabase.from("activities").insert({

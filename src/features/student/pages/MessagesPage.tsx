@@ -10,7 +10,6 @@ import {
   Paperclip,
   X,
   File,
-  Image as ImageIcon,
   Pin,
   Briefcase,
   Loader2,
@@ -21,7 +20,6 @@ import {
 import { useMessaging } from "../hooks/useMessages";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -30,14 +28,12 @@ function getInitials(name: string) {
     .toUpperCase()
     .slice(0, 2);
 }
-
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
-
 function formatDate(iso: string) {
   const d = new Date(iso);
   const today = new Date();
@@ -48,7 +44,6 @@ function formatDate(iso: string) {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
 /** Single conversation list item */
 function ConvItem({
   conv,
@@ -135,7 +130,6 @@ function ConvItem({
     </button>
   );
 }
-
 /** Loading skeleton */
 function LoadingState() {
   return (
@@ -147,7 +141,6 @@ function LoadingState() {
     </div>
   );
 }
-
 /** Empty state — no conversations */
 function EmptyConversations() {
   return (
@@ -168,7 +161,6 @@ function EmptyConversations() {
     </div>
   );
 }
-
 /** Empty chat panel — no conversation selected */
 function NothingSelected() {
   return (

@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { adminService } from "../services/admin.service";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { Profile } from "../types/verification.types";
+import { Profile } from "../../../types/verification.types";
 import { usePendingVerification } from "../hooks/usePendingVerification";
 
 export const AdminAccountsPage = () => {

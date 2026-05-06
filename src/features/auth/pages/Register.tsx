@@ -16,7 +16,7 @@ import { VerificationStep } from "../components/VerificationStep";
 import { StudentForm } from "../components/forms/StudentForm";
 import { CompanyForm } from "../components/forms/CompanyForm";
 import { UniversityForm } from "../components/forms/UniversityForm";
-import { UserRole } from "@/domain/profile.types";
+import { UserRole } from "@/types/profile.types";
 
 const META: Record<UserRole, { title: string; description: string }> = {
   student: {

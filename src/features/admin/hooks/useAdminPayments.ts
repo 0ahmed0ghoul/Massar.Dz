@@ -1,7 +1,7 @@
 // hooks/useAdminPayments.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { PaymentRequestWithProfile } from "../types/payment.types";
+import { PaymentRequestWithProfile } from "../../../types/payment.types";
 import { paymentService } from "../services/payment.service";
 
 

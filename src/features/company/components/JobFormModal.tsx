@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkillsInput } from "@/features/auth/components/skills-input";
 import { Briefcase, MapPin, Calendar, DollarSign, Sparkles, ListChecks, Wrench } from "lucide-react";
-import { JobInput } from "../service/job.service";
+import { JobInput } from "@/types/job";
 
 interface JobFormModalProps {
   open: boolean;

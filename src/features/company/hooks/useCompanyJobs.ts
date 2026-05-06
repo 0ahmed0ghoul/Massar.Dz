@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Job, JobInput, jobService } from '../service/job.service';
+import {jobService } from '../service/job.service';
+import { Job, JobInput } from '@/types/job';
 
 export function useCompanyJobs() {
   const { profile } = useAuth();

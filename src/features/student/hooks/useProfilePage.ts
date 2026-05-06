@@ -2,14 +2,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { studentService } from "@/features/student/services/student.service";
-import { Tables } from "@/types/database";
-import { Profile } from "@/domain/profile.types";
-
+import { CompanyProfile, Profile, StudentProfile } from "@/types/profile.types";
 
 export const useProfilePage = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<StudentProfile>(null);  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCV, setUploadingCV] = useState(false);
@@ -23,7 +20,11 @@ export const useProfilePage = () => {
     setLoading(true);
     try {
       const data = await studentService.getProfile(user.id);
-      setProfile(data);
+
+      const normalizedProfile =data as StudentProfile
+
+    
+      setProfile(normalizedProfile);
       console.log('data',data)
     } catch (error) {
       console.error("Failed to fetch profile:", error);

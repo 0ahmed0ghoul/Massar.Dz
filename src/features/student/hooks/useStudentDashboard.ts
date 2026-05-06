@@ -1,23 +1,8 @@
 // features/student/hooks/useStudentDashboard.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { Tables } from "@/types/database";
 import { studentService } from "../services/student.service";
-
-type Application = Tables<"applications">;
-type Job = Tables<"jobs">;
-type Interview = Tables<"interviews">;
-type Activity = Tables<"activities">;
-type Profile = Tables<"profiles">; // ✅ Use Tables<"profiles"> instead of @/types/supabase
-
-interface DashboardState {
-  stats: { label: string; value: number }[];
-  applications: Application[];
-  jobs: Job[];
-  interviews: Interview[];
-  activities: Activity[];
-  profile: Profile | null;
-}
+import { DashboardState } from "@/types/student";
 
 export const useStudentDashboard = () => {
   const { user } = useAuth();
@@ -54,7 +39,6 @@ export const useStudentDashboard = () => {
 
       const stats = [
         { label: "Applications", value: applications.length },
-        { label: "Jobs Available", value: jobs.length },
         { label: "Upcoming Interviews", value: interviews.length },
         { label: "Activities", value: activities.length },
       ];

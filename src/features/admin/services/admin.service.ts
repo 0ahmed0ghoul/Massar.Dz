@@ -1,6 +1,6 @@
 // features/admin/services/admin.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { AdminStats, Profile } from "../types/verification.types";
+import { AdminStats, Profile } from "@/types/verification.types";
 
 export const adminService = {
   async getProfiles(): Promise<Profile[]> {

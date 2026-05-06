@@ -1,11 +1,10 @@
+import { Link } from "react-router-dom";
+
 // RecentApplications.tsx
 const RecentApplications = ({ applications = [] }) => {
   // Mock data (will be used if applications prop is empty)
   const mockApplications = [
-    { id: 1, jobs: { title: "Frontend Developer", company: "Google", location: "Mountain View, CA" }, status: "Applied", date: "2024-03-14" },
-    { id: 2, jobs: { title: "Software Engineer", company: "Microsoft", location: "Redmond, WA" }, status: "Interview", date: "2024-03-12" },
-    { id: 3, jobs: { title: "Product Designer", company: "Apple", location: "Cupertino, CA" }, status: "Reviewed", date: "2024-03-10" },
-    { id: 4, jobs: { title: "Data Analyst", company: "Amazon", location: "Seattle, WA" }, status: "Applied", date: "2024-03-08" },
+    { id: 1, jobs: { title: "", company: "", location: "" }, status: "Applied", date: "2024-03-14" },
   ];
 
   const displayApplications = applications.length > 0 ? applications : mockApplications;
@@ -14,8 +13,9 @@ const RecentApplications = ({ applications = [] }) => {
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-sm">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">Recent Applications</h2>
-        <button className="text-xs font-semibold text-[#639922] hover:underline">View All</button>
-      </div>
+              <Link to="/student/dashboard/experience" className="text-xs text-[#639922] hover:text-[#7ab33e]">
+                View all →
+              </Link>      </div>
 
       <div className="space-y-3">
         {displayApplications.slice(0, 4).map((app) => (

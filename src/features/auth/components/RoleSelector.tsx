@@ -1,5 +1,5 @@
 import { GraduationCap, Building2, School } from "lucide-react";
-import { UserRole } from "@/domain/profile.types";
+import { UserRole } from "@/types/profile.types";
 
 interface RoleOption {
   role: UserRole;

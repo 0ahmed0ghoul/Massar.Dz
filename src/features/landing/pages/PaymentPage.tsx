@@ -1,9 +1,7 @@
-// pages/PaymentPage.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, Loader2, CreditCard, ArrowLeft } from "lucide-react";
 import { subscriptionService } from "@/features/admin/services/subscription.service";

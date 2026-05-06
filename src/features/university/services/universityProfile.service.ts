@@ -1,6 +1,6 @@
 // features/university/services/universityProfile.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { Profile } from "@/domain/profile.types";
+import { Profile } from "@/types/profile.types";
 
 export interface UniversityProfile extends Profile {
   university_name: string | null;

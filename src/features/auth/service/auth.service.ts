@@ -1,83 +1,10 @@
-import { Profile } from "@/domain/profile.types";
+import { Profile } from "@/types/profile.types";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
-
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
-
-export type VerificationStatus = "pending" | "approved" | "rejected" | null;
-export type CompanyType = "startup" | "private" | "government";
-
-export interface StudentFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  degreeLevel: string;
-  university?: string;
-  department?: string;
-  graduationYear?: string;
-}
-
-export interface GraduateFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  graduationYear: string;
-  university: string;
-  degree: string;
-  speciality: string;
-  skills?: string[];
-}
-
-export interface ProfessionalFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  currentRole: string;
-  company: string;
-  yearsOfExperience: string;
-  skills?: string[];
-  lookingFor: "internship" | "fulltime" | "parttime" | "freelance";
-}
-
-export interface CompanyFormData {
-  companyName: string;
-  companyType: CompanyType;
-  firstName: string;
-  lastName: string;
-  email: string;
-  industry: string;
-  registrationNumber?: string;
-  wilaya: string;
-  companyDescription: string;
-}
-
-export interface UniversityFormData {
-  universityName: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  department: string;
-  position: string;
-  wilaya: string;
-  rectorName: string;
-  website: string;
-}
-
-type RegisterRole = "student" | "graduate" | "professional" | "company_admin" | "university_admin" | "super_admin";
-
-// ─────────────────────────────────────────────
-// SERVICE
-// ─────────────────────────────────────────────
+import { RegisterRole } from "@/types/auth";
 
 class AuthService {
-  // ── AUTH ───────────────────────────────────
-
+  // ── AUTH ──────────────────────────────────
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -111,9 +38,6 @@ class AuthService {
 
     if (!authData.user) throw new Error("User creation failed.");
 
-    // Determine initial is_completed based on role (students are automatically "completed" for access, but we set false)
-    // For students, is_completed = false initially (they can still access dashboard via AuthContext logic).
-    // For companies/universities, is_completed = false, is_verified = false.
     const { error: profileError } = await supabase.from("profiles").insert({
       id: authData.user.id,
       email: cleanEmail,
@@ -121,8 +45,8 @@ class AuthService {
       candidate_type: profileData.candidate_type || null,
       university_connection_status: "none",
       status: "pending",
-      is_completed: false,               // initially false for all
-      is_verified: false,                // initially false for all
+      is_completed: false,
+      is_verified: false,
       first_name: profileData.first_name || null,
       last_name: profileData.last_name || null,
       degree_level: profileData.degree_level || null,
@@ -142,7 +66,9 @@ class AuthService {
 
     if (profileError) {
       console.error("Profile insert error:", profileError);
-      throw new Error("Account created but profile setup failed. Please contact support.");
+      throw new Error(
+        "Account created but profile setup failed. Please contact support."
+      );
     }
 
     return authData.user;
@@ -165,10 +91,7 @@ class AuthService {
     return data.subscription;
   }
 
-  // ─────────────────────────────────────────────
   // PROFILE
-  // ─────────────────────────────────────────────
-
   async fetchProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")
@@ -195,14 +118,12 @@ class AuthService {
     return data;
   }
 
-  // ─────────────────────────────────────────────
   // MARK PROFILE COMPLETED (used by Company/University after filling)
-  // ─────────────────────────────────────────────
   async markProfileCompleted(
     userId: string,
     additionalData: any,
     verificationDocs: any,
-    logoUrl?: string  // NEW: optional logo URL
+    logoUrl?: string // NEW: optional logo URL
   ) {
     const updates: any = {
       ...additionalData,
@@ -220,16 +141,12 @@ class AuthService {
     return this.updateProfile(userId, updates);
   }
 
-  // ─────────────────────────────────────────────
   // ADMIN ACTIONS
-  // ─────────────────────────────────────────────
   async approveCompanyUniversity(userId: string) {
     return this.updateProfile(userId, { is_verified: true, status: "active" });
   }
 
-  // ─────────────────────────────────────────────
   // REGISTER (COMPATIBLE WITH useRegister)
-  // ─────────────────────────────────────────────
   async registerUser(params: {
     email: string;
     password: string;
@@ -281,19 +198,19 @@ class AuthService {
     return this.signUp(params.email, params.password, profileData);
   }
 
-  // ─────────────────────────────────────────────
   // UTILS
-  // ─────────────────────────────────────────────
-  async getCurrentStudentType(userId: string): Promise<'studying' | 'graduated' | 'self_taught' | null> {
+  async getCurrentStudentType(
+    userId: string
+  ): Promise<"studying" | "graduated" | "self_taught" | null> {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('candidate_type')
-      .eq('id', userId)
+      .from("profiles")
+      .select("candidate_type")
+      .eq("id", userId)
       .maybeSingle();
     if (error || !data) return null;
     return data.candidate_type as any;
   }
-  
+
   async checkEmailExists(email: string): Promise<boolean> {
     const { data } = await supabase
       .from("profiles")
@@ -310,11 +227,12 @@ class AuthService {
     await new Promise((r) => setTimeout(r, 800));
     return true;
   }
+
   async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
     try {
-      const { data, error } = await supabase.rpc('get_verified_universities');
+      const { data, error } = await supabase.rpc("get_verified_universities");
       if (error) throw error;
-  
+
       return (data || []).map((u: any) => ({
         id: u.id,
         name: u.university_name, // ✅ FIX HERE
@@ -324,37 +242,41 @@ class AuthService {
       return [];
     }
   }
-async getUniversityDepartments(universityName: string): Promise<string[]> {
-  if (!universityName) return [];
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('department')
-    .eq('role', 'university_admin')
-    .eq('university_name', universityName)
-    .not('department', 'is', null);
-  if (error) {
-    console.error("Error fetching departments:", error);
-    return [];
+
+  async getUniversityDepartments(universityName: string): Promise<string[]> {
+    if (!universityName) return [];
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("department")
+      .eq("role", "university_admin")
+      .eq("university_name", universityName)
+      .not("department", "is", null);
+    if (error) {
+      console.error("Error fetching departments:", error);
+      return [];
+    }
+    // Deduplicate
+    const departments = [
+      ...new Set(data.map((d) => d.department).filter(Boolean)),
+    ];
+    return departments;
   }
-  // Deduplicate
-  const departments = [...new Set(data.map(d => d.department).filter(Boolean))];
-  return departments;
-}
-async uploadUniversityLogo(userId: string, file: File): Promise<string> {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
-  const filePath = `university-logos/${fileName}`;
-  const { error: uploadError } = await supabase.storage
-    .from('university-files')
-    .upload(filePath, file);
-  if (uploadError) throw new Error(uploadError.message);
-  const { data: { publicUrl } } = supabase.storage
-    .from('university-files')
-    .getPublicUrl(filePath);
-  // Update profile avatar_url
-  await this.updateProfile(userId, { avatar_url: publicUrl });
-  return publicUrl;
-}
+
+  async uploadUniversityLogo(userId: string, file: File): Promise<string> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+    const filePath = `university-logos/${fileName}`;
+    const { error: uploadError } = await supabase.storage
+      .from("university-files")
+      .upload(filePath, file);
+    if (uploadError) throw new Error(uploadError.message);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("university-files").getPublicUrl(filePath);
+    // Update profile avatar_url
+    await this.updateProfile(userId, { avatar_url: publicUrl });
+    return publicUrl;
+  }
 }
 
 export const authService = new AuthService();

@@ -1,9 +1,8 @@
 // services/activity.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, ActivityType } from "../types/activity.types";
+import { Activity, ActivityType } from "@/types/activity";
 
 export const activityService = {
-  // Get activities for a student, most recent first (limit default 20)
   async getStudentActivities(studentId: string, limit: number = 20): Promise<Activity[]> {
     const { data, error } = await supabase
       .from("activities")

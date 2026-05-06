@@ -1,3 +1,4 @@
+import { Plan } from "@/types/payment";
 
 export const CCP_ACCOUNT = {
     name: 'Massar Platform',
@@ -5,8 +6,6 @@ export const CCP_ACCOUNT = {
     rib: '12345678901234567890',
     bank: 'Algerian Post (CCP)',
 };
-// constants/pricing.constants.ts
-import { Plan } from "@/features/admin/types/payment.types";
 
 export const STUDENT_PLANS: Plan[] = [
     { id: 'student_monthly', name: 'Student Monthly', price: 999, period: 'month', for: 'student', features: ['AI job recommendations', 'Priority support', 'Profile boost'] },

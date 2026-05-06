@@ -1,20 +1,17 @@
-// components/ActivityTimeline.tsx
 import { formatDistanceToNow } from "date-fns";
-import { Activity } from "../../types/activity.types";
+import { Activity } from "../../../../types/activity";
 import { useActivity } from "../../hooks/useActivity";
 
 interface ActivityTimelineProps {
-  activities?: Activity[];   // optional: if provided, uses these instead of hook
+  activities?: Activity[];   
   loading?: boolean;
 }
 
 const ActivityTimeline = ({ activities: propActivities, loading: propLoading }: ActivityTimelineProps) => {
-  // Fallback to hook if activities not passed as prop
   const { activities: hookActivities, loading: hookLoading } = useActivity();
   const activities = propActivities ?? hookActivities;
   const loading = propLoading ?? hookLoading;
 
-  // Helper to style icons/colors based on activity type
   const getActivityStyle = (type: string) => {
     switch (type) {
       case "profile_view":

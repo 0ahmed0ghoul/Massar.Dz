@@ -1,4 +1,3 @@
-// Common academic departments in Algerian universities
 export const UNIVERSITY_DEPARTMENTS = [
     "Computer Science",
     "Software Engineering",
@@ -74,7 +73,6 @@ export const UNIVERSITY_DEPARTMENTS = [
     "Fisheries & Aquaculture",
   ];
   
-  // Common academic & administrative positions in Algerian universities
   export const ACADEMIC_POSITIONS = [
     "Rector / President",
     "Vice-Rector for Academic Affairs",

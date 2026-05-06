@@ -1,7 +1,6 @@
-// hooks/useActivity.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { Activity, ActivityType } from "../types/activity.types";
+import { Activity, ActivityType } from "../../../types/activity";
 import { activityService } from "../services/activity.service";
 
 

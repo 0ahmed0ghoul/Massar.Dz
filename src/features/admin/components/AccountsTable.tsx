@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Profile } from "../types/verification.types";
+import { Profile } from "../../../types/verification.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

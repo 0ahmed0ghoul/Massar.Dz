@@ -12,10 +12,7 @@ import {
 import { useUniversityCertificateRequests } from '../hooks/useUniversityCertificateRequests';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
 type CertRequest = any; // replace with your actual type
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });

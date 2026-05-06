@@ -19,7 +19,6 @@ export default function TalentPage() {
 
   const handleSearch = async () => {
     setSearching(true);
-    // Simulate search – replace with actual API call when ready
     setTimeout(() => {
       setSearchResults([]);
       setSearching(false);
@@ -29,7 +28,6 @@ export default function TalentPage() {
   const handleAIMatch = async () => {
     if (!aiJobId) return;
     setMatching(true);
-    // Simulate AI match – replace with actual API when ready
     setTimeout(() => {
       setAiResults([]);
       setMatching(false);

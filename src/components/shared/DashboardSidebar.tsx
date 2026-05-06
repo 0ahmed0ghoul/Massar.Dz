@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow } from "lucide-react";
+import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -33,7 +33,6 @@ const studyingOnlyItems = [
   { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
 ];
 
-// Graduated and self-taught students do NOT get Experience, university connection, etc.
 
 const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
@@ -50,6 +49,7 @@ const universityItems = [
   { title: "Students Database", url: "/university/dashboard/students", icon: Database },
   { title: "Chat", url: "/university/dashboard/chat", icon: MessageCircleMore },
   { title: "Certificates", url: "/university/dashboard/certificates", icon: LucidePartyPopper },
+  { title: "Statistics", url: "/university/dashboard/statistics", icon: ChartBarIncreasingIcon },
 ];
 
 const adminItems = [

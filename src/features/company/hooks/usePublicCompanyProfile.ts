@@ -1,11 +1,11 @@
 // features/company/hooks/usePublicCompanyProfile.ts
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Job } from '../types/company';
-import { jobService } from '../service/job.service';
-import { companyProfileService } from '../service/companyProfile.service';
-import { PublicCompanyProfile } from '../types/company.types';
-
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { jobService } from "../service/job.service";
+import { companyProfileService } from "../service/companyProfile.service";
+import { Job } from "@/types/job";
+import { mapJob } from "@/mapper/job.mapper";
+import { PublicCompanyProfile } from "@/types/company";
 
 export function usePublicCompanyProfile(companyId: string) {
   const [company, setCompany] = useState<PublicCompanyProfile | null>(null);
@@ -23,9 +23,14 @@ export function usePublicCompanyProfile(companyId: string) {
           jobService.getJobsByCompany(companyId),
         ]);
         setCompany(profile);
-        setJobs(jobList);
+        const mapped = jobList.map(mapJob);
+        setJobs(mapped);
       } catch (error: any) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }

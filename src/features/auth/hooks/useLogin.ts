@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { authService } from "../service/auth.service";
 import { redirectByProfile } from "@/features/auth/utils/redirectByProfile";
-import type { Profile } from "@/domain/profile.types";
+import type { Profile } from "@/types/profile.types";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

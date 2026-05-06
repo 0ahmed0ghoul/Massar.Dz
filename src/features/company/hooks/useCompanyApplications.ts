@@ -1,7 +1,8 @@
 // features/company/hooks/useCompanyApplications.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Application, applicationService } from '../service/application.service';
+import {applicationService } from '../service/application.service';
+import { Application } from '@/types/application';
 
 export function useCompanyApplications(jobId: string | null) {
   const [applications, setApplications] = useState<Application[]>([]);

@@ -1,16 +1,7 @@
 import { Building2, CheckCircle2, AlertCircle, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tables } from "@/types/database";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
-
-type Profile = Tables<"profiles">;
-
-interface UniversityConnectionCardProps {
-  profile: Profile;
-  onRequestConnection: () => Promise<void>;
-  isRequesting?: boolean;
-}
+import { UniversityConnectionCardProps } from "@/types/profile.types";
 
 export const UniversityConnectionCard = ({
   profile,

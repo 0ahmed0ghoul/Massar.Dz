@@ -11,40 +11,10 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useStudentType } from "@/features/auth/hooks/useStudentType";
+import { AddCertificateModalProps, CertificateType } from "@/types/certificate";
+import { CERTIFICATE_TYPES, STAR_ACHIEVEMENTS } from "@/constants/certificate.constant";
 
-// --- Configuration moved inline for clarity (or import from constants)
-const CERTIFICATE_TYPES: { value: CertificateType; label: string; icon: string; isUniversity: boolean }[] = [
-  { value: "stars", label: "Stars Certificate", icon: "⭐", isUniversity: true },
-  { value: "major", label: "Major Certificate", icon: "🎓", isUniversity: true },
-  { value: "hackathon", label: "Hackathon / Competition", icon: "🏆", isUniversity: false },
-  { value: "english", label: "English Certificate", icon: "🌐", isUniversity: false },
-  { value: "self_taught", label: "Self‑Taught / Online Course", icon: "📚", isUniversity: false },
-];
 
-const STAR_ACHIEVEMENTS = [
-  { id: "major", label: "Major Excellence", description: "Being top of your major" },
-  { id: "delegate", label: "Student Delegate", description: "Active student representation" },
-  { id: "internship", label: "Internship Completion", description: "Completed an internship" },
-  { id: "club", label: "Club Participation", description: "Active member of a student club" },
-  { id: "language", label: "Language Certificate", description: "Official language certificate (TOEFL, IELTS, etc.)" },
-];
-
-type CertificateType = "stars" | "major" | "hackathon" | "english" | "self_taught";
-
-interface AddCertificateModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAdd: (request: {
-    type: CertificateType;
-    title: string;
-    issuer: string;
-    issueDate: string;
-    expiryDate?: string;
-    credentialId?: string;
-    files?: Record<string, File>;
-    achievements?: string[];
-  }) => void;
-}
 
 export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificateModalProps) {
   const { user, profile } = useAuth();

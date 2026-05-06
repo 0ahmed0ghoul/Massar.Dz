@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { MapPin, DollarSign, Briefcase, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Job } from "@/features/company/service/job.service";
+import { Job } from "@/types/job";
 
 interface JobCardProps {
   job: Job & { company?: { company_name: string; avatar_url: string; wilaya: string } };

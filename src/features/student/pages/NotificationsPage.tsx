@@ -1,4 +1,3 @@
-// pages/NotificationsPage.tsx (or features/student/pages/NotificationsPage.tsx)
 import { Bell, AlertTriangle, Info, CheckCircle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNotifications } from "../hooks/useNotifications";

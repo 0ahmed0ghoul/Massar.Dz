@@ -1,3 +1,5 @@
+import { StudentProfile } from "@/types/profile.types";
+
 export const STUDENT_STATUS_OPTIONS = [
   { id: "studying", label: "Currently Studying", icon: "GraduationCap" },
   { id: "graduated", label: "Graduated", icon: "Calendar" },
@@ -109,4 +111,17 @@ export const EDUCATION_LEVELS = [
   { value: "master", label: "Master's" },
   { value: "phd", label: "PhD" },
   { value: "bootcamp", label: "Bootcamp" },
+];
+
+export const REQUIRED_STUDENT_FIELDS: (keyof StudentProfile)[] = [
+  "first_name",
+  "last_name",
+  "email",
+  "degree_level",
+  "university_name",
+  "speciality",
+  "wilaya",
+  "academic_year",
+  "speciality_type",
+  "student_id"
 ];

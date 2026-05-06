@@ -1,6 +1,6 @@
 // features/admin/services/admin.verification.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { Profile } from "../types/verification.types";
+import { Profile } from "@/types/verification.types";
 
 export const adminVerificationService = {
   // ─────────────────────────────────────────────

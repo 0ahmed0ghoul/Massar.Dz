@@ -1,5 +1,5 @@
-// features/jobs/hooks/useJobs.ts
-import { Job, jobService } from '@/features/company/service/job.service';
+import { jobService } from '@/features/company/service/job.service';
+import { Job } from '@/types/job';
 import { useState, useEffect } from 'react';
 
 export function useJobs() {

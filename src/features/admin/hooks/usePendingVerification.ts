@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminVerificationService } from "../services/admin.verification.service";
-import { Profile } from "../types/verification.types";
+import { Profile } from "../../../types/verification.types";
 
 export function usePendingVerification() {
   const [loading, setLoading] = useState(false);

@@ -13,7 +13,7 @@ import { QRScanner } from "@/features/university/components/QRScanner";
 import { AddCertificateModal } from "../components/AddCertificateModal";
 import { CertificateDetailModal } from "../components/CertificateDetailModal";
 import { useCertificates } from "../hooks/useCertificates";
-import { Certificate, CertificateType } from "../types/certificate.types";
+import { Certificate, CertificateType } from "../../../types/certificate";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useStudentType } from "@/features/auth/hooks/useStudentType";

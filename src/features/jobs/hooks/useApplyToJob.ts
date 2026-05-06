@@ -1,4 +1,3 @@
-// features/jobs/hooks/useApplyToJob.ts
 import { useState } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

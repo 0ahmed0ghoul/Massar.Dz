@@ -1,4 +1,3 @@
-// features/university/hooks/useUniversityConnectionMerged.ts
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -8,10 +7,7 @@ import {
   MatchResult,
 } from "../services/universityStudents.service";
 
-/* --------------------------------------------------------------
-   Hook: useUniversityStudentConnection
-   Unified hook using the single service.
--------------------------------------------------------------- */
+
 export function useUniversityStudentConnection(universityId: string) {
   const [officialStudents, setOfficialStudents] = useState<UniversityStudent[]>(
     []
@@ -209,8 +205,4 @@ export function useUniversityStudentConnection(universityId: string) {
   };
 }
 
-/* --------------------------------------------------------------
-   Legacy alias for backward compatibility
-   (if you previously used useUniversityConnection, this mimics it)
--------------------------------------------------------------- */
 export const useUniversityConnection = useUniversityStudentConnection;
