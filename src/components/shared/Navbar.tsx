@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, LogOut, Moon, Sun, Home, Briefcase, GraduationCap } from "lucide-react";
+import {
+  Menu,
+  X,
+  Sparkles,
+  LogOut,
+  Moon,
+  Sun,
+  Home,
+  Briefcase,
+  GraduationCap,
+} from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { ROLES } from "@/types/roles";
 import LogoIcon from "@/assets/Logo-icon.jpg";
@@ -22,7 +32,7 @@ function useTheme() {
 
   return {
     theme,
-    toggleTheme: () => setTheme(prev => (prev === "dark" ? "light" : "dark")),
+    toggleTheme: () => setTheme((prev) => (prev === "dark" ? "light" : "dark")),
   };
 }
 
@@ -80,20 +90,39 @@ const Navbar = () => {
   };
 
   const getDashboard = () => {
-console.log(profile);
-  if (profile?.status === "pending" && profile?.role != 'student') return "/pending-approval";   
-   if (!profile?.is_completed ) return "/complete-profile";
+    console.log("PROFILE:", profile);
+    console.log("ROLE:", profile?.role);
 
-    switch (role) {
-      case ROLES.STUDENT: return "/student/dashboard";
-      case ROLES.COMPANY_ADMIN: return "/dashboard/company";
-      case ROLES.UNIVERSITY_ADMIN: return "/university/dashboard";
-      case ROLES.SUPER_ADMIN: return "/dashboard/admin";
-      default: return "/";
+    // Pending approval for non-students
+    if (profile?.status === "pending" && profile?.role !== "student") {
+      return "/pending-approval";
+    }
+
+    // Incomplete profile
+    if (!profile?.is_completed) {
+      return "/complete-profile";
+    }
+
+    switch (profile?.role) {
+      case "student":
+        return "/student/dashboard";
+
+      case "company_admin":
+        return "/dashboard/company";
+
+      case "university_admin":
+        return "/university/dashboard";
+
+      case "super_admin":
+        return "/dashboard/admin";
+
+      default:
+        return "/";
     }
   };
 
-  const initials = (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
+  const initials =
+    (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
 
   const closeMobileMenu = () => setMobileOpen(false);
 
@@ -108,24 +137,29 @@ console.log(profile);
 
         <div className="container relative z-10 flex h-16 items-center justify-between">
           {/* LOGO */}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="group flex items-center gap-3 text-lg font-bold text-foreground"
             aria-label="Massar Home"
           >
             <div className="relative">
-              <img 
-                src={LogoIcon} 
+              <img
+                src={LogoIcon}
                 alt="Massar Logo"
-                className="h-10 w-10 rounded-xl object-cover shadow-md" 
+                className="h-10 w-10 rounded-xl object-cover shadow-md"
               />
               <div className="absolute inset-0 rounded-xl opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100 bg-primary/40" />
             </div>
-            <span className="tracking-tight transition-colors duration-200 group-hover:text-primary">Massar</span>
+            <span className="tracking-tight transition-colors duration-200 group-hover:text-primary">
+              Massar
+            </span>
           </Link>
 
           {/* DESKTOP NAV LINKS */}
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+          <nav
+            className="hidden items-center gap-8 md:flex"
+            aria-label="Main navigation"
+          >
             <Link
               to="/experience"
               className="relative text-sm text-muted-foreground transition-colors hover:text-foreground group"
@@ -155,7 +189,9 @@ console.log(profile);
             <button
               onClick={toggleTheme}
               className="rounded-lg border border-border bg-card p-2 hover:bg-muted transition-colors"
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              aria-label={`Switch to ${
+                theme === "dark" ? "light" : "dark"
+              } mode`}
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4 text-yellow-400" />
@@ -169,8 +205,8 @@ console.log(profile);
                 <Button variant="ghost" asChild>
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   className="relative overflow-hidden bg-primary text-primary-foreground group"
                 >
                   <Link to="/register" className="flex items-center gap-2">
@@ -190,10 +226,10 @@ console.log(profile);
                   aria-haspopup="true"
                 >
                   {profile?.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
+                    <img
+                      src={profile.avatar_url}
                       alt={`${profile.first_name} ${profile.last_name}`}
-                      className="h-full w-full object-cover" 
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     initials || "U"
@@ -201,10 +237,10 @@ console.log(profile);
                 </button>
 
                 {openMenu && (
-                  <div 
+                  <div
                     className="absolute right-0 mt-3 w-56 rounded-xl border border-border bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden transition-all duration-200 origin-top-right"
                     style={{
-                      animation: 'fadeIn 0.2s ease-out'
+                      animation: "fadeIn 0.2s ease-out",
                     }}
                     role="menu"
                     aria-orientation="vertical"
@@ -213,7 +249,9 @@ console.log(profile);
                       <p className="text-sm font-semibold text-foreground truncate">
                         {profile?.first_name} {profile?.last_name}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {profile?.email}
+                      </p>
                     </div>
                     <button
                       onClick={() => {
@@ -249,7 +287,11 @@ console.log(profile);
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </header>
@@ -258,24 +300,28 @@ console.log(profile);
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl md:hidden"
-          style={{ top: '64px' }}
+          style={{ top: "64px" }}
           id="mobile-menu"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <div 
+          <div
             ref={mobileMenuRef}
             className="flex flex-col h-full animate-in slide-in-from-right duration-300"
           >
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Theme toggle in mobile */}
               <div className="flex items-center justify-between border-b border-border pb-4">
-                <span className="text-sm font-medium text-foreground">Theme</span>
+                <span className="text-sm font-medium text-foreground">
+                  Theme
+                </span>
                 <button
                   onClick={toggleTheme}
                   className="rounded-lg border border-border bg-card p-2 hover:bg-muted transition-colors"
-                  aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+                  aria-label={`Switch to ${
+                    theme === "dark" ? "light" : "dark"
+                  } mode`}
                 >
                   {theme === "dark" ? (
                     <Sun className="h-4 w-4 text-yellow-400" />
@@ -317,12 +363,19 @@ console.log(profile);
               <div className="border-t border-border pt-6 space-y-4">
                 {!user ? (
                   <>
-                    <Button variant="outline" asChild className="w-full justify-start gap-3">
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="w-full justify-start gap-3"
+                    >
                       <Link to="/login" onClick={closeMobileMenu}>
                         Login
                       </Link>
                     </Button>
-                    <Button asChild className="w-full justify-start gap-3 bg-primary text-primary-foreground">
+                    <Button
+                      asChild
+                      className="w-full justify-start gap-3 bg-primary text-primary-foreground"
+                    >
                       <Link to="/register" onClick={closeMobileMenu}>
                         <Sparkles className="h-4 w-4" />
                         Get Started
@@ -334,10 +387,10 @@ console.log(profile);
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
                         {profile?.avatar_url ? (
-                          <img 
-                            src={profile.avatar_url} 
+                          <img
+                            src={profile.avatar_url}
                             alt={`${profile.first_name} ${profile.last_name}`}
-                            className="h-full w-full object-cover rounded-full" 
+                            className="h-full w-full object-cover rounded-full"
                           />
                         ) : (
                           initials || "U"
@@ -347,10 +400,16 @@ console.log(profile);
                         <p className="text-sm font-semibold text-foreground truncate">
                           {profile?.first_name} {profile?.last_name}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {profile?.email}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="ghost" asChild className="w-full justify-start gap-3">
+                    <Button
+                      variant="ghost"
+                      asChild
+                      className="w-full justify-start gap-3"
+                    >
                       <Link to={getDashboard()} onClick={closeMobileMenu}>
                         Dashboard
                       </Link>
