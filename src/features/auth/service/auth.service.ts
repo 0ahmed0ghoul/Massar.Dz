@@ -13,23 +13,25 @@ class AuthService {
     });
 
     if (error) throw error;
+    // 🔥 FORCE SESSION SYNC
+    await supabase.auth.getSession();
+    await supabase.auth.getUser();
     return data.user;
   }
 
   async signUp(email: string, password: string, profileData: Partial<Profile>) {
     const cleanEmail = email.trim().toLowerCase();
 
-    const { data: authData, error: signUpError } =
-      await supabase.auth.signUp({
-        email: cleanEmail,
-        password,
-        options: {
-          data: {
-            role: profileData.role,
-            full_name: profileData.full_name,
-          },
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        data: {
+          role: profileData.role,
+          full_name: profileData.full_name,
         },
-      });
+      },
+    });
 
     if (signUpError) {
       const msg = signUpError.message.toLowerCase();
@@ -91,11 +93,9 @@ class AuthService {
   }
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    const { data } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        callback(session?.user ?? null);
-      }
-    );
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      callback(session?.user ?? null);
+    });
 
     return data.subscription;
   }
@@ -301,13 +301,9 @@ class AuthService {
     return true;
   }
 
-  async getVerifiedUniversities(): Promise<
-    { id: string; name: string }[]
-  > {
+  async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
     try {
-      const { data, error } = await supabase.rpc(
-        "get_verified_universities"
-      );
+      const { data, error } = await supabase.rpc("get_verified_universities");
 
       if (error) throw error;
 

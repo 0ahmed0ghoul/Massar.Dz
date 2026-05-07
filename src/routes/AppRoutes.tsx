@@ -43,6 +43,7 @@ import SkillsPage from "@/features/student/pages/SkillsPage";
 import CompanyPublicProfilePage from "@/features/landing/pages/CompanyPublicProfilePage";
 import ExperiencePage from "@/features/student/pages/ExperiencePage";
 import UniversityStatsPage from "@/features/university/pages/StatsPage";
+import FeedbacksPage from "@/features/admin/pages/FeedbacksPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -189,6 +190,8 @@ const AppRoutes = () => {
             element={<AdminPaymentsPage />}
           />
         </Route>
+        <Route path="/admin/feedbacks" element={<FeedbacksPage />} />
+
       </Route>
       <Route path="*" element={<NotFound/>} />
     </Routes>

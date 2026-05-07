@@ -5,6 +5,7 @@ import Features from "../Features";
 import UniversitiesCompaniesTrustBar from "../Universitiestrustbar";
 import HowItWorks from "../HowItWorks";
 import CTA from "../CTA";
+import FeedbackSection from "../FeedbackSection";
 
 
 const Landing = () => {
@@ -16,6 +17,7 @@ const Landing = () => {
       <UniversitiesCompaniesTrustBar />
       <HowItWorks />
       <CTA />
+      <FeedbackSection/>
       <Footer />
     </div>
   );

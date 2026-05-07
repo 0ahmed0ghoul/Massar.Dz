@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon } from "lucide-react";
+import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon, MessageCircleCodeIcon } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -57,6 +57,7 @@ const adminItems = [
   { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
   { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
+  { title: "Feedbacks", url: "/dashboard/admin/feedbacks", icon: MessageCircleCodeIcon },
 ];
 
 const roleLabels: Record<UserRole, string> = {
