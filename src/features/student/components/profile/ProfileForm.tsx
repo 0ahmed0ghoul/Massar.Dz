@@ -77,7 +77,6 @@ const ProfileForm = ({
     academic_year: profile?.academic_year || "",
     speciality_type: profile?.speciality_type || "",
     student_id: profile?.student_id || "",
-    // Graduated only
     graduation_year: profile?.graduation_year || "",
   });
 

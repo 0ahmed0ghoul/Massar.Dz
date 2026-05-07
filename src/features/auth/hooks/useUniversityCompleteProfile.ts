@@ -1,4 +1,4 @@
-// hooks/useUniversityCompleteProfile.ts (updated)
+// hooks/useUniversityCompleteProfile.ts (fixed)
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,12 +18,15 @@ interface UniversityFormData {
 }
 
 interface DocsState {
-  logoBase64: string | null;
+  logoFile: File | null;
   certBase64: string | null;
   taxId: string;
 }
 
-export function useUniversityCompleteProfile(user: User | null, profile: Profile | null) {
+export function useUniversityCompleteProfile(
+  user: User | null,
+  profile: Profile | null
+) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -40,7 +43,7 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
   });
 
   const [docs, setDocs] = useState<DocsState>({
-    logoBase64: null,
+    logoFile: null,
     certBase64: null,
     taxId: "",
   });
@@ -58,43 +61,71 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
       reader.onerror = reject;
     });
 
-  const handleFileChange = async (field: "logo" | "certificate", file: File | null) => {
+  // ---------------- FILE HANDLER ----------------
+  const handleFileChange = async (
+    field: "logo" | "certificate",
+    file: File | null
+  ) => {
     if (!file) return;
 
-    // File validation
     const isImage = file.type.startsWith("image/");
     const isPDF = file.type === "application/pdf";
 
     if (field === "logo" && !isImage) {
-      toast({ title: "Invalid file", description: "Logo must be an image (JPG, PNG).", variant: "destructive" });
+      toast({
+        title: "Invalid file",
+        description: "Logo must be an image (JPG, PNG).",
+        variant: "destructive",
+      });
       return;
     }
+
     if (field === "certificate" && !isImage && !isPDF) {
-      toast({ title: "Invalid file", description: "Certificate must be an image or PDF.", variant: "destructive" });
+      toast({
+        title: "Invalid file",
+        description: "Certificate must be an image or PDF.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" });
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 5MB.",
+        variant: "destructive",
+      });
       return;
     }
 
-    console.log(`File uploaded for ${field}:`, file.name, file.size);
-
-    // Convert to base64 immediately and store
-    const base64 = await fileToBase64(file);
+    // ---------------- LOGO ----------------
     if (field === "logo") {
-      setDocs((prev) => ({ ...prev, logoBase64: base64 }));
-      setPreviewUrls((prev) => ({ ...prev, logo: URL.createObjectURL(file) }));
-    } else {
-      setDocs((prev) => ({ ...prev, certBase64: base64 }));
-      setPreviewUrls((prev) => ({ ...prev, certificate: URL.createObjectURL(file) }));
+      setDocs((prev) => ({ ...prev, logoFile: file }));
+      setPreviewUrls((prev) => ({
+        ...prev,
+        logo: URL.createObjectURL(file),
+      }));
+      return;
     }
+
+    // ---------------- CERTIFICATE ----------------
+    const base64 = await fileToBase64(file);
+
+    setDocs((prev) => ({
+      ...prev,
+      certBase64: base64,
+    }));
+
+    setPreviewUrls((prev) => ({
+      ...prev,
+      certificate: URL.createObjectURL(file),
+    }));
   };
 
+  // ---------------- REMOVE FILE ----------------
   const removeFile = (field: "logo" | "certificate") => {
     if (field === "logo") {
-      setDocs((prev) => ({ ...prev, logoBase64: null }));
+      setDocs((prev) => ({ ...prev, logoFile: null }));
       setPreviewUrls((prev) => ({ ...prev, logo: "" }));
     } else {
       setDocs((prev) => ({ ...prev, certBase64: null }));
@@ -110,9 +141,11 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
     setDocs((prev) => ({ ...prev, taxId: value }));
   };
 
+  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
     setLoading(true);
 
     try {
@@ -127,18 +160,38 @@ export function useUniversityCompleteProfile(user: User | null, profile: Profile
         position: form.position,
       };
 
-      const verificationDocs: any = { tax_id: docs.taxId };
-      if (docs.logoBase64) verificationDocs.logo = docs.logoBase64;
-      if (docs.certBase64) verificationDocs.registration_certificate = docs.certBase64;
+      const verificationDocs: any = {
+        tax_id: docs.taxId,
+      };
+
+      if (docs.certBase64) {
+        verificationDocs.registration_certificate = docs.certBase64;
+      }
+
+      // ---------------- UPLOAD LOGO ----------------
+      let logoUrl: string | undefined;
+
+      if (docs.logoFile) {
+        logoUrl = await authService.uploadUniversityLogo(
+          user.id,
+          docs.logoFile
+        );
+      }
 
       console.log("Final verificationDocs keys:", Object.keys(verificationDocs));
 
-      await authService.markProfileCompleted(user.id, additionalData, verificationDocs);
+      await authService.markProfileCompleted(
+        user.id,
+        additionalData,
+        verificationDocs,
+        logoUrl
+      );
 
       toast({
         title: "Profile submitted",
         description: "Your application is now pending admin approval.",
       });
+
       navigate("/pending-approval");
     } catch (error: any) {
       console.error("Submit error:", error);

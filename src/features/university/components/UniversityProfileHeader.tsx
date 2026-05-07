@@ -1,3 +1,4 @@
+
 // components/university/UniversityProfileHeader.tsx
 import { Building2, MapPin, Mail, Globe } from 'lucide-react';
 import { UniversityProfile } from '../services/universityProfile.service';

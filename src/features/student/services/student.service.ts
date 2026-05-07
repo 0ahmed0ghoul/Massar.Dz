@@ -128,11 +128,37 @@ export const studentService = {
 
   async isProfileComplete(studentId: string): Promise<boolean> {
     const profile = await this.getProfile(studentId);
+  
     if (!profile) return false;
-    return REQUIRED_STUDENT_FIELDS.every(field => {
-      const value = profile[field];
+  
+    // Normal required fields
+    const fieldsComplete = REQUIRED_STUDENT_FIELDS.every((field) => {
+      const value = profile[field as keyof Profile];
+  
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+  
       return value != null && String(value).trim() !== "";
     });
+  
+    // Required uploaded files
+    const hasAvatar =
+      !!profile.avatar_url && profile.avatar_url.trim() !== "";
+  
+    const hasResume =
+      !!profile.resume_url && profile.resume_url.trim() !== "";
+  
+    const hasStudentCard =
+      !!profile.student_card_url &&
+      profile.student_card_url.trim() !== "";
+  
+    return (
+      fieldsComplete &&
+      hasAvatar &&
+      hasResume &&
+      hasStudentCard
+    );
   },
 
   async ensureProfileCompleted(studentId: string): Promise<boolean> {

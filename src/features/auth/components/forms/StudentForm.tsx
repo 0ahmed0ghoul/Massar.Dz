@@ -53,10 +53,12 @@ export function StudentForm({ isLoading, onSubmit }: { isLoading: boolean; onSub
         watch("department") &&
         watch("degreeLevel") &&
         watch("speciality") &&
+        watch("studentId") &&        // ✅ add this line
         !errors.university &&
         !errors.department &&
         !errors.degreeLevel &&
-        !errors.speciality
+        !errors.speciality &&
+        !errors.studentId            // ✅ add this line
       );
     }
     if (status === "graduated") {

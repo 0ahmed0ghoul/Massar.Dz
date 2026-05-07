@@ -3,11 +3,7 @@ import { Link } from "react-router-dom";
 // RecentApplications.tsx
 const RecentApplications = ({ applications = [] }) => {
   // Mock data (will be used if applications prop is empty)
-  const mockApplications = [
-    { id: 1, jobs: { title: "", company: "", location: "" }, status: "Applied", date: "2024-03-14" },
-  ];
 
-  const displayApplications = applications.length > 0 ? applications : mockApplications;
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-sm">
@@ -18,7 +14,7 @@ const RecentApplications = ({ applications = [] }) => {
               </Link>      </div>
 
       <div className="space-y-3">
-        {displayApplications.slice(0, 4).map((app) => (
+        {applications.slice(0, 4).map((app) => (
           <div key={app.id} className="flex items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.05] font-bold text-foreground">

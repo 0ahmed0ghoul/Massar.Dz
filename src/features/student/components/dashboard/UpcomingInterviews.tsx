@@ -2,19 +2,13 @@
 import { Calendar, Video } from "lucide-react";
 
 const UpcomingInterviews = ({ interviews = [] }) => {
-  // Mock data (will be used if interviews prop is empty)
-  const mockInterviews = [
-    { id: 1, role: "", company: "", date: "2024-03-20T10:00:00", type: "video" },
-
-  ];
-  const displayInterviews = interviews.length > 0 ? interviews : mockInterviews;
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
       <h2 className="mb-6 text-lg font-bold text-foreground">Upcoming Interviews</h2>
       <div className="space-y-4">
-        {displayInterviews.length > 0 ? (
-          displayInterviews.map((i) => (
+        {interviews.length > 0 ? (
+          interviews.map((i) => (
             <div key={i.id} className="flex gap-4 rounded-xl border border-white/[0.05] bg-white/[0.03] p-4">
               <div className="flex h-12 w-12 flex-col items-center justify-center rounded-lg bg-[#639922]/20 text-[#639922]">
                 <Calendar className="h-5 w-5" />

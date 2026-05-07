@@ -4,12 +4,14 @@ import type { User } from "@supabase/supabase-js";
 import { RegisterRole } from "@/types/auth";
 
 class AuthService {
-  // ── AUTH ──────────────────────────────────
+  // ───────────────────────── AUTH ─────────────────────────
+
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     if (error) throw error;
     return data.user;
   }
@@ -17,22 +19,25 @@ class AuthService {
   async signUp(email: string, password: string, profileData: Partial<Profile>) {
     const cleanEmail = email.trim().toLowerCase();
 
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        data: {
-          role: profileData.role,
-          full_name: profileData.full_name,
+    const { data: authData, error: signUpError } =
+      await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            role: profileData.role,
+            full_name: profileData.full_name,
+          },
         },
-      },
-    });
+      });
 
     if (signUpError) {
       const msg = signUpError.message.toLowerCase();
+
       if (msg.includes("already registered") || msg.includes("duplicate")) {
         throw new Error("This email is already registered. Please login.");
       }
+
       throw new Error("Unable to create account. Please try again.");
     }
 
@@ -62,6 +67,7 @@ class AuthService {
       years_of_experience: profileData.years_of_experience || null,
       looking_for: profileData.looking_for || null,
       skills: profileData.skills || null,
+      student_id: profileData.student_id || null,
     });
 
     if (profileError) {
@@ -85,13 +91,17 @@ class AuthService {
   }
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      callback(session?.user ?? null);
-    });
+    const { data } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        callback(session?.user ?? null);
+      }
+    );
+
     return data.subscription;
   }
 
-  // PROFILE
+  // ───────────────────────── PROFILE ─────────────────────────
+
   async fetchProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")
@@ -103,6 +113,7 @@ class AuthService {
       console.warn("Profile fetch error:", error.message);
       return null;
     }
+
     return data ?? null;
   }
 
@@ -118,12 +129,13 @@ class AuthService {
     return data;
   }
 
-  // MARK PROFILE COMPLETED (used by Company/University after filling)
+  // ───────────────────────── COMPLETE PROFILE ─────────────────────────
+
   async markProfileCompleted(
     userId: string,
     additionalData: any,
     verificationDocs: any,
-    logoUrl?: string // NEW: optional logo URL
+    logoUrl?: string
   ) {
     const updates: any = {
       ...additionalData,
@@ -131,9 +143,13 @@ class AuthService {
       is_completed: true,
       completed_at: new Date().toISOString(),
     };
+
+    // IMPORTANT: avatar goes ONLY here
     if (logoUrl) {
       updates.avatar_url = logoUrl;
-      if (updates.verification_docs && updates.verification_docs.logo) {
+
+      // remove duplicated logo inside docs
+      if (updates.verification_docs?.logo) {
         delete updates.verification_docs.logo;
       }
     }
@@ -141,12 +157,50 @@ class AuthService {
     return this.updateProfile(userId, updates);
   }
 
-  // ADMIN ACTIONS
-  async approveCompanyUniversity(userId: string) {
-    return this.updateProfile(userId, { is_verified: true, status: "active" });
+  // ───────────────────────── STORAGE ─────────────────────────
+
+  async uploadUniversityLogo(userId: string, file: File): Promise<string> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+    const filePath = `university-logos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("university-files")
+      .upload(filePath, file, {
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data } = supabase.storage
+      .from("university-files")
+      .getPublicUrl(filePath);
+
+    if (!data?.publicUrl) {
+      throw new Error("Failed to generate public URL");
+    }
+
+    // IMPORTANT: save in avatar_url immediately
+    await this.updateProfile(userId, {
+      avatar_url: data.publicUrl,
+    });
+
+    return data.publicUrl;
   }
 
-  // REGISTER (COMPATIBLE WITH useRegister)
+  // ───────────────────────── ADMIN ─────────────────────────
+
+  async approveCompanyUniversity(userId: string) {
+    return this.updateProfile(userId, {
+      is_verified: true,
+      status: "active",
+    });
+  }
+
+  // ───────────────────────── REGISTER ─────────────────────────
+
   async registerUser(params: {
     email: string;
     password: string;
@@ -160,7 +214,6 @@ class AuthService {
       email: params.email,
     };
 
-    // Role-specific fields
     if (params.role === "student") {
       profileData.candidate_type = params.profile.candidateType;
       profileData.degree_level = params.profile.degreeLevel;
@@ -168,7 +221,9 @@ class AuthService {
       profileData.department = params.profile.department;
       profileData.graduation_year = params.profile.graduationYear;
       profileData.speciality = params.profile.speciality;
+      profileData.student_id = params.profile.studentId || null;
       profileData.skills = params.profile.skills;
+      profileData.wilaya = params.profile.wilaya || null;
     } else if (params.role === "graduate") {
       profileData.candidate_type = params.profile.candidateType;
       profileData.graduation_year = params.profile.graduationYear;
@@ -198,7 +253,23 @@ class AuthService {
     return this.signUp(params.email, params.password, profileData);
   }
 
-  // UTILS
+  // ───────────────────────── UTILS ─────────────────────────
+
+  async checkStudentIdExists(studentId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("student_id", studentId.trim())
+      .maybeSingle();
+
+    if (error) {
+      console.error("Student ID check error:", error);
+      return false;
+    }
+
+    return !!data;
+  }
+
   async getCurrentStudentType(
     userId: string
   ): Promise<"studying" | "graduated" | "self_taught" | null> {
@@ -207,6 +278,7 @@ class AuthService {
       .select("candidate_type")
       .eq("id", userId)
       .maybeSingle();
+
     if (error || !data) return null;
     return data.candidate_type as any;
   }
@@ -217,6 +289,7 @@ class AuthService {
       .select("email")
       .eq("email", email)
       .maybeSingle();
+
     return !!data;
   }
 
@@ -228,14 +301,19 @@ class AuthService {
     return true;
   }
 
-  async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
+  async getVerifiedUniversities(): Promise<
+    { id: string; name: string }[]
+  > {
     try {
-      const { data, error } = await supabase.rpc("get_verified_universities");
+      const { data, error } = await supabase.rpc(
+        "get_verified_universities"
+      );
+
       if (error) throw error;
 
       return (data || []).map((u: any) => ({
         id: u.id,
-        name: u.university_name, // ✅ FIX HERE
+        name: u.university_name,
       }));
     } catch (error) {
       console.error("Error fetching verified universities:", error);
@@ -245,37 +323,20 @@ class AuthService {
 
   async getUniversityDepartments(universityName: string): Promise<string[]> {
     if (!universityName) return [];
+
     const { data, error } = await supabase
       .from("profiles")
       .select("department")
       .eq("role", "university_admin")
       .eq("university_name", universityName)
       .not("department", "is", null);
+
     if (error) {
       console.error("Error fetching departments:", error);
       return [];
     }
-    // Deduplicate
-    const departments = [
-      ...new Set(data.map((d) => d.department).filter(Boolean)),
-    ];
-    return departments;
-  }
 
-  async uploadUniversityLogo(userId: string, file: File): Promise<string> {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
-    const filePath = `university-logos/${fileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from("university-files")
-      .upload(filePath, file);
-    if (uploadError) throw new Error(uploadError.message);
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("university-files").getPublicUrl(filePath);
-    // Update profile avatar_url
-    await this.updateProfile(userId, { avatar_url: publicUrl });
-    return publicUrl;
+    return [...new Set(data.map((d) => d.department).filter(Boolean))];
   }
 }
 

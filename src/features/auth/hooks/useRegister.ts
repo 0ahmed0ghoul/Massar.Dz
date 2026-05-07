@@ -1,4 +1,3 @@
-// hooks/useRegister.ts
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,11 +14,10 @@ export interface RegisterFormData {
   lastName?: string;
   degreeLevel?: string;
   companyName?: string;
-  companyType?: CompanyType;  // ✅ added
+  companyType?: CompanyType;
   industry?: string;
   universityName?: string;
   wilaya?: string;
-  // additional fields for other roles
   department?: string;
   position?: string;
   graduationYear?: string;
@@ -33,8 +31,11 @@ export interface RegisterFormData {
   lookingFor?: string;
   registrationNumber?: string;
   location?: string;
+  candidateType?: string;
+  studentId?: string; // ✅ added
 }
 type BaseFormData = Partial<RegisterFormData>;
+
 function normalizeError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
@@ -62,12 +63,8 @@ export const useRegister = () => {
   const pendingFormDataRef = useRef<RegisterFormData | null>(null);
   const isSubmittingRef = useRef(false);
 
-  const {
-    sendVerificationCode,
-    verifyCode,
-    handleResendCode,
-    resendCooldown,
-  } = useVerification();
+  const { sendVerificationCode, verifyCode, handleResendCode, resendCooldown } =
+    useVerification();
 
   const handleRoleSelect = (r: UserRole) => {
     setRole(r);
@@ -83,13 +80,12 @@ export const useRegister = () => {
     isSubmittingRef.current = true;
     setIsLoading(true);
 
-    // Merge roleType into data for company_admin
     const formDataWithType = { ...data };
     if (role === "company_admin" && roleType) {
       formDataWithType.companyType = roleType;
     }
 
-    // Save pending profile to localStorage
+    // Save pending profile (optional, but keep for recovery)
     const pendingProfile = {
       email: data.email,
       role: role,
@@ -115,12 +111,32 @@ export const useRegister = () => {
         throw new Error("Email already registered. Please login.");
       }
 
+      // Student ID duplicate check for studying students
+      if (role === "student") {
+        const candidateType = data.candidateType;
+        if (candidateType === "studying") {
+          const studentId = data.studentId?.trim();
+          if (!studentId) {
+            throw new Error("Student ID is required for studying students.");
+          }
+          const studentIdExists = await authService.checkStudentIdExists(
+            studentId
+          );
+
+          if (studentIdExists) {
+            throw new Error(
+              "This student ID already exists. Please use another one."
+            );
+          }
+        }
+      }
+
       const strictData: RegisterFormData = {
         ...formDataWithType,
-        email: data.email!,       // safe after validation
-        password: data.password!, // safe after validation
+        email: data.email!,
+        password: data.password!,
       };
-      
+
       pendingFormDataRef.current = strictData;
       await sendVerificationCode(data.email);
 

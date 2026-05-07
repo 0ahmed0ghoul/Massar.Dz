@@ -15,6 +15,8 @@ export function useStudentForm(onSubmitCallback: (data: StudentFields) => void) 
   const [loadingDepts, setLoadingDepts] = useState(false);
 
   const form = useForm<StudentFields>({
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(studentSchema),
     defaultValues: {
       firstName: "",
@@ -27,6 +29,8 @@ export function useStudentForm(onSubmitCallback: (data: StudentFields) => void) 
       degree: "",
       graduationYear: "",
       speciality: "",
+      studentId: "",
+      wilaya: "",
       skills: [],
       candidateType: "studying",
     },

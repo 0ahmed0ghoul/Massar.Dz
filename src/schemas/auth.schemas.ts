@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Base fields shared across roles
+// Base fields shared across roles (can be reused if needed)
 const baseFields = {
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -9,27 +9,37 @@ const baseFields = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Student (currently enrolled)
+// Student (currently enrolled / graduated / self-taught)
 // ─────────────────────────────────────────────────────────────
 export const studentSchema = z.object({
-    firstName: z.string().min(1, "First name required"),
-    lastName: z.string().min(1, "Last name required"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    candidateType: z.enum(["studying", "graduated", "self_taught"]), // ✅ new
-    degreeLevel: z.enum(["bachelor", "master", "phd", "bootcamp"]).optional(),
-    university: z.string().optional(),
-    department: z.string().optional(),
-    degree: z.string().optional(),
-    graduationYear: z.string().optional(),
-    speciality: z.string().optional(),
-    skills: z.array(z.string()).optional().default([]),
-  });
+  firstName: z.string().min(1, "First name required"),
+  lastName: z.string().min(1, "Last name required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  candidateType: z.enum(["studying", "graduated", "self_taught"]),
+  degreeLevel: z.enum(["bachelor", "master", "phd", "bootcamp"]).optional(),
+  university: z.string().optional(),
+  department: z.string().optional(),
+  degree: z.string().optional(),
+  graduationYear: z.string().optional(),
+  speciality: z.string().optional(),
+  studentId: z.string().optional(),   // ✅ changed from student_id to studentId
+  wilaya: z.string().optional(),      // ✅ added
+  skills: z.array(z.string()).optional().default([]),
+}).superRefine((data, ctx) => {
+  if (data.candidateType === "studying" && !data.studentId) {
+    ctx.addIssue({
+      path: ["studentId"],
+      message: "Student ID is required for studying students.",
+      code: "custom",
+    });
+  }
+});
 
 export type StudentFields = z.infer<typeof studentSchema>;
 
 // ─────────────────────────────────────────────────────────────
-// Graduate (recent university graduate)
+// Graduate (if you still use it separately)
 // ─────────────────────────────────────────────────────────────
 export const graduateSchema = z.object({
   ...baseFields,
@@ -43,7 +53,7 @@ export const graduateSchema = z.object({
 export type GraduateFields = z.infer<typeof graduateSchema>;
 
 // ─────────────────────────────────────────────────────────────
-// Professional (experienced, not necessarily a student)
+// Professional
 // ─────────────────────────────────────────────────────────────
 export const professionalSchema = z.object({
   ...baseFields,
@@ -57,7 +67,7 @@ export const professionalSchema = z.object({
 export type ProfessionalFields = z.infer<typeof professionalSchema>;
 
 // ─────────────────────────────────────────────────────────────
-// Company (startup / private / government)
+// Company
 // ─────────────────────────────────────────────────────────────
 export const companySchema = z.object({
   ...baseFields,
@@ -71,14 +81,27 @@ export const companySchema = z.object({
 export type CompanyFields = z.infer<typeof companySchema>;
 
 // ─────────────────────────────────────────────────────────────
-// University (with department)
+// University
 // ─────────────────────────────────────────────────────────────
 export const universitySchema = z.object({
-  ...baseFields,
-  universityName: z.string().min(1, "University name required"),
-  department: z.string().min(1, "Department required"),
-  position: z.string().min(1, "Position required"),
-  wilaya: z.string().min(1, "wilaya required"),
+  firstName: z.string().min(1, "First name required"),
+
+  lastName: z.string().min(1, "Last name required"),
+
+  email: z.string().email("Invalid email address"),
+
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters"),
+
+  universityName: z
+    .string()
+    .min(1, "University name required"),
+
+  wilaya: z
+    .string()
+    .min(1, "Wilaya required"),
 });
 
 export type UniversityFields = z.infer<typeof universitySchema>;
+
