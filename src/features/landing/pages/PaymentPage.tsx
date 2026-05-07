@@ -27,7 +27,7 @@ export default function PaymentPage() {
       const url = await subscriptionService.uploadReceipt(paymentId, receiptFile);
       await subscriptionService.updatePaymentRequest(paymentId, { receipt_url: url, status: "pending" });
       alert("Receipt uploaded successfully. Awaiting admin verification.");
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       console.error(err);
       alert("Upload failed. Please try again.");

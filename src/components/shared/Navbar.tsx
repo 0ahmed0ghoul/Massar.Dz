@@ -80,7 +80,8 @@ const Navbar = () => {
   };
 
   const getDashboard = () => {
-  if (profile?.status === "pending") return "/pending-approval";   
+console.log(profile);
+  if (profile?.status === "pending" && profile?.role != 'student') return "/pending-approval";   
    if (!profile?.is_completed ) return "/complete-profile";
 
     switch (role) {

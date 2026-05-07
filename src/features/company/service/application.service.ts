@@ -2,58 +2,132 @@
 import { supabase } from "@/lib/supabaseClient";
 import { Application } from "@/types/application";
 
+// Helper to normalize skills into array
+function normalizeSkills(skills: any): string[] {
+  if (!skills) return [];
+
+  // Already array
+  if (Array.isArray(skills)) {
+    return skills.map((s) => String(s).toLowerCase().trim());
+  }
+
+  // JSON string
+  if (typeof skills === "string") {
+    try {
+      const parsed = JSON.parse(skills);
+
+      if (Array.isArray(parsed)) {
+        return parsed.map((s) => String(s).toLowerCase().trim());
+      }
+
+      // comma separated string
+      return skills
+        .split(",")
+        .map((s) => s.toLowerCase().trim())
+        .filter(Boolean);
+    } catch {
+      // comma separated string fallback
+      return skills
+        .split(",")
+        .map((s) => s.toLowerCase().trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
 // Helper to calculate match score (0-100)
 function calculateMatchScore(student: any, job: any): number {
   let totalScore = 0;
   let maxScore = 0;
 
+  // Normalize skills safely
+  const studentSkills = normalizeSkills(student.skills);
+  const jobSkills = normalizeSkills(job.skills);
+
   // 1. Skills match (max 60 points)
-  if (job.skills?.length && student.skills?.length) {
-    const studentSkills = student.skills.map((s: string) => s.toLowerCase());
-    const jobSkills = job.skills.map((s: string) => s.toLowerCase());
-    const matching = jobSkills.filter(skill => studentSkills.includes(skill)).length;
+  if (jobSkills.length > 0) {
+    const matching = jobSkills.filter((skill) =>
+      studentSkills.includes(skill)
+    ).length;
+
     const skillScore = (matching / jobSkills.length) * 60;
+
     totalScore += skillScore;
   }
+
   maxScore += 60;
 
   // 2. Experience level match (max 25 points)
-  const experienceMap: Record<string, number> = { entry: 0, mid: 1, senior: 2, lead: 3 };
-  const jobExp = job.experience_level ? experienceMap[job.experience_level] : 0;
+  const experienceMap: Record<string, number> = {
+    entry: 0,
+    mid: 1,
+    senior: 2,
+    lead: 3,
+  };
+
+  const jobExp = job.experience_level
+    ? experienceMap[job.experience_level]
+    : 0;
+
   let studentExp = 0;
-  if (student.candidate_type === 'studying') studentExp = 0;
-  else if (student.candidate_type === 'graduated') studentExp = 1;
-  else if (student.years_of_experience) {
+
+  if (student.candidate_type === "studying") {
+    studentExp = 0;
+  } else if (student.candidate_type === "graduated") {
+    studentExp = 1;
+  } else if (student.years_of_experience) {
     const years = parseFloat(student.years_of_experience);
+
     if (years < 2) studentExp = 0;
     else if (years < 5) studentExp = 1;
     else if (years < 8) studentExp = 2;
     else studentExp = 3;
   }
+
   const expDiff = Math.abs(jobExp - studentExp);
-  const expScore = Math.max(0, 25 - expDiff * 6); // 0-25
+
+  const expScore = Math.max(0, 25 - expDiff * 6);
+
   totalScore += expScore;
   maxScore += 25;
 
-  // 3. Education level (max 15 points) – using student's degree only (since job may not have requirement)
+  // 3. Education level (max 15 points)
   if (student.degree_level) {
-    const eduMap: Record<string, number> = { bachelor: 1, master: 2, phd: 3 };
+    const eduMap: Record<string, number> = {
+      bachelor: 1,
+      master: 2,
+      phd: 3,
+    };
+
     const studentEdu = eduMap[student.degree_level] || 0;
-    // Assume any degree adds 15, else less
+
     totalScore += studentEdu > 0 ? 15 : 5;
   } else {
     totalScore += 5;
   }
+
   maxScore += 15;
 
   // 4. Job type suitability (max 10 points)
-  if (job.job_type === 'internship' && student.candidate_type === 'studying') {
+  if (
+    job.job_type === "internship" &&
+    student.candidate_type === "studying"
+  ) {
     totalScore += 10;
-  } else if (job.job_type !== 'internship' && student.candidate_type !== 'studying') {
+  } else if (
+    job.job_type !== "internship" &&
+    student.candidate_type !== "studying"
+  ) {
     totalScore += 10;
-  } else if (job.job_type === 'internship' && student.candidate_type === 'graduated') {
+  } else if (
+    job.job_type === "internship" &&
+    student.candidate_type === "graduated"
+  ) {
     totalScore += 3;
   }
+
   maxScore += 10;
 
   return Math.round((totalScore / maxScore) * 100);

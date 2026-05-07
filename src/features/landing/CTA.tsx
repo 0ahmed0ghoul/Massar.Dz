@@ -107,15 +107,6 @@ const CTA = () => {
             </Button>
           </div>
 
-          {/* Trust indicator */}
-          <div className="mt-10 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
-            <Shield className="h-3 w-3" />
-            <span>Free forever</span>
-            <span>•</span>
-            <span>No credit card required</span>
-            <span>•</span>
-            <span>Cancel anytime</span>
-          </div>
         </div>
       </div>
     </section>
