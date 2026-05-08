@@ -44,6 +44,8 @@ import CompanyPublicProfilePage from "@/features/landing/pages/CompanyPublicProf
 import ExperiencePage from "@/features/student/pages/ExperiencePage";
 import UniversityStatsPage from "@/features/university/pages/StatsPage";
 import FeedbacksPage from "@/features/admin/pages/FeedbacksPage";
+import ApplicationDetailPage from "@/features/company/pages/ApplicationDetailPage";
+import DashboardRedirectPage from "@/pages/DashboardRedirectPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -55,7 +57,7 @@ function CompleteProfileRouter() {
   } else if (profile.role === "company_admin") {
     return <CompanyCompleteProfilePage />;
   } else {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/student/dashboard" />;
   }
 }
 
@@ -73,6 +75,8 @@ const AppRoutes = () => {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/payment/:paymentId" element={<PaymentPage />} />
       <Route path="/companies/:id" element={<CompanyPublicProfilePage />} />
+      <Route path="/dashboard" element={<DashboardRedirectPage />} />
+
       {/* ================= PROTECTED ================= */}
       <Route element={<ProtectedRoute />}>
         {/* ================= STUDENT ================= */}
@@ -101,10 +105,7 @@ const AppRoutes = () => {
               path="/student/dashboard/certificate"
               element={<CertificatePage />}
             />
-                        <Route
-              path="/student/dashboard/skills"
-              element={<SkillsPage />}
-            />
+            <Route path="/student/dashboard/skills" element={<SkillsPage />} />
           </Route>
         </Route>
 
@@ -122,9 +123,15 @@ const AppRoutes = () => {
                 element={<TalentPage />}
               />
               <Route
-                path="/dashboard/company/applications"
+                path="/company/dashboard/applications"
                 element={<CompanyApplicationsPage />}
               />
+
+              <Route
+                path="/company/dashboard/application"
+                element={<ApplicationDetailPage />}
+              />
+
               <Route
                 path="/dashboard/company/profile"
                 element={<CompanyProfilePage />}
@@ -154,15 +161,15 @@ const AppRoutes = () => {
                 path="/university/dashboard/invitations"
                 element={<InvitationsPage />}
               />
-                            <Route
+              <Route
                 path="/university/dashboard/chat"
                 element={<UniversityChatPage />}
               />
-                            <Route
+              <Route
                 path="university/dashboard/certificates"
                 element={<CertificateRequestsPage />}
               />
-                                          <Route
+              <Route
                 path="university/dashboard/statistics"
                 element={<UniversityStatsPage />}
               />
@@ -189,11 +196,10 @@ const AppRoutes = () => {
             path="/dashboard/admin/payments"
             element={<AdminPaymentsPage />}
           />
+          <Route path="dashboard/admin/feedbacks" element={<FeedbacksPage />} />
         </Route>
-        <Route path="/admin/feedbacks" element={<FeedbacksPage />} />
-
       </Route>
-      <Route path="*" element={<NotFound/>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

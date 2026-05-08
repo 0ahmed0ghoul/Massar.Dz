@@ -38,7 +38,7 @@ const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
   { title: "Profile", url: "/dashboard/company/profile", icon: User },
   { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
-  { title: "Applications", url: "/dashboard/company/applications", icon: FileText },
+  { title: "Applications", url: "/company/dashboard/applications", icon: FileText },
   { title: "Talent", url: "/dashboard/company/talent", icon: Star },
 ];
 

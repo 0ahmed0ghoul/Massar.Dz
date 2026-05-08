@@ -58,20 +58,62 @@ export const studentService = {
     }
   },
 
-  async getApplications(studentId: string): Promise<ApplicationWithJob[]> {
+  async getApplications(studentId: string): Promise<Application[]> {
     const { data, error } = await supabase
       .from("applications")
       .select(`
         *,
-        jobs ( id, title, company )
+        job:jobs (
+          id,
+          title,
+          company:profiles!company_id ( company_name ),
+          location,
+          job_type,
+          created_at
+        )
       `)
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
-    if (error) {
-      console.error("Error fetching applications:", error);
-      throw new Error(error.message);
-    }
-    return data || [];
+    if (error) throw new Error(error.message);
+    // Transform: the nested job.company is an object; flatten if needed
+    return (data || []).map(app => ({
+      ...app,
+      job: app.job ? {
+        ...app.job,
+        company: app.job.company?.company_name || "Unknown"
+      } : null
+    }));
+  },
+  
+  async getInterviews(studentId: string): Promise<Interview[]> {
+    // Fetch interviews through applications
+    const { data, error } = await supabase
+      .from("interviews")
+      .select(`
+        *,
+        application:applications!inner (
+          id,
+          student_id,
+          job:jobs (
+            id,
+            title,
+            company:profiles!company_id ( company_name )
+          )
+        )
+      `)
+      .eq("application.student_id", studentId)
+      .order("interview_date", { ascending: true });
+    if (error) throw new Error(error.message);
+    // Transform to component-friendly format
+    return (data || []).map(interview => ({
+      id: interview.id,
+      scheduled_at: interview.interview_date,
+      location: interview.location,
+      meeting_link: interview.meeting_link,
+      notes: interview.notes,
+      job_title: interview.application?.job?.title,
+      company_name: interview.application?.job?.company?.company_name,
+    }));
   },
 
   async getActivities(studentId: string): Promise<Activity[]> {
@@ -82,19 +124,6 @@ export const studentService = {
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Error fetching activities:", error);
-      throw new Error(error.message);
-    }
-    return data || [];
-  },
-
-  async getInterviews(studentId: string): Promise<Interview[]> {
-    const { data, error } = await supabase
-      .from("interviews")
-      .select("*")
-      .eq("student_id", studentId)
-      .order("scheduled_at", { ascending: true });
-    if (error) {
-      console.error("Error fetching interviews:", error);
       throw new Error(error.message);
     }
     return data || [];
@@ -114,51 +143,86 @@ export const studentService = {
   },
 
   async updateProfile(studentId: string, payload: Partial<Profile>): Promise<void> {
+    // Create a clean copy to avoid mutating the original payload
+    const cleanedPayload: any = { ...payload };
+  
+    // Fields that are enums (should never be an empty string)
+    const enumFields = [
+      'speciality',
+      'degree_level',
+      'candidate_type',
+      'looking_for',
+      'company_type',
+    ];
+  
+    // Fields that are JSON/arrays (skills)
+    const jsonFields = ['skills'];
+  
+    // Convert empty strings to null for enum fields
+    enumFields.forEach(field => {
+      if (cleanedPayload[field] === '') {
+        cleanedPayload[field] = null;
+      }
+    });
+  
+    // For JSON/array fields, empty string -> null
+    jsonFields.forEach(field => {
+      if (cleanedPayload[field] === '') {
+        cleanedPayload[field] = null;
+      }
+    });
+  
+    // Optional: convert any empty string in any field to null
+    // (be careful – some fields like email might not be nullable)
+    // You can restrict to specific fields or just do it safely
+    const nullableFields = ['first_name', 'last_name', 'phone', 'wilaya', 'university_name', 'department', 'position', 'company_name', 'industry', 'company_description'];
+    nullableFields.forEach(field => {
+      if (cleanedPayload[field] === '') {
+        cleanedPayload[field] = null;
+      }
+    });
+  
     const { error } = await supabase
       .from("profiles")
-      .update(payload)
+      .update(cleanedPayload)
       .eq("id", studentId);
+  
     if (error) {
       console.error("Error updating profile:", error);
       throw new Error(error.message);
     }
-    // Record generic profile update activity (avoid too many if called in loops)
+  
+    // Record activity if needed (optional)
     await addActivity(studentId, "profile_updated", "Profile information updated");
   },
 
   async isProfileComplete(studentId: string): Promise<boolean> {
     const profile = await this.getProfile(studentId);
-  
     if (!profile) return false;
   
-    // Normal required fields
+    const candidateType = profile.candidate_type;
+    const isStudying = candidateType === "studying";
+    const isGraduated = candidateType === "graduated";
+    const isSelfTaught = candidateType === "self_taught";
+  
+    // Required fields for all students
     const fieldsComplete = REQUIRED_STUDENT_FIELDS.every((field) => {
       const value = profile[field as keyof Profile];
-  
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-  
+      if (Array.isArray(value)) return value.length > 0;
       return value != null && String(value).trim() !== "";
     });
   
-    // Required uploaded files
-    const hasAvatar =
-      !!profile.avatar_url && profile.avatar_url.trim() !== "";
+    // Documents: avatar & resume always required
+    const hasAvatar = !!profile.avatar_url && profile.avatar_url.trim() !== "";
+    const hasResume = !!profile.resume_url && profile.resume_url.trim() !== "";
   
-    const hasResume =
-      !!profile.resume_url && profile.resume_url.trim() !== "";
+    // Student card only required for "studying"
+    let hasStudentCard = true;
+    if (isStudying) {
+      hasStudentCard = !!profile.student_card_url && profile.student_card_url.trim() !== "";
+    }
   
-    const hasStudentCard =
-      !!profile.student_card_url &&
-      profile.student_card_url.trim() !== "";
-  
-    return (
-      fieldsComplete &&
-      hasAvatar &&
-      hasResume &&
-      hasStudentCard
-    );
+    return fieldsComplete && hasAvatar && hasResume && hasStudentCard;
   },
 
   async ensureProfileCompleted(studentId: string): Promise<boolean> {

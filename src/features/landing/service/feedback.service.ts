@@ -21,15 +21,9 @@ export interface FeedbackInput {
 }
 
 class FeedbackService {
-  // Submit a new feedback (public)
-  async submitFeedback(feedback: FeedbackInput): Promise<Feedback> {
-    const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      
-      console.log("SESSION:", session);
-      console.log("USER:", session?.user);
-    const { data, error } = await supabase
+  // Insert feedback – does NOT return the inserted row to avoid RLS conflict for anonymous users
+  async submitFeedback(feedback: FeedbackInput): Promise<void> {
+    const { error } = await supabase
       .from('feedbacks')
       .insert({
         name: feedback.name,
@@ -38,14 +32,10 @@ class FeedbackService {
         message: feedback.message,
         status: 'pending',
         is_visible: false,
-      })
-      .select()
-      .single();
+      });
     if (error) throw new Error(error.message);
-    return data;
   }
 
-  // Get visible, approved feedbacks for landing page
   async getVisibleFeedbacks(limit = 10): Promise<Feedback[]> {
     const { data, error } = await supabase
       .from('feedbacks')
@@ -58,7 +48,6 @@ class FeedbackService {
     return data || [];
   }
 
-  // Admin: get all feedbacks (for management)
   async getAllFeedbacks(): Promise<Feedback[]> {
     const { data, error } = await supabase
       .from('feedbacks')
@@ -68,7 +57,6 @@ class FeedbackService {
     return data || [];
   }
 
-  // Admin: update feedback status & visibility
   async updateFeedbackStatus(id: string, status: Feedback['status'], is_visible: boolean): Promise<Feedback> {
     const { data, error } = await supabase
       .from('feedbacks')
@@ -80,7 +68,6 @@ class FeedbackService {
     return data;
   }
 
-  // Admin: delete feedback
   async deleteFeedback(id: string): Promise<void> {
     const { error } = await supabase
       .from('feedbacks')

@@ -2,11 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { authService, CompanyFormData } from "../service/auth.service";
+import { authService } from "../service/auth.service";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types/profile.types";
-
-
 
 interface DocsState {
   logo: File | null;
@@ -19,15 +17,15 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState<CompanyFormData>({
+  const [form, setForm] = useState({
     firstName: profile?.first_name || "",
     lastName: profile?.last_name || "",
-    wilaya: profile?.wilaya || profile?.wilaya || "",
+    wilaya: profile?.wilaya || "",
     companyName: profile?.company_name || "",
     industry: profile?.industry || "",
     companyDescription: profile?.company_description || "",
-    companyType:profile?.company_type,
-    email:profile?.email,
+    companyType: profile?.company_type,
+    email: profile?.email,
   });
 
   const [docs, setDocs] = useState<DocsState>({
@@ -51,7 +49,6 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
 
   const handleFileChange = async (field: "logo" | "registrationCertificate", file: File | null) => {
     if (!file) return;
-    console.log(`File uploaded for ${field}:`, file);
     setDocs((prev) => ({ ...prev, [field]: file }));
     const url = URL.createObjectURL(file);
     setPreviewUrls((prev) => ({ ...prev, [field]: url }));
@@ -62,7 +59,7 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
     setPreviewUrls((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const updateForm = (key: keyof CompanyFormData, value: string) => {
+  const updateForm = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -76,6 +73,13 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
     setLoading(true);
 
     try {
+      // 1. Upload company logo if provided
+      let logoUrl: string | undefined;
+      if (docs.logo) {
+        logoUrl = await authService.uploadCompanyLogo(user.id, docs.logo);
+      }
+
+      // 2. Prepare additional profile data
       const additionalData = {
         first_name: form.firstName,
         last_name: form.lastName,
@@ -85,12 +89,14 @@ export function useCompanyCompleteProfile(user: User | null, profile: Profile | 
         wilaya: form.wilaya,
       };
 
+      // 3. Prepare verification documents (excluding logo, which goes to avatar_url)
       const verificationDocs: any = { tax_id: docs.taxId };
-      if (docs.logo) verificationDocs.logo = await fileToBase64(docs.logo);
-      if (docs.registrationCertificate)
+      if (docs.registrationCertificate) {
         verificationDocs.registration_certificate = await fileToBase64(docs.registrationCertificate);
+      }
 
-      await authService.markProfileCompleted(user.id, additionalData, verificationDocs);
+      // 4. Submit to auth service
+      await authService.markProfileCompleted(user.id, additionalData, verificationDocs, logoUrl);
 
       toast({
         title: "Profile submitted",

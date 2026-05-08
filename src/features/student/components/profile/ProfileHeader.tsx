@@ -10,18 +10,18 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  ProfileCompletionJourney,
-  
-} from "../ProfileCompletionJourney";
+import { ProfileCompletionJourney } from "../ProfileCompletionJourney";
 import { CandidateType, Profile } from "@/types/student";
 import { Step } from "@/types/profile.types";
 
-
 const ProfileHeader = ({ profile }: { profile: Profile }) => {
+  // Only student role has candidate_type
   const candidateType = profile.role === "student" ? (profile.candidate_type as CandidateType) : null;
+  const isStudying = candidateType === "studying";
+  const isGraduated = candidateType === "graduated";
+  const isSelfTaught = candidateType === "self_taught";
 
-  // 1. Determine required fields based on candidate type / role
+  // ----- Required fields for completeness calculation -----
   let requiredFields: (string | null | undefined)[] = [
     profile.first_name,
     profile.last_name,
@@ -29,7 +29,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   ];
 
   if (profile.role === "student") {
-    if (candidateType === "studying") {
+    if (isStudying) {
       requiredFields.push(
         profile.degree_level,
         profile.university_name,
@@ -42,39 +42,24 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
         profile.avatar_url,
         profile.resume_url
       );
-    } else if (candidateType === "graduated") {
+    } else if (isGraduated) {
       requiredFields.push(
         profile.university_name,
-        profile.degree_level, // the degree title
+        profile.degree_level,
         profile.speciality,
         profile.graduation_year,
         profile.avatar_url,
         profile.resume_url,
         profile.wilaya
       );
-    } else if (candidateType === "self_taught") {
+    } else if (isSelfTaught) {
       requiredFields.push(
         profile.avatar_url,
         profile.resume_url,
-        profile.skills // assuming skills array is not empty
-      );
-    } else {
-      // fallback for student without candidate_type (old accounts)
-      requiredFields.push(
-        profile.degree_level,
-        profile.university_name,
-        profile.speciality,
-        profile.academic_year,
-        profile.speciality_type,
-        profile.student_card_url,
-        profile.student_id,
-        profile.wilaya,
-        profile.avatar_url,
-        profile.resume_url
+        profile.skills  // ensure skills array is not empty
       );
     }
   } else if (profile.role === "graduate") {
-    // handle legacy graduate role if needed
     requiredFields.push(
       profile.university_name,
       profile.degree_level,
@@ -83,7 +68,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       profile.resume_url
     );
   } else {
-    // For company/university admins or other roles, basic info + avatar + maybe other fields
+    // For company/university admins
     requiredFields.push(profile.avatar_url, profile.wilaya);
     if (profile.role === "company_admin") requiredFields.push(profile.company_name);
     if (profile.role === "university_admin") requiredFields.push(profile.university_name);
@@ -92,12 +77,11 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   const filled = requiredFields.filter((f) => f && String(f).trim() !== "").length;
   const completeness = Math.round((filled / requiredFields.length) * 100);
 
-  // 2. Build steps dynamically
-  const basicInfoComplete = !!(profile.first_name && profile.last_name && profile.email);
-  const documentsComplete = !!(profile.avatar_url && profile.resume_url);
+  // ----- Build steps dynamically -----
   let steps: Step[] = [];
 
-  // Step 0: Basic Info (always present)
+  // Step 0: Basic Info
+  const basicInfoComplete = !!(profile.first_name && profile.last_name && profile.email);
   steps.push({
     id: "basic",
     title: "Basic Info",
@@ -106,10 +90,10 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
     status: basicInfoComplete ? "completed" : "current",
   });
 
-  // Step 1: Academic / Professional details (depending on role)
+  // Step 1: Academic / Professional details
   let academicComplete = false;
   if (profile.role === "student") {
-    if (candidateType === "studying") {
+    if (isStudying) {
       academicComplete = !!(
         profile.degree_level &&
         profile.university_name &&
@@ -117,30 +101,27 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
         profile.academic_year &&
         profile.speciality_type
       );
-    } else if (candidateType === "graduated") {
+    } else if (isGraduated) {
       academicComplete = !!(
         profile.university_name &&
         profile.degree_level &&
         profile.speciality &&
         profile.graduation_year
       );
-    } else if (candidateType === "self_taught") {
-      academicComplete = true; // no academic info required, but we might check skills length
-    } else {
-      academicComplete = false;
+    } else if (isSelfTaught) {
+      // No academic info required, but we can consider it "complete" if skills are present
+      academicComplete = Array.isArray(profile.skills) && profile.skills.length > 0;
     }
   } else if (profile.role === "company_admin") {
     academicComplete = !!(profile.company_name && profile.wilaya);
   } else if (profile.role === "university_admin") {
     academicComplete = !!(profile.university_name && profile.wilaya);
-  } else {
-    academicComplete = false;
   }
 
   steps.push({
     id: "academic",
-    title: profile.role === "student" && candidateType === "self_taught" ? "Skills & Portfolio" : "Professional Info",
-    description: profile.role === "student" && candidateType === "self_taught" ? "Add your skills" : "Education / Work",
+    title: isSelfTaught ? "Skills & Portfolio" : "Professional Info",
+    description: isSelfTaught ? "Add your skills" : "Education / Work",
     icon: <GraduationCap className="h-4 w-4" />,
     status: basicInfoComplete
       ? academicComplete
@@ -150,13 +131,15 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   });
 
   // Step 2: Documents (avatar, resume, student card for studying)
+  const documentsComplete = !!(profile.avatar_url && profile.resume_url);
   const relevantDocsComplete = (() => {
     if (!documentsComplete) return false;
-    if (profile.role === "student" && candidateType === "studying") {
+    if (isStudying) {
       return !!(profile.student_card_url && profile.student_id);
     }
     return true;
   })();
+
   steps.push({
     id: "documents",
     title: "Documents",
@@ -169,16 +152,16 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       : "locked",
   });
 
-  // Step 3: Admin Verification (only if required)
-  const needsVerification = profile.role === "student" || profile.role === "graduate";
-  if (needsVerification) {
-    const allFieldsComplete = completeness === 100;
+  // Step 3: Admin Verification – only for studying and graduated
+  const needsAdminVerification = isStudying || isGraduated;
+  if (needsAdminVerification) {
+    const allPreviousComplete = basicInfoComplete && academicComplete && relevantDocsComplete;
     steps.push({
       id: "admin-verification",
       title: "Verification",
       description: "Admin review",
       icon: <Shield className="h-4 w-4" />,
-      status: allFieldsComplete
+      status: allPreviousComplete
         ? profile.is_verified
           ? "completed"
           : "current"
@@ -186,15 +169,15 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
     });
   }
 
-  // Step 4: University Connection (only for studying students)
-  if (profile.role === "student" && candidateType === "studying") {
-    const isVerified = profile.is_verified === true;
+  // Step 4: University Connection – only for studying
+  if (isStudying) {
+    const allPreviousComplete = basicInfoComplete && academicComplete && relevantDocsComplete && profile.is_verified;
     steps.push({
       id: "university-connection",
       title: "Connection",
       description: "University link",
       icon: <LinkIcon className="h-4 w-4" />,
-      status: isVerified
+      status: allPreviousComplete
         ? profile.university_connection_status === "accepted"
           ? "completed"
           : "current"
@@ -202,37 +185,51 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
     });
   }
 
-  // Final step: Ready (for all students and graduates)
+  // Step 5: Ready (for all students and graduates)
   if (profile.role === "student" || profile.role === "graduate") {
-    const isConnectedOrVerified = (() => {
-      if (profile.role === "student" && candidateType === "studying") {
-        return profile.university_connection_status === "accepted";
-      }
-      return profile.is_verified === true;
-    })();
+    let readyCompleted = false;
+    if (isStudying) {
+      readyCompleted = profile.university_connection_status === "accepted";
+    } else if (isGraduated) {
+      readyCompleted = profile.is_verified === true;
+    } else if (isSelfTaught) {
+      // Self-taught: no verification or connection needed – just complete profile
+      readyCompleted = completeness === 100;
+    }
+
     steps.push({
       id: "certificate",
       title: "Ready",
       description: "Certificates",
       icon: <Award className="h-4 w-4" />,
-      status: isConnectedOrVerified ? "completed" : "locked",
+      status: readyCompleted ? "completed" : "locked",
+    });
+  } else if (profile.role === "company_admin" || profile.role === "university_admin") {
+    // For company/university, add final step when approved
+    const readyCompleted = profile.is_verified === true;
+    steps.push({
+      id: "ready",
+      title: "Ready",
+      description: "Account approved",
+      icon: <Award className="h-4 w-4" />,
+      status: readyCompleted ? "completed" : "locked",
     });
   }
 
-  // Determine current step index based on first incomplete/current step
+  // Determine current step index (first step with status "current")
   let currentStepIndex = steps.findIndex(step => step.status === "current");
-  if (currentStepIndex === -1) currentStepIndex = steps.length - 1;
+  if (currentStepIndex === -1 && steps.length > 0) currentStepIndex = steps.length - 1;
 
-  // 3. Render
+  // ----- Render -----
   return (
     <div className="space-y-5">
-      {/* MAIN CARD (unchanged) */}
+      {/* MAIN CARD */}
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md">
         <div className="absolute -top-20 -left-20 h-48 w-48 rounded-full bg-[#639922]/10 blur-3xl" />
 
         <div className="relative z-10 p-4 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            {/* LEFT SECTION (avatar & info) */}
+            {/* LEFT SECTION */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1 min-w-0">
               <div className="relative shrink-0">
                 {profile.avatar_url ? (
@@ -257,14 +254,15 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
                   {profile.first_name} {profile.last_name}
                 </h1>
                 <p className="mt-1 text-sm text-foreground/40 capitalize">
-                  {profile.role}{profile.role === "student" && candidateType ? ` – ${candidateType}` : ""}
+                  {profile.role}
+                  {profile.role === "student" && candidateType ? ` – ${candidateType}` : ""}
                 </p>
                 <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-2">
                   <span className="inline-flex items-center gap-1 rounded-full border border-[#639922]/30 bg-[#639922]/10 px-3 py-1 text-xs text-[#639922]">
                     <Shield className="h-3 w-3" />
                     {profile.is_verified ? "Verified" : "Unverified"}
                   </span>
-                  {profile.role === "student" && candidateType === "studying" && (
+                  {isStudying && (
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
@@ -281,12 +279,27 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
               </div>
             </div>
 
-            {/* RIGHT SECTION – progress circle */}
+            {/* RIGHT SECTION – Progress Circle */}
             <div className="flex justify-center lg:justify-end">
               <div className="relative h-24 w-24 sm:h-28 sm:w-28">
                 <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                  <circle cx="50" cy="50" r="42" strokeWidth="8" fill="none" className="text-foreground/10" stroke="currentColor" />
-                  <circle cx="50" cy="50" r="42" strokeWidth="8" fill="none" stroke="currentColor" className="text-[#639922]"
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    strokeWidth="8"
+                    fill="none"
+                    className="text-foreground/10"
+                    stroke="currentColor"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    strokeWidth="8"
+                    fill="none"
+                    stroke="currentColor"
+                    className="text-[#639922]"
                     strokeDasharray="264"
                     strokeDashoffset={264 - (264 * completeness) / 100}
                     strokeLinecap="round"
@@ -302,7 +315,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
         </div>
       </div>
 
-      {/* JOURNEY */}
+      {/* JOURNEY COMPONENT */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md">
         <ProfileCompletionJourney steps={steps} />
       </div>

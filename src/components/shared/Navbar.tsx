@@ -90,37 +90,34 @@ const Navbar = () => {
   };
 
   const getDashboard = () => {
-    console.log("PROFILE:", profile);
-    console.log("ROLE:", profile?.role);
-
-    // Pending approval for non-students
-    if (profile?.status === "pending" && profile?.role !== "student") {
-      return "/pending-approval";
+    if (!profile) return "/";
+  
+    // Students always go to their dashboard – profile completion is handled inside
+    if (profile.role === "student") {
+      return "/student/dashboard";
     }
-
-    // Incomplete profile
-    if (!profile?.is_completed) {
+  
+    // For company/university, check completion and approval
+    if (!profile.is_completed) {
       return "/complete-profile";
     }
-
-    switch (profile?.role) {
-      case "student":
-        return "/student/dashboard";
-
-      case "company_admin":
-        return "/dashboard/company";
-
-      case "university_admin":
-        return "/university/dashboard";
-
-      case "super_admin":
-        return "/dashboard/admin";
-
-      default:
-        return "/";
+  
+    if (profile.role === "company_admin") {
+      if (!profile.is_verified) return "/pending-approval";
+      return "/dashboard/company";
     }
+  
+    if (profile.role === "university_admin") {
+      if (!profile.is_verified) return "/pending-approval";
+      return "/university/dashboard";
+    }
+  
+    if (profile.role === "super_admin") {
+      return "/dashboard/admin";
+    }
+  
+    return "/";
   };
-
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
 
@@ -342,7 +339,7 @@ const Navbar = () => {
                   Home
                 </Link>
                 <Link
-                  to="/jobs"
+                  to="/experience"
                   onClick={closeMobileMenu}
                   className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
                 >

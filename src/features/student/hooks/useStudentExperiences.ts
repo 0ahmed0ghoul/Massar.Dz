@@ -10,12 +10,12 @@ import { applicationService } from '@/features/company/service/application.servi
 export function useStudentExperiences() {
   const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const { toast } = useToast();
+  const [applications, setApplications] = useState<(Application & { interview?: any })[]>([]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -23,7 +23,7 @@ export function useStudentExperiences() {
     try {
       const [exp, apps] = await Promise.all([
         experienceService.getExperiences(user.id),
-        applicationService.getStudentApplications(user.id),
+        applicationService.getStudentApplicationsWithInterviews(user.id), // new method
       ]);
       setExperiences(exp);
       setApplications(apps);

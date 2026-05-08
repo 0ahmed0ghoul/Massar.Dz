@@ -37,16 +37,16 @@ export interface ProfessionalFormData {
   lookingFor: "internship" | "fulltime" | "parttime" | "freelance";
 }
 
+// In the hook or separate types file
 export interface CompanyFormData {
-  companyName: string;
-  companyType: CompanyType;
   firstName: string;
   lastName: string;
-  email: string;
-  industry: string;
-  registrationNumber?: string;
   wilaya: string;
+  companyName: string;
+  industry: string;
   companyDescription: string;
+  companyType?: string;
+  email?: string;
 }
 
 export interface UniversityFormData {

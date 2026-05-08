@@ -39,7 +39,7 @@ const DashboardPage = () => {
             <div>
               <h1 className="text-xl font-black tracking-tight text-foreground sm:text-2xl md:text-3xl lg:text-4xl">
                 Welcome back,{" "}
-                <span className="text-[#639922]">{profile?.first_name || "Talent"}</span>
+                <span className="text-[#639922]">{profile?.first_name}</span>
               </h1>
               <p className="text-xs text-foreground/40 sm:text-sm md:text-base">
                 Here's what's happening with your career path today.

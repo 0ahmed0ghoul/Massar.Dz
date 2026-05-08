@@ -67,15 +67,16 @@ export const professionalSchema = z.object({
 export type ProfessionalFields = z.infer<typeof professionalSchema>;
 
 // ─────────────────────────────────────────────────────────────
-// Company
+// Company – adjusted to match the CompanyForm fields exactly
 // ─────────────────────────────────────────────────────────────
 export const companySchema = z.object({
-  ...baseFields,
   companyName: z.string().min(1, "Company name required"),
   companyType: z.enum(["startup", "private", "government"]),
   industry: z.string().min(1, "Industry required"),
-  registrationNumber: z.string().optional(),
-  location: z.string().min(1, "Location required"),
+  firstName: z.string().min(1, "First name required"),
+  lastName: z.string().min(1, "Last name required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type CompanyFields = z.infer<typeof companySchema>;

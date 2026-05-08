@@ -100,7 +100,6 @@ class AuthService {
     return data.subscription;
   }
 
-  // ───────────────────────── PROFILE ─────────────────────────
 
   async fetchProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
@@ -158,6 +157,25 @@ class AuthService {
   }
 
   // ───────────────────────── STORAGE ─────────────────────────
+
+  // Inside AuthService class
+async uploadCompanyLogo(userId: string, file: File): Promise<string> {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+  const filePath = `company-logos/${fileName}`;
+
+  // Make sure bucket "company-files" exists; otherwise create it via Supabase storage
+  const { error: uploadError } = await supabase.storage
+    .from("company-files")
+    .upload(filePath, file, { upsert: true });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data } = supabase.storage.from("company-files").getPublicUrl(filePath);
+  if (!data?.publicUrl) throw new Error("Failed to generate public URL");
+
+  return data.publicUrl;
+}
 
   async uploadUniversityLogo(userId: string, file: File): Promise<string> {
     const fileExt = file.name.split(".").pop();

@@ -8,7 +8,9 @@ export interface Application {
     | "shortlisted"
     | "interview"
     | "rejected"
-    | "hired";
+    | "hired"
+    | "interview_scheduled";
+
   rating: number;
   notes: string | null;
   cover_letter: string | null;

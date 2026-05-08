@@ -3,69 +3,65 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, StarOff, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useFeedbacks } from './hooks/useFeedbacks';
+import { useFeedbacks } from '@/features/landing/hooks/useFeedbacks';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const FeedbackSection = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { feedbacks, loading, submitting, submitFeedback } = useFeedbacks();
+  const { feedbacks, loading, submitting, submitFeedback, refresh } = useFeedbacks();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ rating: 5, message: '' });
+  const [form, setForm] = useState({ rating: 5, message: '', name: '', email: '' });
   const [hoverRating, setHoverRating] = useState(0);
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen && !user) {
-      navigate('/login?redirectTo=/');
+    if (!isOpen) {
+      setOpen(false);
+      setForm({ rating: 5, message: '', name: '', email: '' });
       return;
     }
-    setOpen(isOpen);
+    if (!user) {
+      // Not logged in – show dialog with name/email fields
+      setOpen(true);
+    } else {
+      // Logged in – pre-fill name from profile
+      const fullName = profile?.first_name && profile?.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.first_name || profile?.last_name || 'Anonymous User';
+      setForm(prev => ({ ...prev, name: fullName, email: profile?.email || '' }));
+      setOpen(true);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.message) return;
 
-    // Use logged-in user's name and email (if available)
-    const name = profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.first_name || profile?.last_name || 'Anonymous User';
-    const email = profile?.email || null;
-
     const success = await submitFeedback({
-      name,
-      email,
+      name: form.name,
+      email: user ? profile?.email : form.email,
       rating: form.rating,
       message: form.message,
     });
     if (success) {
-      setForm({ rating: 5, message: '' });
+      setForm({ rating: 5, message: '', name: '', email: '' });
       setOpen(false);
+      refresh();
     }
   };
 
   return (
     <section className="relative overflow-hidden bg-background py-20">
-            {/* Grid pattern */}
-            <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px)
-          `,
-          backgroundSize: "48px 48px",
-        }}
-      />
-
+      <div className="pointer-events-none absolute inset-0" style={{
+        backgroundImage: `
+          linear-gradient(hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px),
+          linear-gradient(90deg, hsl(var(--grid-line, 0 0% 75%) / var(--grid-line-opacity, 0.5)) 1px, transparent 1px)
+        `,
+        backgroundSize: "48px 48px",
+      }} />
 
       <div className="container relative z-10">
         <div className="text-center mb-12">
@@ -84,6 +80,30 @@ const FeedbackSection = () => {
                 <DialogTitle className="text-xl text-[#639922]">We'd love to hear from you</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {!user && (
+                  <>
+                    <div>
+                      <label className="block text-sm mb-1 text-foreground/70">Your Name *</label>
+                      <Input
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        required
+                        className="bg-white/5 border-white/10"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1 text-foreground/70">Email (optional)</label>
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="bg-white/5 border-white/10"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className="block text-sm mb-1 text-foreground/70">Rating</label>
                   <div className="flex gap-1">
@@ -121,7 +141,6 @@ const FeedbackSection = () => {
           </Dialog>
         </div>
 
-        {/* Feedbacks grid (unchanged) */}
         {loading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-[#639922]" />
@@ -131,22 +150,16 @@ const FeedbackSection = () => {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {feedbacks.map((fb) => (
-              <div
-                key={fb.id}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-md transition hover:border-[#639922]/30"
-              >
+              <div key={fb.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-md transition hover:border-[#639922]/30">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#639922]/10 text-[#639922] font-bold">
                     {fb.name.charAt(0)}
-                  </div>
+          </div>
                   <div>
                     <p className="font-semibold text-foreground">{fb.name}</p>
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${i < fb.rating ? 'fill-yellow-500 text-yellow-500' : 'text-white/30'}`}
-                        />
+                        <Star key={i} className={`h-3 w-3 ${i < fb.rating ? 'fill-yellow-500 text-yellow-500' : 'text-white/30'}`} />
                       ))}
                     </div>
                   </div>

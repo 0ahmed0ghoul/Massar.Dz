@@ -1,4 +1,4 @@
-// features/student/hooks/useStudentDashboard.ts
+// features/student/hooks/useStudentDashboard.ts (updated)
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { studentService } from "../services/student.service";
@@ -6,7 +6,6 @@ import { DashboardState } from "@/types/student";
 
 export const useStudentDashboard = () => {
   const { user } = useAuth();
-
   const [data, setData] = useState<DashboardState>({
     stats: [],
     applications: [],
@@ -15,7 +14,6 @@ export const useStudentDashboard = () => {
     activities: [],
     profile: null,
   });
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,17 +22,15 @@ export const useStudentDashboard = () => {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       const [applications, jobs, activities, interviews, profile] = await Promise.all([
         studentService.getApplications(user.id),
         studentService.getJobs(),
         studentService.getActivities(user.id),
         studentService.getInterviews(user.id),
-        studentService.getProfile(user.id), // ✅ Now matches Profile type
+        studentService.getProfile(user.id),
       ]);
 
       const stats = [
@@ -45,11 +41,11 @@ export const useStudentDashboard = () => {
 
       setData({
         stats,
-        applications,
+        applications, // now each has `job` with title, company
         jobs,
         interviews,
         activities,
-        profile, // ✅ No type error
+        profile,
       });
     } catch (err) {
       console.error("Dashboard fetch error:", err);

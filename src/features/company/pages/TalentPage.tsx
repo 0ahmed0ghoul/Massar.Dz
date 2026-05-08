@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Brain, Zap, Sparkles, Building2 } from "lucide-react";
+import { Search, Filter, Brain, Zap, Sparkles, Building2, Clock } from "lucide-react";
 import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
 import CandidateCard from "../components/CandidateCard";
 
@@ -44,10 +44,12 @@ export default function TalentPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background overflow-hidden">
+      {/* Grid background overlay (unchanged) */}
       <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.035]" />
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full bg-[#639922]/[0.07] blur-3xl" />
 
+      {/* Page content – will be blurred by the overlay, but remains visible */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Talent Database</h1>
@@ -180,6 +182,18 @@ export default function TalentPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Coming Soon Overlay – makes the whole page blurry and shows message */}
+      <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-md">
+        <div className="rounded-2xl border border-white/20 bg-black/60 p-8 text-center shadow-2xl backdrop-blur-sm">
+          <Clock className="mx-auto mb-4 h-12 w-12 text-[#639922]" />
+          <h2 className="text-2xl font-bold text-white">Coming Soon</h2>
+          <p className="mt-2 text-white/70">
+            The Talent Database is under construction. <br />
+            We're building advanced AI search and matching.
+          </p>
         </div>
       </div>
     </div>

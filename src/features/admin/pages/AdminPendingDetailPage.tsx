@@ -551,12 +551,32 @@ export const AdminPendingDetailPage = () => {
               )}
               {(isUniversity || isCompany) && (
                 <>
-                  {verificationDocs.logo &&
-                    renderDocCard(
-                      verificationDocs.logo,
-                      "Logo",
-                      <Image className="h-8 w-8 text-[#639922]" />
-                    )}
+              {isCompany && profile.avatar_url && (
+                <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md p-5 sm:p-6">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
+                    <Image className="h-5 w-5 text-[#639922]" />
+                    University Logo
+                  </h2>
+
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={profile.avatar_url}
+                      alt="University Logo"
+                      className="h-20 w-20 rounded-full object-cover border border-white/10"
+                    />
+
+                    <button
+                      onClick={() =>
+                        openPreview(profile.avatar_url!, "University Logo")
+                      }
+                      className="flex items-center gap-2 rounded-lg bg-[#639922]/20 px-3 py-1.5 text-xs font-medium text-[#639922] transition hover:bg-[#639922]/30"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview
+                    </button>
+                  </div>
+                </div>
+              )}
                   {verificationDocs.registration_certificate &&
                     renderDocCard(
                       verificationDocs.registration_certificate,

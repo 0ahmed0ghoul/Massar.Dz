@@ -79,7 +79,7 @@ export default function CompanyDashboard() {
               Manage your jobs, candidates, and recruitment pipeline.
             </p>
           </div>
-          <Link to="/company/dashboard/jobs">
+          <Link to="/dashboard/company/jobs">
             <Button className="bg-[#639922] text-foreground hover:bg-[#4f7a1a]">
               <Briefcase className="mr-2 h-4 w-4" /> Post a Job
             </Button>
@@ -163,7 +163,7 @@ export default function CompanyDashboard() {
                         {formatDistanceToNow(new Date(app.created_at), { addSuffix: true })}
                       </span>
                       <Link
-                        to={`/company/dashboard/applications?job=${app.job_id}&candidate=${app.student_id}`}
+                        to={`/company/dashboard/application?job=${app.job_id}&candidate=${app.student_id}`}
                         className="text-[#639922] hover:underline"
                       >
                         View application →

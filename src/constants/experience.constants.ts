@@ -12,4 +12,6 @@ export const statusConfig: Record<string, { label: string; color: string }> = {
   interview: { label: "Interview", color: "bg-purple-600" },
   rejected: { label: "Rejected", color: "bg-red-600" },
   hired: { label: "Hired", color: "bg-[#639922]" },
+  interview_scheduled: { label: "Interview Scheduled", color: "bg-blue-500/20 text-blue-400" },
+
 };
