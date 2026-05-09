@@ -152,8 +152,8 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       : "locked",
   });
 
-  // Step 3: Admin Verification – only for studying and graduated
-  const needsAdminVerification = isStudying || isGraduated;
+// Step 3: Admin Verification – for all students
+const needsAdminVerification = isStudying || isGraduated || isSelfTaught;
   if (needsAdminVerification) {
     const allPreviousComplete = basicInfoComplete && academicComplete && relevantDocsComplete;
     steps.push({
@@ -185,26 +185,25 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
     });
   }
 
-  // Step 5: Ready (for all students and graduates)
-  if (profile.role === "student" || profile.role === "graduate") {
-    let readyCompleted = false;
-    if (isStudying) {
-      readyCompleted = profile.university_connection_status === "accepted";
-    } else if (isGraduated) {
-      readyCompleted = profile.is_verified === true;
-    } else if (isSelfTaught) {
-      // Self-taught: no verification or connection needed – just complete profile
-      readyCompleted = completeness === 100;
-    }
+// Step 5: Ready (for all students and graduates)
+if (profile.role === "student" || profile.role === "graduate") {
+  let readyCompleted = false;
 
-    steps.push({
-      id: "certificate",
-      title: "Ready",
-      description: "Certificates",
-      icon: <Award className="h-4 w-4" />,
-      status: readyCompleted ? "completed" : "locked",
-    });
-  } else if (profile.role === "company_admin" || profile.role === "university_admin") {
+  if (isStudying) {
+    readyCompleted =
+      profile.university_connection_status === "accepted";
+  } else if (isGraduated || isSelfTaught) {
+    readyCompleted = profile.is_verified === true;
+  }
+
+  steps.push({
+    id: "certificate",
+    title: "Ready",
+    description: "Certificates",
+    icon: <Award className="h-4 w-4" />,
+    status: readyCompleted ? "completed" : "locked",
+  });
+} else if (profile.role === "company_admin" || profile.role === "university_admin") {
     // For company/university, add final step when approved
     const readyCompleted = profile.is_verified === true;
     steps.push({

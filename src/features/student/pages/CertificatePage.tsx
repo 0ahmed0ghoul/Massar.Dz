@@ -1,10 +1,6 @@
-// pages/student/CertificatePage.tsx
-import { useState, useEffect } from "react";
-import { 
-  Award, GraduationCap, Star, Trophy, Users, 
-  Plus, Scan, ShieldCheck, XCircle, CheckCircle,
-  Calendar, FileText, Eye, Building2
-} from "lucide-react";
+// features/student/pages/CertificatePage.tsx
+import { useState } from "react";
+import { Award, GraduationCap, Star, Trophy, Plus, Scan, ShieldCheck, XCircle, CheckCircle, Calendar, FileText, Eye, Building2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRScanner } from "@/features/university/components/QRScanner";
 import { AddCertificateModal } from "../components/AddCertificateModal";
 import { CertificateDetailModal } from "../components/CertificateDetailModal";
-import { useCertificates } from "../hooks/useCertificates";
-import { Certificate, CertificateType } from "../../../types/certificate";
+import { useCertificates, PendingRequest } from "../hooks/useCertificates";
+import { Certificate, CertificateType } from "@/types/certificate";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useStudentType } from "@/features/auth/hooks/useStudentType";
@@ -21,21 +17,19 @@ import { useStudentType } from "@/features/auth/hooks/useStudentType";
 export default function CertificatePage() {
   const { user } = useAuth();
   const { type: candidateType, loading: typeLoading } = useStudentType();
+  const { certificates, pendingRequests, loading, addCertificate, claimGraduationCertificate, refresh } = useCertificates();
   const [universityConnectionStatus, setUniversityConnectionStatus] = useState<string | null>(null);
   const [connectionLoading, setConnectionLoading] = useState(true);
-  
-  const { certificates, loading, addCertificate, claimGraduationCertificate, refresh } = useCertificates();
-  
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
-  // Fetch university connection status (only needed for studying students)
-  useEffect(() => {
-    async function fetchConnectionStatus() {
-      if (!user || candidateType !== 'studying') {
+  // Check university connection status only for studying students
+  useState(() => {
+    async function fetchConnection() {
+      if (!user || candidateType !== "studying") {
         setConnectionLoading(false);
         return;
       }
@@ -44,71 +38,42 @@ export default function CertificatePage() {
         .select("status")
         .eq("student_id", user.id)
         .maybeSingle();
-      if (error) console.error("Error fetching connection:", error);
-      setUniversityConnectionStatus(data?.status || null);
+      if (!error && data) setUniversityConnectionStatus(data.status);
       setConnectionLoading(false);
     }
-    fetchConnectionStatus();
+    fetchConnection();
   }, [user, candidateType]);
 
   const isConnected = universityConnectionStatus === "accepted";
-  const isStudying = candidateType === 'studying';
-  const isGraduated = candidateType === 'graduated';
-  const isSelfTaught = candidateType === 'self_taught';
+  const isStudying = candidateType === "studying";
+  const isGraduated = candidateType === "graduated";
+  const isSelfTaught = candidateType === "self_taught";
 
   const handleScanSuccess = async (decodedText: string) => {
     try {
       const url = new URL(decodedText);
       const token = url.searchParams.get("token");
-      if (!token) {
-        setScanResult({ success: false, message: "Invalid QR code: no token found." });
-        return;
-      }
+      if (!token) throw new Error("Invalid QR code: no token found.");
       const newCert = await claimGraduationCertificate(token);
       if (newCert) {
         setScanResult({ success: true, message: "Graduation certificate claimed successfully! 🎓" });
         setShowScanner(false);
         refresh();
-      } else {
-        setScanResult({ success: false, message: "Something went wrong. Please try again." });
-      }
+      } else throw new Error("Something went wrong.");
     } catch (error: any) {
       setScanResult({ success: false, message: error.message || "Invalid QR code format." });
     }
   };
 
-  const handleAddCertificate = async (request: {
-    type: CertificateType;
-    title: string;
-    issuer: string;
-    issueDate: string;
-    expiryDate?: string;
-    credentialId?: string;
-    files?: Record<string, File>;
-    achievements?: string[];
-  }) => {
-    // For university certificates (major/stars) we only refresh the list – the request is stored in certificate_requests
-    if (request.type === "stars" || request.type === "major") {
+  const handleAddCertificate = async (req: any) => {
+    if (req.type === "stars" || req.type === "major") {
+      refresh(); // just refresh, the request is stored in certificate_requests
+    } else {
+      let file: File | undefined;
+      if (req.files) file = Object.values(req.files)[0];
+      await addCertificate(req.type, req.title, req.issuer, req.issueDate, req.expiryDate, req.credentialId, file);
       refresh();
-      return;
     }
-
-    // Self‑claimed certificates: add directly
-    let file: File | undefined;
-    if (request.files) {
-      const firstKey = Object.keys(request.files)[0];
-      if (firstKey) file = request.files[firstKey];
-    }
-    await addCertificate(
-      request.type,
-      request.title,
-      request.issuer,
-      request.issueDate,
-      request.expiryDate,
-      request.credentialId,
-      file
-    );
-    refresh();
   };
 
   const openDetail = (cert: Certificate) => {
@@ -146,10 +111,8 @@ export default function CertificatePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#639922] border-t-transparent" />
-          <p className="text-sm text-foreground/40">Loading certificates...</p>
-        </div>
+        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#639922] border-t-transparent" />
+        <p className="text-sm text-foreground/40">Loading certificates...</p>
       </div>
     );
   }
@@ -173,30 +136,20 @@ export default function CertificatePage() {
             <Plus className="w-4 h-4 mr-2" /> Add Certificate
           </Button>
 
-          {isStudying && (
-            isConnected ? (
-              <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20">
-                <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
-              </Button>
-            ) : (
-              <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                You need to be connected to a university department to claim a graduation certificate.
-              </div>
-            )
+          {isStudying && isConnected && (
+            <Button variant="outline" onClick={() => setShowScanner(!showScanner)} className="border-white/20">
+              <Scan className="w-4 h-4 mr-2" /> {showScanner ? "Hide Scanner" : "Claim Graduation Certificate"}
+            </Button>
           )}
 
           {isGraduated && (
             <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              As a graduate, you can upload your graduation certificate manually using "Add Certificate".
+              <Award className="h-4 w-4" /> Graduates can upload their graduation certificate via "Add Certificate".
             </div>
           )}
-
           {isSelfTaught && (
             <div className="text-sm text-foreground/40 bg-white/5 px-3 py-2 rounded-lg flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              Self‑taught learners can add skills certificates and achievements.
+              <Star className="h-4 w-4" /> Self‑taught learners can add skills certificates and achievements.
             </div>
           )}
         </div>
@@ -204,109 +157,81 @@ export default function CertificatePage() {
         {showScanner && (
           <div className="mb-8">
             <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-xl text-foreground flex items-center gap-2">
-                  <Scan className="h-5 w-5 text-[#639922]" /> Scan University QR Code
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-xl flex items-center gap-2"><Scan className="h-5 w-5 text-[#639922]" /> Scan University QR Code</CardTitle></CardHeader>
               <CardContent>
                 <div className="rounded-xl border border-white/[0.08] bg-black/30 p-4">
                   <QRScanner onScanSuccess={handleScanSuccess} />
                 </div>
                 {scanResult && (
-                  <div className={`mt-4 flex items-start gap-3 rounded-xl p-4 border ${
-                    scanResult.success
-                      ? "bg-[#639922]/10 border-[#639922]/30 text-[#639922]"
-                      : "bg-red-500/10 border-red-500/30 text-red-400"
-                  }`}>
-                    {scanResult.success ? <CheckCircle className="w-5 h-5 mt-0.5" /> : <XCircle className="w-5 h-5 mt-0.5" />}
-                    <div className="text-sm font-medium leading-relaxed">{scanResult.message}</div>
+                  <div className={`mt-4 flex items-start gap-3 rounded-xl p-4 border ${scanResult.success ? "bg-[#639922]/10 border-[#639922]/30 text-[#639922]" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+                    {scanResult.success ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    <div className="text-sm font-medium">{scanResult.message}</div>
                   </div>
                 )}
-                <p className="text-xs text-foreground/30 mt-4">
-                  Scan the QR code provided by your university to claim your graduation certificate.
-                </p>
+                <p className="text-xs text-foreground/30 mt-4">Scan the QR code provided by your university to claim your graduation certificate.</p>
               </CardContent>
             </Card>
           </div>
         )}
 
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs defaultValue="earned" className="w-full">
           <TabsList className="bg-white/5 border border-white/10 rounded-full p-1 mb-6">
-            <TabsTrigger value="all" className="rounded-full data-[state=active]:bg-[#639922] data-[state=active]:text-black">All</TabsTrigger>
-            {Object.keys(groupedCertificates).map(cat => (
-              <TabsTrigger key={cat} value={cat} className="rounded-full data-[state=active]:bg-[#639922] data-[state=active]:text-black">
-                {cat}
+            <TabsTrigger value="earned" className="rounded-full data-[state=active]:bg-[#639922] data-[state=active]:text-black">Earned Certificates</TabsTrigger>
+            {pendingRequests.length > 0 && (
+              <TabsTrigger value="pending" className="rounded-full data-[state=active]:bg-[#639922] data-[state=active]:text-black">
+                Pending Requests ({pendingRequests.length})
               </TabsTrigger>
-            ))}
+            )}
+            <TabsTrigger value="categories" className="rounded-full data-[state=active]:bg-[#639922] data-[state=active]:text-black">By Category</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all">
+          <TabsContent value="earned">
+            {certificates.length === 0 ? (
+              <div className="text-center py-12 text-foreground/30">No earned certificates yet.</div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {certificates.map(cert => (
+                  <CertificateCard key={cert.id} certificate={cert} icon={getIconByType(cert.type)} onClick={() => openDetail(cert)} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="pending">
+            <div className="space-y-4">
+              {pendingRequests.map(req => (
+                <PendingRequestCard key={req.id} request={req} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="categories">
             <div className="space-y-8">
               {Object.entries(groupedCertificates).map(([category, certs]) => (
                 <div key={category}>
-                  <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Award className="h-5 w-5 text-[#639922]" /> {category}
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2"><Award className="h-5 w-5 text-[#639922]" /> {category}</h2>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {certs.map(cert => (
-                      <CertificateCard 
-                        key={cert.id} 
-                        certificate={cert} 
-                        icon={getIconByType(cert.type)} 
-                        onClick={() => openDetail(cert)}
-                      />
-                    ))}
+                    {certs.map(cert => <CertificateCard key={cert.id} certificate={cert} icon={getIconByType(cert.type)} onClick={() => openDetail(cert)} />)}
                   </div>
                 </div>
               ))}
             </div>
           </TabsContent>
-
-          {Object.entries(groupedCertificates).map(([category, certs]) => (
-            <TabsContent key={category} value={category}>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {certs.map(cert => (
-                  <CertificateCard 
-                    key={cert.id} 
-                    certificate={cert} 
-                    icon={getIconByType(cert.type)} 
-                    onClick={() => openDetail(cert)}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-          ))}
         </Tabs>
-
-        {certificates.length === 0 && !loading && (
-          <div className="text-center py-12 text-foreground/30">
-            No certificates yet. Add your first certificate using the button above.
-          </div>
-        )}
       </div>
 
       <AddCertificateModal open={showAddModal} onOpenChange={setShowAddModal} onAdd={handleAddCertificate} />
-      <CertificateDetailModal
-        open={showDetailModal} 
-        onOpenChange={setShowDetailModal} 
-        certificate={selectedCert} 
-      />
+      <CertificateDetailModal open={showDetailModal} onOpenChange={setShowDetailModal} certificate={selectedCert} />
     </div>
   );
 }
 
 function CertificateCard({ certificate, icon, onClick }: { certificate: Certificate; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <div 
-      onClick={onClick}
-      className="group cursor-pointer rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-all hover:border-[#639922]/30 hover:bg-white/[0.04]"
-    >
+    <div onClick={onClick} className="group cursor-pointer rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-all hover:border-[#639922]/30 hover:bg-white/[0.04]">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#639922]/10">
-            {icon}
-          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#639922]/10">{icon}</div>
           <div>
             <h3 className="font-semibold text-foreground">{certificate.title}</h3>
             <p className="text-xs text-foreground/40">{certificate.issuer}</p>
@@ -319,9 +244,27 @@ function CertificateCard({ certificate, icon, onClick }: { certificate: Certific
         <Badge variant="secondary" className="bg-[#639922]/20 text-[#639922] text-xs">Verified</Badge>
       </div>
       <div className="mt-3 flex justify-end">
-        <span className="text-xs text-foreground/40 flex items-center gap-1 group-hover:text-[#639922] transition-colors">
-          <Eye className="h-3 w-3" /> View details
-        </span>
+        <span className="text-xs text-foreground/40 flex items-center gap-1 group-hover:text-[#639922]"><Eye className="h-3 w-3" /> View details</span>
+      </div>
+    </div>
+  );
+}
+
+function PendingRequestCard({ request }: { request: PendingRequest }) {
+  return (
+    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+          <Clock className="h-5 w-5 text-amber-400" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-foreground">{request.title}</h3>
+          <p className="text-xs text-foreground/40">{request.issuer}</p>
+          <Badge variant="outline" className="mt-2 border-amber-500/30 text-amber-400 text-[10px]">Pending Review</Badge>
+          {request.type === "stars" && request.achievements && (
+            <div className="mt-2 text-xs text-foreground/50">Selected achievements: {request.achievements.length}</div>
+          )}
+        </div>
       </div>
     </div>
   );

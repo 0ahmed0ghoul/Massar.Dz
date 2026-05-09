@@ -28,11 +28,25 @@ const JobDetailPage = () => {
   const { jobs, loading } = useJobs();
   const { apply, loading: applying } = useApplyToJob();
   const [applyModalOpen, setApplyModalOpen] = useState(false);
-  
   // Logic placeholders
-  const isStudent = profile?.role === 'student';
+  const isStudent = profile?.role === "student";
+  const isCompleted = profile?.is_completed === true;
+  const isVerified = profile?.is_verified === true;
+
+  const canApply = isStudent && isCompleted && isVerified;
+
+  let applyMessage = "";
+
+  if (!isCompleted && !isVerified) {
+    applyMessage =
+      "You must complete your profile and wait for Massar team verification before applying for jobs.";
+  } else if (isCompleted && !isVerified) {
+    applyMessage =
+      "Wait until the Massar team verifies your account so you can apply for jobs.";
+  }
+
   const isPremium = false; // Toggle this to test the blur effect
-  
+
   const job = jobs.find((j) => j.id === id);
 
   // ── Share Feature Implementation ──
@@ -67,7 +81,7 @@ const JobDetailPage = () => {
 
   const company = job.company;
   const companyName = company?.company_name || "Company";
-  const matchScore = 94; 
+  const matchScore = 94;
 
   return (
     <div className="relative min-h-screen bg-background transition-colors overflow-hidden">
@@ -107,7 +121,10 @@ const JobDetailPage = () => {
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
+                      <Badge
+                        variant="outline"
+                        className="border-primary/30 bg-primary/10 text-primary"
+                      >
                         {job.job_type}
                       </Badge>
                       <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -117,8 +134,12 @@ const JobDetailPage = () => {
                     <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground mb-2">
                       {job.title}
                     </h1>
-                    <Link to={`/companies/${company?.id}`} className="flex items-center gap-1.5 text-lg font-medium text-muted-foreground hover:text-primary transition-colors">
-                      {companyName} <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <Link
+                      to={`/companies/${company?.id}`}
+                      className="flex items-center gap-1.5 text-lg font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {companyName}{" "}
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
                     </Link>
                   </div>
                 </div>
@@ -126,30 +147,46 @@ const JobDetailPage = () => {
 
               <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-6 py-6 border-y border-border/50">
                 <div className="space-y-1">
-                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Location</p>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                    Location
+                  </p>
                   <p className="flex items-center gap-2 font-semibold text-foreground">
-                    <MapPin className="h-4 w-4 text-primary" /> {job.location || "Remote"}
+                    <MapPin className="h-4 w-4 text-primary" />{" "}
+                    {job.location || "Remote"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Salary</p>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                    Salary
+                  </p>
                   <p className="flex items-center gap-2 font-semibold text-foreground">
-                    <DollarSign className="h-4 w-4 text-primary" /> 
-                    {job.salary_min?.toLocaleString()} - {job.salary_max?.toLocaleString()} <span className="text-[10px] text-muted-foreground">DZD</span>
+                    <DollarSign className="h-4 w-4 text-primary" />
+                    {job.salary_min?.toLocaleString()} -{" "}
+                    {job.salary_max?.toLocaleString()}{" "}
+                    <span className="text-[10px] text-muted-foreground">
+                      DZD
+                    </span>
                   </p>
                 </div>
                 <div className="space-y-1 col-span-2 md:col-span-1">
-                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Experience</p>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                    Experience
+                  </p>
                   <p className="flex items-center gap-2 font-semibold text-foreground capitalize">
-                    <Briefcase className="h-4 w-4 text-primary" /> {job.experience_level}
+                    <Briefcase className="h-4 w-4 text-primary" />{" "}
+                    {job.experience_level}
                   </p>
                 </div>
               </div>
 
               <div className="mt-10 space-y-8">
                 <section>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-4">Description</h3>
-                  <p className="text-[16px] leading-relaxed text-muted-foreground whitespace-pre-wrap">{job.description}</p>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-4">
+                    Description
+                  </h3>
+                  <p className="text-[16px] leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                    {job.description}
+                  </p>
                 </section>
               </div>
             </div>
@@ -157,56 +194,90 @@ const JobDetailPage = () => {
 
           {/* RIGHT: Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            
             {/* ── Match Score Card with Premium Blur ── */}
             <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card/60 p-6 backdrop-blur-md shadow-lg shadow-primary/10 animate-float">
               {!isPremium && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/40 backdrop-blur-md transition-all">
                   <Lock className="mb-2 h-6 w-6 text-primary" />
-                  <p className="text-sm font-bold text-foreground">Premium Feature</p>
-                  <Link to="/pricing" className="h-auto p-0 text-xs text-primary">Upgrade to see match</Link>
+                  <p className="text-sm font-bold text-foreground">
+                    Premium Feature
+                  </p>
+                  <Link
+                    to="/pricing"
+                    className="h-auto p-0 text-xs text-primary"
+                  >
+                    Upgrade to see match
+                  </Link>
                 </div>
               )}
-              
+
               <div className={!isPremium ? "blur-sm select-none" : ""}>
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
                     <Trophy className="h-5 w-5 text-primary" />
                   </div>
                   <div className="text-right">
-                    <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Match Rate</p>
-                    <p className="text-2xl font-black text-primary">{matchScore}%</p>
+                    <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      Match Rate
+                    </p>
+                    <p className="text-2xl font-black text-primary">
+                      {matchScore}%
+                    </p>
                   </div>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full bg-primary" style={{ width: `${matchScore}%` }} />
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${matchScore}%` }}
+                  />
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground leading-snug">
-                  Your profile matches <span className="font-bold text-foreground">{matchScore}%</span> of the requirements.
+                  Your profile matches{" "}
+                  <span className="font-bold text-foreground">
+                    {matchScore}%
+                  </span>{" "}
+                  of the requirements.
                 </p>
               </div>
             </div>
 
             {/* Application Card */}
             <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
-              <h4 className="font-bold text-foreground mb-4">Ready to apply?</h4>
+              <h4 className="font-bold text-foreground mb-4">
+                Ready to apply?
+              </h4>
               {isStudent ? (
-                <Button
-                  onClick={() => setApplyModalOpen(true)}
-                  className="w-full bg-primary py-6 text-lg font-bold text-primary-foreground hover:bg-primary/90 rounded-xl transition-all hover:scale-[1.02]"
-                >
-                  Apply Now <Star className="ml-2 h-5 w-5 fill-current" />
-                </Button>
+                canApply ? (
+                  <Button
+                    onClick={() => setApplyModalOpen(true)}
+                    className="w-full bg-primary py-6 text-lg font-bold text-primary-foreground hover:bg-primary/90 rounded-xl transition-all hover:scale-[1.02]"
+                  >
+                    Apply Now <Star className="ml-2 h-5 w-5 fill-current" />
+                  </Button>
+                ) : (
+                  <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-center">
+                    <p className="text-sm font-medium text-yellow-400">
+                      {applyMessage}
+                    </p>
+
+                    <Button
+                      disabled
+                      className="mt-4 w-full cursor-not-allowed rounded-xl py-6 text-lg font-bold opacity-50"
+                    >
+                      Apply Now
+                    </Button>
+                  </div>
+                )
               ) : (
                 <div className="rounded-lg bg-muted p-4 text-center text-xs text-muted-foreground italic">
                   Applications are currently open for students only.
                 </div>
               )}
-              
+
               <div className="mt-6 flex flex-col gap-3">
-                <Button 
+                <Button
                   onClick={handleShare}
-                  variant="outline" 
+                  variant="outline"
                   className="w-full justify-start gap-2 border-border/50 hover:bg-primary/5 hover:text-primary transition-colors"
                 >
                   <Share2 className="h-4 w-4" /> Share with friends

@@ -132,14 +132,35 @@ export const studentService = {
   async getProfile(studentId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(`
+        *,
+        student_skills (
+          id,
+          proficiency,
+          years_of_experience,
+          skill:skills (
+            id,
+            name
+          )
+        )
+      `)
       .eq("id", studentId)
       .single();
+  
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching profile:", error);
       throw new Error(error.message);
     }
-    return data;
+  
+    // transform skills into string[]
+    const transformedData = {
+      ...data,
+      skills:
+        data?.student_skills?.map((s: any) => s.skill?.name).filter(Boolean) ||
+        [],
+    };
+  
+    return transformedData;
   },
 
   async updateProfile(studentId: string, payload: Partial<Profile>): Promise<void> {

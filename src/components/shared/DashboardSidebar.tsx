@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon, MessageCircleCodeIcon } from "lucide-react";
+import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon, MessageCircleCodeIcon, BriefcaseBusiness, MessageCircleMoreIcon } from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -24,7 +24,8 @@ const studentBaseItems = [
   { title: "Profile", url: "/student/dashboard/profile", icon: User },
   { title: "Skills", url: "/student/dashboard/skills", icon: Sparkle },
   { title: "Certificates", url: "/student/dashboard/certificate", icon: Paperclip },
-  { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMore },
+  { title: "Messages", url: "/student/dashboard/messages", icon:MessageCircleMoreIcon },
+  { title: "Browse Jobs", url: "/experience", icon: BriefcaseBusiness },
   { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
 ];
 
@@ -73,7 +74,6 @@ export function DashboardSidebar({
   isCollapsed,
   onClose,
   notificationCount,
-  isProfileComplete,
   pendingCount,
   candidateType,
 }: DashboardSidebarProps) {

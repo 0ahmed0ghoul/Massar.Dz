@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminVerificationService } from "../services/admin.verification.service";
-import { Profile } from "../../../types/verification.types";
+import { Profile } from "@/types/profile.types";
 
 export function usePendingVerification() {
   const [loading, setLoading] = useState(false);
@@ -50,54 +50,69 @@ export function usePendingVerification() {
   // ─────────────────────────────────────────────
   // Data fetching
   // ─────────────────────────────────────────────
-  const fetchPendingInstitutions = useCallback(() => {
-    return withLoading(() => adminVerificationService.getPendingInstitutions());
-  }, []);
-
-  const fetchPendingStudents = useCallback(() => {
-    return withLoading(() => adminVerificationService.getPendingStudents());
-  }, []);
-
-  const fetchAllPending = useCallback(() => {
-    return withLoading(() => adminVerificationService.getAllPending());
+  const fetchPendingAccounts = useCallback(() => {
+    return withLoading(() => adminVerificationService.getPendingAccounts());
   }, []);
 
   // ─────────────────────────────────────────────
   // Approval actions
   // ─────────────────────────────────────────────
-  const approveInstitution = useCallback(async (profile: Profile): Promise<boolean> => {
-    const result = await withAction(profile.id, async () => {
-      await adminVerificationService.approveInstitution(profile.id);
-      toast({
-        title: "Approved ✓",
-        description: `${profile.first_name} ${profile.last_name} approved as ${
-          profile.role === "university_admin" ? "University Admin" : "Company Admin"
-        }.`,
-      });
-      return true;
-    });
-    return result !== null;
-  }, []);
-
-  const approveStudent = useCallback(
-    async (profile: Profile, sendInvitation: boolean = false, adminId?: string): Promise<boolean> => {
+  const approveProfile = useCallback(
+    async (
+      profile: Profile,
+      options?: {
+        sendInvitation?: boolean;
+        adminId?: string;
+      }
+    ): Promise<boolean> => {
       const result = await withAction(profile.id, async () => {
-        await adminVerificationService.approveStudent(profile.id);
+        // Universal approval
+        await adminVerificationService.approveProfile(profile.id);
+  
+        // Success toast
         toast({
           title: "Approved ✓",
-          description: `${profile.first_name} ${profile.last_name}'s profile verified.`,
+          description:
+            profile.role === "student"
+              ? `${profile.first_name} ${profile.last_name}'s profile verified.`
+              : `${profile.first_name} ${profile.last_name} approved as ${
+                  profile.role === "university_admin"
+                    ? "University Admin"
+                    : "Company Admin"
+                }.`,
         });
-
-        if (sendInvitation && profile.university_name && adminId) {
-          const universityId = await adminVerificationService.getUniversityIdByName(profile.university_name);
-          if (!universityId) throw new Error("University not found");
-          await adminVerificationService.sendConnectionInvitation(profile.id, universityId, adminId);
+  
+        // Optional university invitation for students
+        if (
+          profile.role === "student" &&
+          options?.sendInvitation &&
+          profile.university_name &&
+          options.adminId
+        ) {
+          const universityId =
+            await adminVerificationService.getUniversityIdByName(
+              profile.university_name
+            );
+  
+          if (!universityId) {
+            throw new Error("University not found");
+          }
+  
+          await adminVerificationService.sendConnectionInvitation(
+            profile.id,
+            universityId,
+            options.adminId
+          );
+  
           toast({
             title: "Success",
             description: "Connection invitation sent to the university",
-          });        }
+          });
+        }
+  
         return true;
       });
+  
       return result !== null;
     },
     []
@@ -152,11 +167,8 @@ export function usePendingVerification() {
   return {
     loading,
     actionLoading,
-    fetchPendingInstitutions,
-    fetchPendingStudents,
-    fetchAllPending,
-    approveInstitution,
-    approveStudent,
+    fetchPendingAccounts,
+    approveProfile,
     rejectProfile,
     sendConnectionInvitation,
     getConnectionStatus,

@@ -5,7 +5,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { Menu, ChevronLeft } from "lucide-react";
 import { DashboardSidebar } from "./DashboardSidebar";
 
-type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
+type UserRole =
+  | "student"
+  | "company_admin"
+  | "university_admin"
+  | "super_admin";
 
 const roleColors: Record<UserRole, string> = {
   student: "#639922",
@@ -27,7 +31,14 @@ const DashboardLayout = ({ role }: Props) => {
   const [pendingCount, setPendingCount] = useState(0);
 
   // Candidate type from profile (only for student)
-  const candidateType = role === "student" ? (profile?.candidate_type as "studying" | "graduated" | "self_taught" | null) : null;
+  const candidateType =
+    role === "student"
+      ? (profile?.candidate_type as
+          | "studying"
+          | "graduated"
+          | "self_taught"
+          | null)
+      : null;
 
   // Fetch unread notification count with error handling
   useEffect(() => {
@@ -56,7 +67,16 @@ const DashboardLayout = ({ role }: Props) => {
     try {
       channel = supabase
         .channel("notifications-count")
-        .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => fetchUnreadCount())
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => fetchUnreadCount()
+        )
         .subscribe();
     } catch (err) {
       console.warn("Failed to subscribe to notifications changes:", err);
@@ -74,50 +94,50 @@ const DashboardLayout = ({ role }: Props) => {
   // Fetch pending count for super_admin (with error handling)
   useEffect(() => {
     if (role !== "super_admin") return;
+
     const fetchPendingCount = async () => {
-      try {
-        const { count: pendingInstitutions, error: instError } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending")
-          .in("role", ["university_admin", "company_admin"]);
-        if (instError) {
-          console.warn("Error fetching pending institutions:", instError);
-        }
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("is_verified", false)
+        .eq("is_completed", true);
 
-        const { count: pendingStudents, error: studentError } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true })
-          .eq("role", "student")
-          .or(`is_completed.eq.false,status.eq.pending`);
-        if (studentError) {
-          console.warn("Error fetching pending students:", studentError);
-        }
-
-        setPendingCount((pendingInstitutions || 0) + (pendingStudents || 0));
-      } catch (err) {
-        console.error("Failed to fetch pending count:", err);
-        setPendingCount(0);
+      if (error) {
+        console.error("Error fetching pending accounts:", error);
+        return;
       }
+
+      setPendingCount(count || 0);
     };
+
+    // Initial fetch
     fetchPendingCount();
 
-    let channel: any;
-    try {
-      channel = supabase
-        .channel("pending-count")
-        .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => fetchPendingCount())
-        .subscribe();
-    } catch (err) {
-      console.warn("Failed to subscribe to profiles changes:", err);
-    }
+    // Realtime subscription
+    const channel = supabase
+      .channel("profiles-pending-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profiles",
+        },
+        async () => {
+          await fetchPendingCount();
+        }
+      )
+      .subscribe();
+
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, [role]);
-
-  const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
-  const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+  const initials =
+    (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
+  const fullName = `${profile?.first_name || ""} ${
+    profile?.last_name || ""
+  }`.trim();
   const email = profile?.email || "";
 
   return (
@@ -147,16 +167,26 @@ const DashboardLayout = ({ role }: Props) => {
               className="hidden md:flex rounded-md p-1 text-foreground/60 hover:text-foreground"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <ChevronLeft className={`h-5 w-5 transition-transform duration-200 ${sidebarCollapsed ? "rotate-180" : ""}`} />
+              <ChevronLeft
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  sidebarCollapsed ? "rotate-180" : ""
+                }`}
+              />
             </button>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
-              <p className="text-xs text-foreground/40 truncate max-w-[150px]">{email}</p>
+              <p className="text-sm font-medium truncate max-w-[150px]">
+                {fullName || "User"}
+              </p>
+              <p className="text-xs text-foreground/40 truncate max-w-[150px]">
+                {email}
+              </p>
             </div>
             <div className="text-right block sm:hidden">
-              <p className="text-sm font-medium">{fullName?.split(' ')[0] || "User"}</p>
+              <p className="text-sm font-medium">
+                {fullName?.split(" ")[0] || "User"}
+              </p>
             </div>
             {profile?.avatar_url ? (
               <img

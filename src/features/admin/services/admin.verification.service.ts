@@ -1,28 +1,15 @@
 // features/admin/services/admin.verification.service.ts
 import { supabase } from "@/lib/supabaseClient";
-import { Profile } from "@/types/verification.types";
+import { Profile } from "@/types/profile.types";
 
 export const adminVerificationService = {
   // ─────────────────────────────────────────────
   // Fetch pending profiles
   // ─────────────────────────────────────────────
-  async getPendingInstitutions(): Promise<Profile[]> {
+  async getPendingAccounts(): Promise<Profile[]> {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("is_completed", true)
-      .eq("is_verified", false)
-      .in("role", ["university_admin", "company_admin"])
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return data as Profile[];
-  },
-
-  async getPendingStudents(): Promise<Profile[]> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "student")
       .eq("is_completed", true)
       .eq("is_verified", false)
       .order("created_at", { ascending: false });
@@ -30,13 +17,6 @@ export const adminVerificationService = {
     return data as Profile[];
   },
 
-  async getAllPending(): Promise<Profile[]> {
-    const [institutions, students] = await Promise.all([
-      this.getPendingInstitutions(),
-      this.getPendingStudents(),
-    ]);
-    return [...institutions, ...students];
-  },
 
   // ─────────────────────────────────────────────
   // Approval / Rejection

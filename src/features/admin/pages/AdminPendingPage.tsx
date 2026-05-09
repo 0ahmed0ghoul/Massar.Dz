@@ -1,84 +1,96 @@
 // features/admin/pages/AdminPendingPage.tsx
 import { useEffect, useState } from "react";
-import { RefreshCw, School, Building2, Shield, Clock, GraduationCap } from "lucide-react";
+import {
+  RefreshCw,
+  School,
+  Building2,
+  Shield,
+  Clock,
+  GraduationCap,
+} from "lucide-react";
 import { usePendingVerification } from "../hooks/usePendingVerification";
 import { PendingList } from "../components/PendingList";
 import { PendingFilter } from "../../../constants/admin.constants";
-import { Profile } from "../../../types/verification.types";
-
+import { Profile } from "@/types/profile.types";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 export const AdminPendingPage = () => {
   const {
-    fetchPendingInstitutions,
-    fetchPendingStudents,
-    approveInstitution,
-    approveStudent,
+    fetchPendingAccounts,
+    approveProfile,
     rejectProfile,
     actionLoading,
     loading,
   } = usePendingVerification();
-
-  const [institutionProfiles, setInstitutionProfiles] = useState<Profile[]>([]);
-  const [studentProfiles, setStudentProfiles] = useState<Profile[]>([]);
+  const { user } = useAuth();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [filter, setFilter] = useState<PendingFilter>("all");
 
   const loadPending = async () => {
-    const [institutions, students] = await Promise.all([
-      fetchPendingInstitutions(),
-      fetchPendingStudents(),
-    ]);
-    if (institutions) setInstitutionProfiles(institutions);
-    if (students) setStudentProfiles(students);
+    const pendingProfiles = await fetchPendingAccounts();
+
+    if (pendingProfiles) {
+      setProfiles(pendingProfiles);
+    }
   };
 
   useEffect(() => {
     loadPending();
   }, []);
 
-  const handleApproveInstitution = async (profile: Profile) => {
-    const ok = await approveInstitution(profile);
+  const handleApprove = async (profile: Profile) => {
+    const ok = await approveProfile(profile, {
+      sendInvitation: profile.role === "student",
+      adminId: user?.id,
+    });
+
     if (ok) loadPending();
   };
 
-  const handleRejectInstitution = async (profile: Profile) => {
+  const handleReject = async (profile: Profile) => {
     const ok = await rejectProfile(profile);
-    if (ok) loadPending();
-  };
 
-  const handleApproveStudent = async (profile: Profile) => {
-    const ok = await approveStudent(profile, false); // No invitation from list
-    if (ok) loadPending();
-  };
-
-  const handleRejectStudent = async (profile: Profile) => {
-    const ok = await rejectProfile(profile);
     if (ok) loadPending();
   };
 
   const getDisplayProfiles = () => {
     switch (filter) {
       case "students":
-        return studentProfiles;
+        return profiles.filter((p) => p.role === "student");
+
       case "university_admin":
-        return institutionProfiles.filter(p => p.role === "university_admin");
+        return profiles.filter((p) => p.role === "university_admin");
+
       case "company_admin":
-        return institutionProfiles.filter(p => p.role === "company_admin");
+        return profiles.filter((p) => p.role === "company_admin");
+
       default:
-        return [...institutionProfiles, ...studentProfiles];
+        return profiles;
     }
   };
 
   const counts = {
-    all: institutionProfiles.length + studentProfiles.length,
-    university_admin: institutionProfiles.filter(p => p.role === "university_admin").length,
-    company_admin: institutionProfiles.filter(p => p.role === "company_admin").length,
-    students: studentProfiles.length,
+    all: profiles.length,
+
+    university_admin: profiles.filter((p) => p.role === "university_admin")
+      .length,
+
+    company_admin: profiles.filter((p) => p.role === "company_admin").length,
+
+    students: profiles.filter((p) => p.role === "student").length,
   };
 
   const displayedProfiles = getDisplayProfiles();
 
   return (
     <div className="relative min-h-screen bg-background">
-      <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
 
@@ -90,7 +102,9 @@ export const AdminPendingPage = () => {
                 <Clock className="h-6 w-6 text-amber-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Pending Verifications</h1>
+                <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
+                  Pending Verifications
+                </h1>
                 <p className="mt-1 text-sm text-foreground/40">
                   Review and approve institutions, companies & student profiles
                 </p>
@@ -102,13 +116,24 @@ export const AdminPendingPage = () => {
             disabled={loading}
             className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-foreground/60 backdrop-blur-sm transition-all hover:border-[#639922]/30 hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 transition-transform duration-300 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
+            <RefreshCw
+              className={`h-4 w-4 transition-transform duration-300 ${
+                loading ? "animate-spin" : "group-hover:rotate-180"
+              }`}
+            />
             Refresh
           </button>
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-1 backdrop-blur-sm">
-          {(["all", "university_admin", "company_admin", "students"] as PendingFilter[]).map((f) => (
+          {(
+            [
+              "all",
+              "university_admin",
+              "company_admin",
+              "students",
+            ] as PendingFilter[]
+          ).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -118,10 +143,26 @@ export const AdminPendingPage = () => {
                   : "text-foreground/40 hover:text-foreground hover:bg-white/5"
               }`}
             >
-              {f === "all" && <><Shield className="h-3.5 w-3.5" /> All</>}
-              {f === "university_admin" && <><School className="h-3.5 w-3.5" /> Universities</>}
-              {f === "company_admin" && <><Building2 className="h-3.5 w-3.5" /> Companies</>}
-              {f === "students" && <><GraduationCap className="h-3.5 w-3.5" /> Students</>}
+              {f === "all" && (
+                <>
+                  <Shield className="h-3.5 w-3.5" /> All
+                </>
+              )}
+              {f === "university_admin" && (
+                <>
+                  <School className="h-3.5 w-3.5" /> Universities
+                </>
+              )}
+              {f === "company_admin" && (
+                <>
+                  <Building2 className="h-3.5 w-3.5" /> Companies
+                </>
+              )}
+              {f === "students" && (
+                <>
+                  <GraduationCap className="h-3.5 w-3.5" /> Students
+                </>
+              )}
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-all ${
                   counts[f] > 0
@@ -141,9 +182,13 @@ export const AdminPendingPage = () => {
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-[#639922]" />
                 <h2 className="text-lg font-semibold text-foreground">
-                  {filter === "all" ? "All Pending" :
-                   filter === "students" ? "Students Pending Verification" :
-                   filter === "university_admin" ? "Universities Pending Approval" : "Companies Pending Approval"}
+                  {filter === "all"
+                    ? "All Pending"
+                    : filter === "students"
+                    ? "Students Pending Verification"
+                    : filter === "university_admin"
+                    ? "Universities Pending Approval"
+                    : "Companies Pending Approval"}
                 </h2>
                 <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-medium text-amber-400">
                   {displayedProfiles.length} pending
@@ -154,12 +199,8 @@ export const AdminPendingPage = () => {
             <PendingList
               profiles={displayedProfiles}
               actionLoading={actionLoading}
-              onApprove={(profile) =>
-                filter === "students" ? handleApproveStudent(profile) : handleApproveInstitution(profile)
-              }
-              onReject={(profile) =>
-                filter === "students" ? handleRejectStudent(profile) : handleRejectInstitution(profile)
-              }
+              onApprove={handleApprove}
+              onReject={handleReject}
               loading={loading}
             />
           </div>

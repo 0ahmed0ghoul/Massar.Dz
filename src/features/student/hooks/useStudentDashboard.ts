@@ -1,7 +1,8 @@
-// features/student/hooks/useStudentDashboard.ts (updated)
+// features/student/hooks/useStudentDashboard.ts
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { studentService } from "../services/student.service";
+import { applicationService } from "@/features/company/service/application.service"; // ✅ add this import
 import { DashboardState } from "@/types/student";
 
 export const useStudentDashboard = () => {
@@ -25,8 +26,9 @@ export const useStudentDashboard = () => {
     setLoading(true);
     setError(null);
     try {
+      // ✅ Use applicationService.getStudentApplications (returns job with company object)
       const [applications, jobs, activities, interviews, profile] = await Promise.all([
-        studentService.getApplications(user.id),
+        applicationService.getStudentApplications(user.id),
         studentService.getJobs(),
         studentService.getActivities(user.id),
         studentService.getInterviews(user.id),
@@ -41,7 +43,7 @@ export const useStudentDashboard = () => {
 
       setData({
         stats,
-        applications, // now each has `job` with title, company
+        applications, // now each app has `job.title` and `job.company.company_name`
         jobs,
         interviews,
         activities,
