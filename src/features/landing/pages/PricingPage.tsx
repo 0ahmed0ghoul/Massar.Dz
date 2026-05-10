@@ -1,4 +1,4 @@
-// pages/PricingPage.tsx (updated)
+// pages/PricingPage.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { COMPANY_PLANS, getStudentPromotion, STUDENT_PLANS } from "@/constants/pricing.constants";
 import { Plan } from "@/types/payment";
+
 type TabType = "student" | "company" | "all";
 
 export default function PricingPage() {
@@ -78,7 +79,6 @@ export default function PricingPage() {
       });
       return;
     }
-    // If role matches or no role restriction (all plans), proceed
     setSelectedPlan(plan);
   };
 
@@ -109,9 +109,22 @@ export default function PricingPage() {
   else if (activeTab === "company") displayedPlans = COMPANY_PLANS;
   else displayedPlans = [...STUDENT_PLANS, ...COMPANY_PLANS];
 
+  // Helper to check if a plan is currently active for the user
+  const isPlanActive = (planId: string): boolean => {
+    if (!profile) return false;
+    // If user has current_plan_id field (set after payment approval)
+    if ((profile as any).current_plan_id === planId) return true;
+    // For companies, if they are premium and plan is company plan, we consider active (but better check exact id)
+    if (profile.role === "company_admin" && profile.is_premium && planId.startsWith("company_")) {
+      // If no specific current_plan_id, assume the yearly growth plan is active (example fallback)
+      // In real scenario, store current_plan_id in profile after approval.
+      return (profile as any).current_plan_id === planId;
+    }
+    return false;
+  };
+
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
-      {/* Background grid & glow (unchanged) */}
       <div className="pointer-events-none absolute inset-0 bg-grid-pattern" />
       <div className="pointer-events-none absolute top-[-120px] left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#639922]/10 blur-3xl rounded-full" />
 
@@ -126,7 +139,7 @@ export default function PricingPage() {
             Back to Home
           </Button>
         </div>
-        {/* Header (unchanged) */}
+
         <div className="text-center mb-12">
           <div className="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-[#639922]/10 border border-[#639922]/20">
             <Zap className="w-6 h-6 text-[#639922]" />
@@ -137,7 +150,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Tab selector (unchanged) */}
+        {/* Tab selector */}
         <div className="flex justify-center mb-10">
           <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
             {(["student", "company", "all"] as TabType[]).map((tab) => (
@@ -160,7 +173,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Promotion banner (unchanged) */}
+        {/* Promotion banner for students */}
         {profile?.role === "student" &&
           promotion.eligible &&
           promotion.message &&
@@ -177,7 +190,7 @@ export default function PricingPage() {
             </div>
           )}
 
-        {/* Pricing cards grid */}
+        {/* Pricing grid */}
         <div className="grid md:grid-cols-3 gap-6">
           {displayedPlans.map((plan) => {
             let finalPrice = plan.price;
@@ -204,6 +217,8 @@ export default function PricingPage() {
                 discountLabel = `50% off applied`;
               }
             }
+
+            const isActive = isPlanActive(plan.id);
 
             return (
               <Card
@@ -253,13 +268,19 @@ export default function PricingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button
-                    onClick={() => handleChoosePlan(plan)}
-                    className="w-full bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-black hover:shadow-lg transition-all group"
-                  >
-                    {finalPrice === 0 ? "Claim for Free" : "Choose Plan"}
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  {isActive ? (
+                    <Button disabled className="w-full bg-white/10 text-white/50 cursor-not-allowed">
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleChoosePlan(plan)}
+                      className="w-full bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-black hover:shadow-lg transition-all group"
+                    >
+                      {finalPrice === 0 ? "Claim for Free" : "Choose Plan"}
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -296,7 +317,7 @@ export default function PricingPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Dialog (unchanged) */}
+      {/* Payment Dialog */}
       <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
         <DialogContent className="max-w-md border-white/10 bg-background text-foreground">
           <DialogHeader>

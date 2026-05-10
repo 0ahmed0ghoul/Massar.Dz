@@ -15,6 +15,7 @@ import {
   Link as LinkIcon,
   MapPin as MapPinIcon,
   FileText as NoteIcon,
+  Brain,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -34,7 +35,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useApplicationDetail } from "../hooks/useApplicationDetail";
-import { AppStatus, STATUS_CONFIG, STATUS_OPTIONS } from "@/constants/application.constant";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import {
+  AppStatus,
+  STATUS_CONFIG,
+  STATUS_OPTIONS,
+} from "@/constants/application.constant";
+import { ResumeParser } from "../components/ResumeParser";
 
 // Helper to normalise skills into an array
 const getSkillsArray = (skills: any): string[] => {
@@ -45,7 +52,10 @@ const getSkillsArray = (skills: any): string[] => {
       const parsed = JSON.parse(skills);
       if (Array.isArray(parsed)) return parsed;
     } catch {
-      return skills.split(",").map((s) => s.trim()).filter(Boolean);
+      return skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
   }
   return [];
@@ -53,7 +63,7 @@ const getSkillsArray = (skills: any): string[] => {
 
 // Interview form data type
 interface InterviewFormData {
-  interview_date: string; // datetime-local value
+  interview_date: string;
   location: string;
   meeting_link: string;
   notes: string;
@@ -62,10 +72,14 @@ interface InterviewFormData {
 export default function ApplicationDetailPage() {
   const navigate = useNavigate();
   const { application, loading, updating, updateStatus, scheduleInterview } =
-    useApplicationDetail(); // assume scheduleInterview is added to hook
+    useApplicationDetail();
+  const { profile } = useAuth();
 
   // Document preview state
-  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
   // Interview modal state
   const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
   const [interviewForm, setInterviewForm] = useState<InterviewFormData>({
@@ -76,17 +90,16 @@ export default function ApplicationDetailPage() {
   });
   const [submittingInterview, setSubmittingInterview] = useState(false);
 
-  const openPreview = (url: string, title: string) => setPreviewDoc({ url, title });
+  const openPreview = (url: string, title: string) =>
+    setPreviewDoc({ url, title });
   const closePreview = () => setPreviewDoc(null);
 
   // Handle status change from dropdown
   const handleStatusChange = async (newStatus: string) => {
-    // If "interview" is selected, open modal instead of immediate update
     if (newStatus === "interview") {
       setIsInterviewModalOpen(true);
       return;
     }
-    // Otherwise, proceed with normal status update
     await updateStatus(application.id, newStatus);
   };
 
@@ -103,13 +116,14 @@ export default function ApplicationDetailPage() {
 
     setSubmittingInterview(true);
     try {
-      // Call API to schedule interview and update application status to "interview_scheduled"
       await scheduleInterview(application.id, interviewForm);
-      // Close modal and reset form
       setIsInterviewModalOpen(false);
-      setInterviewForm({ interview_date: "", location: "", meeting_link: "", notes: "" });
-      // Optionally refresh application data (the hook could refetch)
-      // For now, we assume the hook updates local state or we can call updateStatus with a new status
+      setInterviewForm({
+        interview_date: "",
+        location: "",
+        meeting_link: "",
+        notes: "",
+      });
       await updateStatus(application.id, "interview_scheduled");
     } catch (error) {
       console.error("Failed to schedule interview:", error);
@@ -155,7 +169,8 @@ export default function ApplicationDetailPage() {
   };
 
   const isPdf = (url: string) => url.toLowerCase().includes(".pdf");
-  const isImage = (url: string) => url.match(/\.(jpeg|jpg|png|gif|webp)$/i) || url.includes("image");
+  const isImage = (url: string) =>
+    url.match(/\.(jpeg|jpg|png|gif|webp)$/i) || url.includes("image");
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
@@ -165,19 +180,34 @@ export default function ApplicationDetailPage() {
           <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div>
-                <h2 className="text-lg font-semibold text-white">{previewDoc.title}</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  {previewDoc.title}
+                </h2>
                 <p className="text-sm text-white/40">Document Preview</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={closePreview} className="text-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closePreview}
+                className="text-white hover:bg-white/10"
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
             <div className="flex-1 overflow-hidden bg-[#0b0b0b]">
               {isPdf(previewDoc.url) || !isImage(previewDoc.url) ? (
-                <iframe src={previewDoc.url} title={previewDoc.title} className="h-full w-full" />
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.title}
+                  className="h-full w-full"
+                />
               ) : (
                 <div className="flex h-full items-center justify-center overflow-auto p-6">
-                  <img src={previewDoc.url} alt={previewDoc.title} className="max-h-full rounded-xl object-contain shadow-2xl" />
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.title}
+                    className="max-h-full rounded-xl object-contain shadow-2xl"
+                  />
                 </div>
               )}
             </div>
@@ -185,14 +215,15 @@ export default function ApplicationDetailPage() {
         </div>
       )}
 
-      {/* Interview Scheduling Modal - Replaces old interview table & policies */}
+      {/* Interview Scheduling Modal */}
       <Dialog open={isInterviewModalOpen} onOpenChange={setIsInterviewModalOpen}>
         <DialogContent className="sm:max-w-lg bg-[#0f1117] border-white/10 text-foreground">
           <DialogHeader>
             <DialogTitle>Schedule Interview</DialogTitle>
             <DialogDescription className="text-foreground/60">
-              Set up the interview details for {candidate.first_name} {candidate.last_name}.
-              This will replace any previous interview records.
+              Set up the interview details for {candidate.first_name}{" "}
+              {candidate.last_name}. This will replace any previous interview
+              records.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -204,32 +235,43 @@ export default function ApplicationDetailPage() {
                 id="interview_date"
                 type="datetime-local"
                 value={interviewForm.interview_date}
-                onChange={(e) => setInterviewForm({ ...interviewForm, interview_date: e.target.value })}
+                onChange={(e) =>
+                  setInterviewForm({
+                    ...interviewForm,
+                    interview_date: e.target.value,
+                  })
+                }
                 className="bg-white/5 border-white/10"
                 required
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="location" className="flex items-center gap-2">
-                <MapPinIcon className="h-4 w-4 text-[#639922]" /> Location (optional if online)
+                <MapPinIcon className="h-4 w-4 text-[#639922]" /> Location
+                (optional if online)
               </Label>
               <Input
                 id="location"
                 placeholder="Office address, conference room, etc."
                 value={interviewForm.location}
-                onChange={(e) => setInterviewForm({ ...interviewForm, location: e.target.value })}
+                onChange={(e) =>
+                  setInterviewForm({ ...interviewForm, location: e.target.value })
+                }
                 className="bg-white/5 border-white/10"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="meeting_link" className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4 text-[#639922]" /> Meeting Link (optional)
+                <LinkIcon className="h-4 w-4 text-[#639922]" /> Meeting Link
+                (optional)
               </Label>
               <Input
                 id="meeting_link"
                 placeholder="https://meet.google.com/..."
                 value={interviewForm.meeting_link}
-                onChange={(e) => setInterviewForm({ ...interviewForm, meeting_link: e.target.value })}
+                onChange={(e) =>
+                  setInterviewForm({ ...interviewForm, meeting_link: e.target.value })
+                }
                 className="bg-white/5 border-white/10"
               />
             </div>
@@ -241,24 +283,34 @@ export default function ApplicationDetailPage() {
                 id="notes"
                 placeholder="Any instructions or preparation details for the candidate..."
                 value={interviewForm.notes}
-                onChange={(e) => setInterviewForm({ ...interviewForm, notes: e.target.value })}
+                onChange={(e) =>
+                  setInterviewForm({ ...interviewForm, notes: e.target.value })
+                }
                 className="bg-white/5 border-white/10"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInterviewModalOpen(false)} className="border-white/10">
+            <Button
+              variant="outline"
+              onClick={() => setIsInterviewModalOpen(false)}
+              className="border-white/10"
+            >
               Cancel
             </Button>
-            <Button onClick={handleScheduleInterview} disabled={submittingInterview} className="bg-[#639922] text-black hover:bg-[#4f7a1a]">
+            <Button
+              onClick={handleScheduleInterview}
+              disabled={submittingInterview}
+              className="bg-[#639922] text-black hover:bg-[#4f7a1a]"
+            >
               {submittingInterview ? "Scheduling..." : "Schedule & Send Invite"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Rest of the page unchanged except status dropdown handling */}
+      {/* Back button */}
       <button
         onClick={() => navigate("/company/dashboard/applications")}
         className="group mb-6 flex items-center gap-2 text-foreground/60 transition hover:text-foreground"
@@ -272,12 +324,14 @@ export default function ApplicationDetailPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Application Details</h1>
-            <p className="text-sm text-foreground/40">Review candidate information and application</p>
+            <p className="text-sm text-foreground/40">
+              Review candidate information and application
+            </p>
           </div>
           {getStatusBadge()}
         </div>
 
-        {/* Job Summary Card - unchanged */}
+        {/* Job Summary Card */}
         <Card className="border-white/10 bg-white/[0.03]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -288,17 +342,24 @@ export default function ApplicationDetailPage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-lg font-semibold text-foreground">{job.title}</p>
-              <p className="text-sm text-foreground/60">{job.company} • {job.location}</p>
+              <p className="text-sm text-foreground/60">
+                {job.company} • {job.location}
+              </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm text-foreground/60">
-              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{job.location}</span>
-              <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Applied {new Date(created_at).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" /> {job.location}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" /> Applied{" "}
+                {new Date(created_at).toLocaleDateString()}
+              </span>
             </div>
             <p className="text-sm text-foreground/80">{job.description}</p>
           </CardContent>
         </Card>
 
-        {/* Candidate Profile Card - unchanged except documents section remains with preview */}
+        {/* Candidate Profile Card */}
         <Card className="border-white/10 bg-white/[0.03]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -307,40 +368,57 @@ export default function ApplicationDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Profile info - unchanged */}
             <div className="flex items-start gap-4">
               {candidate.avatar_url ? (
-                <img src={candidate.avatar_url} alt="avatar" className="h-16 w-16 rounded-full border border-white/20 object-cover" />
+                <img
+                  src={candidate.avatar_url}
+                  alt="avatar"
+                  className="h-16 w-16 rounded-full border border-white/20 object-cover"
+                />
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#639922]/20">
                   <User className="h-8 w-8 text-[#639922]" />
                 </div>
               )}
               <div className="flex-1">
-                <p className="text-lg font-semibold text-foreground">{candidate.first_name} {candidate.last_name}</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {candidate.first_name} {candidate.last_name}
+                </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/60">
-                  <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{candidate.email}</span>
+                  <span className="flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5" /> {candidate.email}
+                  </span>
                 </div>
                 {candidate.degree_level && (
-                  <p className="mt-1 text-sm text-foreground/60">{candidate.degree_level} • {candidate.speciality || "—"}</p>
+                  <p className="mt-1 text-sm text-foreground/60">
+                    {candidate.degree_level} • {candidate.speciality || "—"}
+                  </p>
                 )}
                 {candidate.university_name && (
-                  <p className="text-sm text-foreground/40">{candidate.university_name} • Graduated: {candidate.graduation_year || "N/A"}</p>
+                  <p className="text-sm text-foreground/40">
+                    {candidate.university_name} • Graduated:{" "}
+                    {candidate.graduation_year || "N/A"}
+                  </p>
                 )}
               </div>
             </div>
-            {/* Skills */}
+
             {skillsArray.length > 0 && (
               <div>
                 <p className="mb-2 text-sm font-medium text-foreground/70">Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {skillsArray.map((skill, idx) => (
-                    <span key={idx} className="rounded-full bg-[#639922]/10 px-2.5 py-0.5 text-xs text-[#639922]">{skill}</span>
+                    <span
+                      key={idx}
+                      className="rounded-full bg-[#639922]/10 px-2.5 py-0.5 text-xs text-[#639922]"
+                    >
+                      {skill}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
-            {/* Documents */}
+
             <div>
               <p className="mb-3 text-sm font-medium text-foreground/70">Documents</p>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -348,10 +426,20 @@ export default function ApplicationDetailPage() {
                   <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:bg-white/[0.04]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-[#639922]/10 p-2"><FileText className="h-5 w-5 text-[#639922]" /></div>
-                        <div><p className="text-sm font-medium text-foreground">Resume / CV</p><p className="text-xs text-foreground/40">Preview document</p></div>
+                        <div className="rounded-lg bg-[#639922]/10 p-2">
+                          <FileText className="h-5 w-5 text-[#639922]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Resume / CV</p>
+                          <p className="text-xs text-foreground/40">Preview document</p>
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline" className="border-white/10 bg-transparent hover:bg-white/5" onClick={() => openPreview(candidate.resume_url, "Resume / CV")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-white/10 bg-transparent hover:bg-white/5"
+                        onClick={() => openPreview(candidate.resume_url, "Resume / CV")}
+                      >
                         <Eye className="mr-2 h-4 w-4" /> View
                       </Button>
                     </div>
@@ -361,10 +449,22 @@ export default function ApplicationDetailPage() {
                   <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:bg-white/[0.04]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-[#639922]/10 p-2"><FileText className="h-5 w-5 text-[#639922]" /></div>
-                        <div><p className="text-sm font-medium text-foreground">Student ID Card</p><p className="text-xs text-foreground/40">Preview document</p></div>
+                        <div className="rounded-lg bg-[#639922]/10 p-2">
+                          <FileText className="h-5 w-5 text-[#639922]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Student ID Card</p>
+                          <p className="text-xs text-foreground/40">Preview document</p>
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline" className="border-white/10 bg-transparent hover:bg-white/5" onClick={() => openPreview(candidate.student_card_url, "Student ID Card")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-white/10 bg-transparent hover:bg-white/5"
+                        onClick={() =>
+                          openPreview(candidate.student_card_url, "Student ID Card")
+                        }
+                      >
                         <Eye className="mr-2 h-4 w-4" /> View
                       </Button>
                     </div>
@@ -372,17 +472,34 @@ export default function ApplicationDetailPage() {
                 )}
               </div>
             </div>
-            {/* Cover Letter */}
+
             {cover_letter && (
               <div>
                 <p className="mb-2 text-sm font-medium text-foreground/70">Cover Letter</p>
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                  <p className="whitespace-pre-wrap text-sm text-foreground/80">{cover_letter}</p>
+                  <p className="whitespace-pre-wrap text-sm text-foreground/80">
+                    {cover_letter}
+                  </p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* AI Resume Parser (Premium) */}
+        {profile?.is_premium && candidate.resume_url && (
+          <Card className="border-white/10 bg-white/[0.03]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-[#639922]" />
+                AI Resume Parser (Premium)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResumeParser resumeUrl={candidate.resume_url} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions - Status Dropdown */}
         <div className="flex justify-end pt-4">
@@ -398,7 +515,11 @@ export default function ApplicationDetailPage() {
               `}
             >
               {STATUS_OPTIONS.map((option) => (
-                <option key={option} value={option} className="bg-[#0f1117] text-white capitalize">
+                <option
+                  key={option}
+                  value={option}
+                  className="bg-[#0f1117] text-white capitalize"
+                >
                   {STATUS_CONFIG[option].label}
                 </option>
               ))}

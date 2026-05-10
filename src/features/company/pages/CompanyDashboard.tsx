@@ -16,10 +16,43 @@ import {
   FileText,
   Calendar,
   Loader2,
+  Mail,
+  BarChart,
+  CheckCircle2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
 import { useCompanyApplicationsSummary } from "@/features/company/hooks/useCompanyApplicationsSummary";
 import { formatDistanceToNow } from "date-fns";
+function FeatureCard({ icon: Icon, title, description, isPremium, onUpgrade }: any) {
+  return (
+    <div className="group rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-[#639922]/30 hover:bg-white/[0.04]">
+      <div className="flex items-start gap-3">
+        <div className="rounded-lg bg-[#639922]/10 p-2">
+          <Icon className="h-5 w-5 text-[#639922]" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <p className="mt-1 text-xs text-foreground/50">{description}</p>
+          {!isPremium && (
+            <button
+              onClick={onUpgrade}
+              className="mt-3 rounded-md border border-[#639922]/30 bg-[#639922]/10 px-3 py-1 text-xs font-medium text-[#639922] transition hover:bg-[#639922]/20"
+            >
+              Upgrade
+            </button>
+          )}
+          {isPremium && (
+            <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-white/5 px-3 py-1 text-xs text-white/50">
+              <CheckCircle2 className="h-3 w-3 text-[#639922]" /> Active
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CompanyDashboard() {
   const { jobs, loading: jobsLoading } = useCompanyJobs();
@@ -28,10 +61,10 @@ export default function CompanyDashboard() {
     totalCount,
     loading: appsLoading,
   } = useCompanyApplicationsSummary(5);
-
+  const { profile } = useAuth();
   const activeJobs = jobs.filter((j) => j.status === "active").length;
   const totalJobs = jobs.length;
-
+const navigate = useNavigate();
   const stats = [
     {
       icon: Briefcase,
@@ -142,15 +175,57 @@ export default function CompanyDashboard() {
           ))}
         </div>
 
-        {/* Smart Features Card (unchanged) */}
+        {/* Smart Features – Premium */}
         <div className="mb-8 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-5 backdrop-blur-md lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#639922]" />
             <h2 className="text-lg font-semibold text-foreground">
               Smart Features
             </h2>
+            {!profile?.is_premium && (
+              <span className="ml-auto text-[10px] font-medium text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">Coming Soon</div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* AI Resume Parser */}
+            <FeatureCard
+              icon={FileText}
+              title="AI Resume Parser"
+              description="Automatically extract skills, experience, and education from uploaded CVs."
+              isPremium={profile?.is_premium}
+              onUpgrade={() => navigate("/pricing")}
+            />
+
+            {/* Smart Ranking */}
+            <FeatureCard
+              icon={TrendingUp}
+              title="Smart Ranking"
+              description="Rank applicants by AI‑calculated match score based on job requirements."
+              isPremium={profile?.is_premium}
+              onUpgrade={() => navigate("/pricing")}
+            />
+
+            {/* Bulk Messaging */}
+            <FeatureCard
+              icon={Mail}
+              title="Bulk Messaging"
+              description="Send interview invites or updates to multiple candidates at once."
+              isPremium={profile?.is_premium}
+              onUpgrade={() => navigate("/pricing")}
+            />
+
+            {/* Advanced Analytics */}
+            <FeatureCard
+              icon={BarChart}
+              title="Advanced Analytics"
+              description="Get insights on funnel metrics, time‑to‑hire, and source effectiveness."
+              isPremium={profile?.is_premium}
+              onUpgrade={() => navigate("/pricing")}
+            />
+          </div>
         </div>
 
         {/* Recent Applications */}

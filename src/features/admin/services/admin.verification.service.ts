@@ -21,22 +21,61 @@ export const adminVerificationService = {
   // ─────────────────────────────────────────────
   // Approval / Rejection
   // ─────────────────────────────────────────────
-  async approveInstitution(id: string): Promise<void> {
+  async approveProfile(profile: Profile): Promise<void> {
+    // Approve profile
     const { error } = await supabase
       .from("profiles")
-      .update({ is_verified: true, status: "active" })
-      .eq("id", id);
+      .update({
+        is_verified: true,
+        status: "active",
+      })
+      .eq("id", profile.id);
+  
     if (error) throw new Error(error.message);
+  
+    // Automatically create university connection invitation
+    // only for students that are currently studying
+    if (
+      profile.role === "student" &&
+      profile.candidate_role === "studying" &&
+      profile.university_name
+    ) {
+      const universityId = await this.getUniversityIdByName(
+        profile.university_name
+      );
+  
+      if (!universityId) return;
+  
+      // Prevent duplicates
+      const { data: existingConnection } = await supabase
+        .from("university_connections")
+        .select("id")
+        .eq("student_id", profile.id)
+        .eq("university_id", universityId)
+        .maybeSingle();
+  
+      if (!existingConnection) {
+        const { error: connectionError } = await supabase
+          .from("university_connections")
+          .insert({
+            student_id: profile.id,
+            university_id: universityId,
+            status: "pending",
+          });
+  
+        if (connectionError) {
+          throw new Error(connectionError.message);
+        }
+  
+        await supabase
+          .from("profiles")
+          .update({
+            university_connection_status: "pending",
+          })
+          .eq("id", profile.id);
+      }
+    }
   },
-
-  async approveStudent(id: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_verified: true, status: "active" })
-      .eq("id", id);
-    if (error) throw new Error(error.message);
-  },
-
   async rejectProfile(id: string): Promise<void> {
     const { error } = await supabase.from("profiles").delete().eq("id", id);
     if (error) throw new Error(error.message);

@@ -1,4 +1,3 @@
-// features/admin/pages/AdminPendingDetailPage.tsx
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -25,39 +24,27 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+
 import { usePendingVerification } from "../hooks/usePendingVerification";
 
 export const AdminPendingDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
-    approveInstitution,
-    approveStudent,
+    approveProfile,
     rejectProfile,
     getConnectionStatus,
     actionLoading,
   } = usePendingVerification();
 
   const profile = location.state?.profile;
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>("");
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
 
   if (!profile) {
     return (
@@ -104,31 +91,23 @@ export const AdminPendingDetailPage = () => {
     }
   }, [isStudent, profile, getConnectionStatus]);
 
-  const handleApproveClick = () => {
-    if (isStudent && profile.university_name) {
-      setShowApprovalDialog(true);
-    } else {
-      confirmApprove(false);
-    }
-  };
-
-  const confirmApprove = async (sendInvitation: boolean) => {
-    setShowApprovalDialog(false);
+  const handleApproveClick = async () => {
     setLoading(true);
+  
     try {
-      let ok = false;
-      if (isStudent) {
-        ok = await approveStudent(profile, sendInvitation, user?.id);
-      } else {
-        ok = await approveInstitution(profile);
+      const ok = await approveProfile(profile);
+  
+      if (ok) {
+        navigate("/dashboard/admin/pending");
       }
-      if (ok) navigate("/dashboard/admin/pending");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const handleReject = async () => {
     setLoading(true);
@@ -620,33 +599,6 @@ export const AdminPendingDetailPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Approval Dialog */}
-      <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Approve Student Profile</DialogTitle>
-            <DialogDescription>
-              Do you want to send a connection invitation to the student's
-              university ({profile.university_name})? This will allow the
-              student to request certificates and communicate with the
-              university.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:justify-between">
-            <Button variant="outline" onClick={() => confirmApprove(false)}>
-              Approve Only
-            </Button>
-            <Button
-              onClick={() => confirmApprove(true)}
-              className="bg-[#639922] text-black hover:bg-[#4f7a1a]"
-            >
-              Approve & Send Invitation
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Modal for document preview */}
       {previewUrl && (
         <div

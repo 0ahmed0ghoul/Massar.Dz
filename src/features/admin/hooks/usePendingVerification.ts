@@ -58,18 +58,10 @@ export function usePendingVerification() {
   // Approval actions
   // ─────────────────────────────────────────────
   const approveProfile = useCallback(
-    async (
-      profile: Profile,
-      options?: {
-        sendInvitation?: boolean;
-        adminId?: string;
-      }
-    ): Promise<boolean> => {
+    async (profile: Profile): Promise<boolean> => {
       const result = await withAction(profile.id, async () => {
-        // Universal approval
-        await adminVerificationService.approveProfile(profile.id);
+        await adminVerificationService.approveProfile(profile);
   
-        // Success toast
         toast({
           title: "Approved ✓",
           description:
@@ -81,34 +73,6 @@ export function usePendingVerification() {
                     : "Company Admin"
                 }.`,
         });
-  
-        // Optional university invitation for students
-        if (
-          profile.role === "student" &&
-          options?.sendInvitation &&
-          profile.university_name &&
-          options.adminId
-        ) {
-          const universityId =
-            await adminVerificationService.getUniversityIdByName(
-              profile.university_name
-            );
-  
-          if (!universityId) {
-            throw new Error("University not found");
-          }
-  
-          await adminVerificationService.sendConnectionInvitation(
-            profile.id,
-            universityId,
-            options.adminId
-          );
-  
-          toast({
-            title: "Success",
-            description: "Connection invitation sent to the university",
-          });
-        }
   
         return true;
       });

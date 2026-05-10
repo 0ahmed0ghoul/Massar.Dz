@@ -166,7 +166,64 @@ class StudentChatService {
       .eq("read", false);
     if (error) throw new Error(error.message);
   }
-
+  async getCompanyConversations(studentId: string): Promise<StudentConversation[]> {
+    // 1. Fetch all applications by the student, get distinct company ids
+    const { data: applications, error: appsError } = await supabase
+      .from("applications")
+      .select("job:jobs(company_id)")
+      .eq("student_id", studentId);
+    if (appsError) throw new Error(appsError.message);
+  
+    const companyIds = new Set<string>();
+    applications.forEach((app) => {
+      const companyId = app.job?.company_id;
+      if (companyId) companyIds.add(companyId);
+    });
+  
+    if (companyIds.size === 0) return [];
+  
+    // 2. Fetch company profiles
+    const { data: companies, error: compError } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email, avatar_url, company_name")
+      .in("id", Array.from(companyIds));
+    if (compError) throw new Error(compError.message);
+  
+    const conversations: StudentConversation[] = [];
+  
+    for (const company of companies) {
+      // Last message between student and this company
+      const { data: lastMsg } = await supabase
+        .from("messages")
+        .select("content, created_at")
+        .or(
+          `and(sender_id.eq.${studentId},receiver_id.eq.${company.id}),and(sender_id.eq.${company.id},receiver_id.eq.${studentId})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+  
+      // Unread messages for student
+      const { count: unreadCount } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", studentId)
+        .eq("sender_id", company.id)
+        .eq("read", false);
+  
+      conversations.push({
+        id: company.id,
+        universityName: company.company_name || `${company.first_name || ""} ${company.last_name || ""}`.trim(),
+        universityAvatar: company.avatar_url,
+        lastMessage: lastMsg?.content || null,
+        lastMessageAt: lastMsg?.created_at || null,
+        unreadCount: unreadCount || 0,
+        role: "company", // add a flag to differentiate
+      });
+    }
+  
+    return conversations;
+  }
   // Subscribe to new messages sent to the student
   subscribeToMessages(
     studentId: string,

@@ -80,10 +80,11 @@ export interface PlatformStudent {
 }
 
 export interface StudentConversation {
-  id: string;                    
+  id: string;
   universityName: string;
-  universityAvatar?: string;
-  lastMessage: string | null;
-  lastMessageAt: string | null;
+  universityAvatar?: string | null;
+  lastMessage?: string | null;
+  lastMessageAt?: string | null;
   unreadCount: number;
+  role?: "university" | "company"; // optional, for UI
 }

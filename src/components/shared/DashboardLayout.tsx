@@ -1,3 +1,4 @@
+// components/DashboardLayout.tsx
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
@@ -29,8 +30,8 @@ const DashboardLayout = ({ role }: Props) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
-  // Candidate type from profile (only for student)
   const candidateType =
     role === "student"
       ? (profile?.candidate_type as
@@ -40,7 +41,7 @@ const DashboardLayout = ({ role }: Props) => {
           | null)
       : null;
 
-  // Fetch unread notification count with error handling
+  // ── Notifications ─────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const fetchUnreadCount = async () => {
@@ -50,15 +51,10 @@ const DashboardLayout = ({ role }: Props) => {
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id)
           .eq("is_read", false);
-        if (!error && count !== null) {
-          setNotificationCount(count);
-        } else if (error) {
-          console.warn("Notification fetch error:", error);
-          setNotificationCount(0);
-        }
+        if (!error && count !== null) setNotificationCount(count);
+        else if (error) console.warn("Notification fetch error:", error);
       } catch (err) {
         console.error("Failed to fetch notification count:", err);
-        setNotificationCount(0);
       }
     };
     fetchUnreadCount();
@@ -86,58 +82,87 @@ const DashboardLayout = ({ role }: Props) => {
     };
   }, [user]);
 
+  // ── Profile completion ────────────────────────────────────
   useEffect(() => {
-    if (profile) setIsProfileComplete(profile.is_completed === true);
-    else setIsProfileComplete(false);
+    setIsProfileComplete(profile?.is_completed === true);
   }, [profile]);
 
-  // Fetch pending count for super_admin (with error handling)
+  // ── Pending accounts (super admin only) ───────────────────
   useEffect(() => {
     if (role !== "super_admin") return;
-
     const fetchPendingCount = async () => {
       const { count, error } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("is_verified", false)
         .eq("is_completed", true);
-
       if (error) {
         console.error("Error fetching pending accounts:", error);
         return;
       }
-
       setPendingCount(count || 0);
     };
-
-    // Initial fetch
     fetchPendingCount();
-
-    // Realtime subscription
     const channel = supabase
       .channel("profiles-pending-updates")
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => fetchPendingCount()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role]);
+
+  // ── Unread messages (students only) ───────────────────────
+  useEffect(() => {
+    if (!user || role !== "student") return;
+
+    const fetchUnreadMessages = async () => {
+      const { count, error } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("read", false);
+      if (!error && count !== null) setUnreadMessagesCount(count);
+      else if (error) console.warn("Failed to fetch unread messages:", error);
+    };
+
+    fetchUnreadMessages();
+
+    const channel = supabase
+      .channel(`messages-unread-${user.id}`)
+      .on(
+        "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
-          table: "profiles",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
         },
-        async () => {
-          await fetchPendingCount();
-        }
+        () => fetchUnreadMessages()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => fetchUnreadMessages()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [role]);
-  const initials =
-    (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
-  const fullName = `${profile?.first_name || ""} ${
-    profile?.last_name || ""
-  }`.trim();
+  }, [user, role]);
+
+  const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
+  const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
   const email = profile?.email || "";
 
   return (
@@ -151,6 +176,7 @@ const DashboardLayout = ({ role }: Props) => {
         isProfileComplete={isProfileComplete}
         pendingCount={pendingCount}
         candidateType={candidateType}
+        unreadMessagesCount={unreadMessagesCount}
       />
       <div className="flex-1 flex flex-col">
         <header className="h-14 flex items-center justify-between border-b border-white/10 px-4">
@@ -176,17 +202,11 @@ const DashboardLayout = ({ role }: Props) => {
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium truncate max-w-[150px]">
-                {fullName || "User"}
-              </p>
-              <p className="text-xs text-foreground/40 truncate max-w-[150px]">
-                {email}
-              </p>
+              <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
+              <p className="text-xs text-foreground/40 truncate max-w-[150px]">{email}</p>
             </div>
             <div className="text-right block sm:hidden">
-              <p className="text-sm font-medium">
-                {fullName?.split(" ")[0] || "User"}
-              </p>
+              <p className="text-sm font-medium">{fullName?.split(" ")[0] || "User"}</p>
             </div>
             {profile?.avatar_url ? (
               <img

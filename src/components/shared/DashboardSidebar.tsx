@@ -1,9 +1,33 @@
-// components/DashboardSidebar.tsx (updated)
+// components/DashboardSidebar.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import LogoIcon from "@/assets/Logo-icon.jpg";
-import { X, LogOut, LayoutDashboard, User, Briefcase, FileText, Star, Clock, MessageCircleMore, Bell, Heart, Paperclip, Users, Wallet, Database, MessageCircle, LucidePartyPopper, Sparkle, Workflow, ChartBarIncreasingIcon, MessageCircleCodeIcon, BriefcaseBusiness, MessageCircleMoreIcon } from "lucide-react";
+import {
+  X,
+  LogOut,
+  LayoutDashboard,
+  User,
+  Briefcase,
+  FileText,
+  Star,
+  Clock,
+  MessageCircleMore,
+  Bell,
+  Heart,
+  Paperclip,
+  Users,
+  Wallet,
+  Database,
+  MessageCircle,
+  LucidePartyPopper,
+  Sparkle,
+  Workflow,
+  ChartBarIncreasingIcon,
+  MessageCircleCodeIcon,
+  BriefcaseBusiness,
+  MessageCircleMoreIcon,
+} from "lucide-react";
 
 interface DashboardSidebarProps {
   role: UserRole;
@@ -14,26 +38,24 @@ interface DashboardSidebarProps {
   isProfileComplete: boolean;
   pendingCount: number;
   candidateType?: "studying" | "graduated" | "self_taught" | null;
+  unreadMessagesCount?: number;
 }
 
 type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
 
-// Base nav maps – we'll filter student items later
 const studentBaseItems = [
   { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
   { title: "Profile", url: "/student/dashboard/profile", icon: User },
   { title: "Skills", url: "/student/dashboard/skills", icon: Sparkle },
   { title: "Certificates", url: "/student/dashboard/certificate", icon: Paperclip },
-  { title: "Messages", url: "/student/dashboard/messages", icon:MessageCircleMoreIcon },
+  { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMoreIcon },
   { title: "Browse Jobs", url: "/experience", icon: BriefcaseBusiness },
   { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
 ];
 
-// Studying students get Experience and maybe other future items
 const studyingOnlyItems = [
   { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
 ];
-
 
 const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
@@ -76,12 +98,12 @@ export function DashboardSidebar({
   notificationCount,
   pendingCount,
   candidateType,
+  unreadMessagesCount = 0,
 }: DashboardSidebarProps) {
   let items: { title: string; url: string; icon: any }[] = [];
 
   if (role === "student") {
     items = [...studentBaseItems];
-    // Only add "Experience" for studying students
     if (candidateType === "studying") {
       items = [...studentBaseItems, ...studyingOnlyItems];
     }
@@ -104,13 +126,15 @@ export function DashboardSidebar({
   };
 
   const sidebarWidth = isCollapsed ? "w-20" : "w-64";
-  const mobileWidth = "w-full";
   const showNotificationBadge = notificationCount > 0;
 
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={onClose} />
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+        />
       )}
 
       <aside
@@ -121,22 +145,39 @@ export function DashboardSidebar({
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
           ${sidebarWidth}
-          ${isOpen ? mobileWidth : ""}
+          ${isOpen ? "w-full" : ""}
         `}
       >
         <div className="flex h-full flex-col">
-          <div className={`flex items-center border-b border-white/10 p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
+          <div
+            className={`flex items-center border-b border-white/10 p-4 ${
+              isCollapsed ? "justify-center" : "justify-between"
+            }`}
+          >
             {!isCollapsed && (
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => navigate("/")}
+              >
                 <img src={LogoIcon} className="h-5 w-5" alt="Logo" />
                 <span className="font-bold">Massar</span>
-                <span className="text-foreground/40 text-sm">{roleLabels[role]}</span>
+                <span className="text-foreground/40 text-sm">
+                  {roleLabels[role]}
+                </span>
               </div>
             )}
             {isCollapsed && (
-              <img src={LogoIcon} className="h-5 w-5 cursor-pointer" onClick={() => navigate("/")} alt="Logo" />
+              <img
+                src={LogoIcon}
+                className="h-5 w-5 cursor-pointer"
+                onClick={() => navigate("/")}
+                alt="Logo"
+              />
             )}
-            <button onClick={onClose} className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden">
+            <button
+              onClick={onClose}
+              className="rounded-md p-1 text-foreground/60 hover:text-foreground md:hidden"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -144,8 +185,10 @@ export function DashboardSidebar({
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
             {items.map((item) => {
               const active = location.pathname === item.url;
+              const isMessages = item.title === "Messages";
               const isNotifications = item.title === "Notifications";
               const isPending = item.title === "Pending";
+              const showMsgBadge = isMessages && unreadMessagesCount > 0;
 
               return (
                 <Link
@@ -153,12 +196,19 @@ export function DashboardSidebar({
                   to={item.url}
                   onClick={() => onClose()}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                    active ? "bg-white/10 text-foreground" : "text-foreground/50 hover:text-foreground"
+                    active
+                      ? "bg-white/10 text-foreground"
+                      : "text-foreground/50 hover:text-foreground"
                   } ${isCollapsed ? "justify-center" : ""}`}
                   title={isCollapsed ? item.title : undefined}
                 >
                   <div className="relative">
                     <item.icon className="h-4 w-4 flex-shrink-0" />
+                    {showMsgBadge && (
+                      <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#639922] px-1 text-[10px] font-bold text-black shadow-md">
+                        {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                      </span>
+                    )}
                     {isNotifications && showNotificationBadge && (
                       <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-md">
                         {notificationCount > 99 ? "99+" : notificationCount}
@@ -176,10 +226,16 @@ export function DashboardSidebar({
             })}
           </div>
 
-          <div className={`p-3 border-t border-white/10 ${isCollapsed ? "text-center" : ""}`}>
+          <div
+            className={`p-3 border-t border-white/10 ${
+              isCollapsed ? "text-center" : ""
+            }`}
+          >
             <button
               onClick={handleLogout}
-              className={`flex items-center gap-2 text-red-400 text-sm ${isCollapsed ? "justify-center w-full" : ""}`}
+              className={`flex items-center gap-2 text-red-400 text-sm ${
+                isCollapsed ? "justify-center w-full" : ""
+              }`}
               title={isCollapsed ? "Logout" : undefined}
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />
