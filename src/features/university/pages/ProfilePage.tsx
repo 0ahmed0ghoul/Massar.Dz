@@ -166,7 +166,7 @@ const UniversityProfilePage = () => {
             </div>
             {/* Title */}
             <h1 className="text-3xl font-bold tracking-tight text-white/90 sm:text-4xl">
-              University Profile
+              Department Profile
             </h1>
             <p className="text-sm text-white/35 max-w-md leading-relaxed">
               Manage your institution's information, upload your student roster,

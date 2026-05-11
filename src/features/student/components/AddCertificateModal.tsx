@@ -114,7 +114,7 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
   const getUniversityName = async () => {
     if (!user) return "University";
     const { data: connection } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select("university_id")
       .eq("student_id", user.id)
       .eq("status", "accepted")

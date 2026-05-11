@@ -95,10 +95,6 @@ export const universitySchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters"),
 
-  universityName: z
-    .string()
-    .min(1, "University name required"),
-
   wilaya: z
     .string()
     .min(1, "Wilaya required"),

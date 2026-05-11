@@ -23,7 +23,8 @@ interface SearchableSelectProps {
   onBlur?: () => void;
   placeholder: string;
   emptyMessage?: string;
-  className?:string;
+  className?: string;
+  disabled?: boolean;
 }
 
 export function SearchableSelect({
@@ -33,6 +34,7 @@ export function SearchableSelect({
   onBlur,
   placeholder,
   emptyMessage = "No option found.",
+  disabled = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
 
@@ -40,8 +42,11 @@ export function SearchableSelect({
     <Popover
       open={open}
       onOpenChange={(isOpen) => {
+        if (disabled) return;
+      
         setOpen(isOpen);
-        if (!isOpen) onBlur?.(); // ✅ trigger blur when closing
+      
+        if (!isOpen) onBlur?.();
       }}
     >
       <PopoverTrigger asChild>
@@ -50,7 +55,10 @@ export function SearchableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between border-border bg-card/30 text-foreground hover:bg-card/50 font-normal"
+          className={cn(
+            "w-full justify-between border-border bg-card/30 text-foreground hover:bg-card/50 font-normal",
+            disabled && "cursor-not-allowed opacity-50"
+          )}
         >
           {value || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

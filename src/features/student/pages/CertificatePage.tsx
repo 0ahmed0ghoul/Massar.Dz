@@ -34,7 +34,7 @@ export default function CertificatePage() {
         return;
       }
       const { data, error } = await supabase
-        .from("university_connections")
+        .from("department_connections")
         .select("status")
         .eq("student_id", user.id)
         .maybeSingle();

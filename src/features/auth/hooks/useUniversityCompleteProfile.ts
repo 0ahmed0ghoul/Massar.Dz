@@ -10,11 +10,12 @@ interface UniversityFormData {
   firstName: string;
   lastName: string;
   wilaya: string;
-  universityName: string;
-  rectorName: string;
+  university_name: string;
+  rector_name: string;
   website: string;
   department: string;
   position: string;
+  email: string;
 }
 
 interface DocsState {
@@ -35,11 +36,12 @@ export function useUniversityCompleteProfile(
     firstName: profile?.first_name || "",
     lastName: profile?.last_name || "",
     wilaya: profile?.wilaya || "",
-    universityName: profile?.university_name || "",
-    rectorName: profile?.rector_name || "",
+    university_name: profile?.university_name || "",
+    rector_name: profile?.rector_name || "",
     website: profile?.website || "",
     department: profile?.department || "",
     position: profile?.position || "",
+    email: profile?.email || "",
   });
 
   const [docs, setDocs] = useState<DocsState>({
@@ -152,12 +154,13 @@ export function useUniversityCompleteProfile(
       const additionalData = {
         first_name: form.firstName,
         last_name: form.lastName,
-        university_name: form.universityName,
-        rector_name: form.rectorName,
+        university_name: form.university_name,
+        rector_name: form.rector_name,
         website: form.website,
         wilaya: form.wilaya,
         department: form.department,
         position: form.position,
+        email: form.email,
       };
 
       const verificationDocs: any = {

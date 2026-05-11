@@ -43,6 +43,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import {
+  DEPARTMENT_SPECIALITIES,
+  UNIVERSITY_DEPARTMENTS,
+} from "@/constants/university.constants";
 
 const inputCls = `
   w-full rounded-lg border border-white/[0.12] bg-transparent
@@ -88,6 +92,7 @@ const ProfileForm = ({
     speciality_type: "",
     student_id: "",
     graduation_year: "",
+    department: "",
   });
 
   useEffect(() => {
@@ -107,6 +112,7 @@ const ProfileForm = ({
       speciality_type: profile?.speciality_type || "",
       academic_year: profile?.academic_year || "",
       student_id: profile?.student_id || "",
+      department: profile?.department || "",
     };
 
     setLocalForm({
@@ -274,6 +280,10 @@ const ProfileForm = ({
     if (Array.isArray(value)) return value.length > 0;
     return value && String(value).trim().length > 0;
   };
+  const specialityOptions =
+    DEPARTMENT_SPECIALITIES[
+      localForm.department as keyof typeof DEPARTMENT_SPECIALITIES
+    ] || [];
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md transition-all duration-300 hover:border-[#639922]/30">
@@ -327,9 +337,13 @@ const ProfileForm = ({
               />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground">Profile Picture</p>
+              <p className="text-sm font-medium text-foreground">
+                Profile Picture
+              </p>
               <p className="text-xs text-foreground/40">JPG, PNG. Max 2MB</p>
-              {uploadingAvatar && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
+              {uploadingAvatar && (
+                <p className="mt-1 text-xs text-[#639922]">Uploading...</p>
+              )}
             </div>
           </div>
 
@@ -366,7 +380,9 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">CV / Resume</p>
+                <p className="text-sm font-medium text-foreground">
+                  CV / Resume
+                </p>
                 <p className="text-xs text-foreground/40">
                   {profile?.resume_url ? (
                     <a
@@ -381,7 +397,9 @@ const ProfileForm = ({
                     "PDF only. Max 5MB"
                   )}
                 </p>
-                {uploadingCV && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
+                {uploadingCV && (
+                  <p className="mt-1 text-xs text-[#639922]">Uploading...</p>
+                )}
               </div>
             </div>
           )}
@@ -419,7 +437,9 @@ const ProfileForm = ({
                 />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Student Card</p>
+                <p className="text-sm font-medium text-foreground">
+                  Student Card
+                </p>
                 <p className="text-xs text-foreground/40">
                   {profile?.student_card_url ? (
                     <a
@@ -434,7 +454,9 @@ const ProfileForm = ({
                     "Image/PDF. Max 5MB"
                   )}
                 </p>
-                {uploadingStudentCard && <p className="mt-1 text-xs text-[#639922]">Uploading...</p>}
+                {uploadingStudentCard && (
+                  <p className="mt-1 text-xs text-[#639922]">Uploading...</p>
+                )}
               </div>
             </div>
           )}
@@ -554,14 +576,57 @@ const ProfileForm = ({
                     isFilled={isFilled(localForm.academic_year)}
                   />
                   <div className="md:col-span-2">
-                    <InputField
-                      label="Speciality / Major"
-                      icon={<BookOpen className="h-4 w-4" />}
-                      value={localForm.speciality}
-                      onChange={(value) => updateField("speciality", value)}
-                      placeholder="Computer Science, Business, etc."
-                      isFilled={isFilled(localForm.speciality)}
-                    />
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">Department</Label>
+                      {isFilled(localForm.department) ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      )}
+                    </div>
+
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={UNIVERSITY_DEPARTMENTS}
+                        value={localForm.department}
+                        onChange={(val) => {
+                          updateField("department", val);
+
+                          // reset speciality if department changes
+                          updateField("speciality", "");
+                        }}
+                        placeholder="Select department..."
+                        emptyMessage="No department found"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">
+                        Speciality / Major
+                      </Label>
+                      {isFilled(localForm.speciality) ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      )}
+                    </div>
+
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={specialityOptions}
+                        value={localForm.speciality}
+                        onChange={(val) => updateField("speciality", val)}
+                        placeholder={
+                          localForm.department
+                            ? "Select speciality..."
+                            : "Select department first..."
+                        }
+                        emptyMessage="No speciality found"
+                        disabled={!localForm.department}
+                      />
+                    </div>
                   </div>
                   <InputField
                     label="Student ID"
@@ -599,22 +664,72 @@ const ProfileForm = ({
                       />
                     </div>
                   </div>
-                  <InputField
-                    label="Degree title"
+                  <SelectField
+                    label="Degree Level"
                     icon={<GraduationCap className="h-4 w-4" />}
                     value={localForm.degree_level}
                     onChange={(value) => updateField("degree_level", value)}
-                    placeholder="Bachelor's in Computer Science"
+                    options={[
+                      { value: "", label: "Select degree level" },
+                      { value: "License", label: "License" },
+                      { value: "Master", label: "Master" },
+                      { value: "Doctorate", label: "Doctorate" },
+                    ]}
                     isFilled={isFilled(localForm.degree_level)}
                   />
-                  <InputField
-                    label="Speciality / Field"
-                    icon={<BookOpen className="h-4 w-4" />}
-                    value={localForm.speciality}
-                    onChange={(value) => updateField("speciality", value)}
-                    placeholder="Artificial Intelligence"
-                    isFilled={isFilled(localForm.speciality)}
-                  />
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">Department</Label>
+                      {isFilled(localForm.department) ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      )}
+                    </div>
+
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={UNIVERSITY_DEPARTMENTS}
+                        value={localForm.department}
+                        onChange={(val) => {
+                          updateField("department", val);
+
+                          // reset speciality if department changes
+                          updateField("speciality", "");
+                        }}
+                        placeholder="Select department..."
+                        emptyMessage="No department found"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-foreground/80">
+                        Speciality / Major
+                      </Label>
+                      {isFilled(localForm.speciality) ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      )}
+                    </div>
+
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={specialityOptions}
+                        value={localForm.speciality}
+                        onChange={(val) => updateField("speciality", val)}
+                        placeholder={
+                          localForm.department
+                            ? "Select speciality..."
+                            : "Select department first..."
+                        }
+                        emptyMessage="No speciality found"
+                        disabled={!localForm.department}
+                      />
+                    </div>
+                  </div>
                   <InputField
                     label="Graduation Year"
                     icon={<Calendar className="h-4 w-4" />}
@@ -676,7 +791,9 @@ const ProfileForm = ({
                       <BookOpen className="h-6 w-6 text-[#639922]" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">No skills added yet</p>
+                      <p className="font-medium text-foreground">
+                        No skills added yet
+                      </p>
                       <p className="mt-1 text-sm text-foreground/50">
                         Add your skills to improve your profile and job matches.
                       </p>
@@ -705,7 +822,10 @@ const ProfileForm = ({
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">
                     <MapPin className="h-4 w-4" />
                   </div>
-                  <Popover open={wilayaSearchOpen} onOpenChange={setWilayaSearchOpen}>
+                  <Popover
+                    open={wilayaSearchOpen}
+                    onOpenChange={setWilayaSearchOpen}
+                  >
                     <PopoverTrigger asChild>
                       <button
                         type="button"
@@ -799,7 +919,9 @@ const InputField = ({
       )}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">
+        {icon}
+      </div>
       <input
         type={type}
         value={value}
@@ -811,7 +933,14 @@ const InputField = ({
   </div>
 );
 
-const SelectField = ({ label, icon, value, onChange, options, isFilled }: any) => (
+const SelectField = ({
+  label,
+  icon,
+  value,
+  onChange,
+  options,
+  isFilled,
+}: any) => (
   <div>
     <label className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-foreground/50">
       <span>{label}</span>
@@ -822,7 +951,9 @@ const SelectField = ({ label, icon, value, onChange, options, isFilled }: any) =
       )}
     </label>
     <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">{icon}</div>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">
+        {icon}
+      </div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

@@ -194,7 +194,7 @@ async parseExcelFile(file: File): Promise<any[]> {
     // 2. Get connection statuses for these students with this university
     const studentIds = students.map(s => s.id);
     const { data: connections, error: connError } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .select('student_id, status')
       .eq('university_id', universityId)
       .in('student_id', studentIds);
@@ -281,9 +281,9 @@ async parseExcelFile(file: File): Promise<any[]> {
 
   // ---------- Send Connection Invitation ----------
   async sendInvitation(request: InvitationRequest): Promise<void> {
-    // Upsert into university_connections (ensure only one record per student-university pair)
+    // Upsert into department_connections (ensure only one record per student-university pair)
     const { error } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .upsert({
         student_id: request.studentId,
         university_id: request.departmentId,
@@ -301,7 +301,7 @@ async parseExcelFile(file: File): Promise<any[]> {
   async rejectStudent(rejection: RejectionData): Promise<void> {
     // Update the connection status to 'rejected'
     const { error } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .update({ status: 'rejected' })
       .eq('student_id', rejection.studentId)
       .eq('university_id', rejection.universityId);
@@ -332,7 +332,7 @@ async parseExcelFile(file: File): Promise<any[]> {
   async resetConnectionRequest(studentId: string, universityId: string): Promise<void> {
     // Update status to 'pending' so admin can reconsider
     const { error } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .update({ status: 'pending' })
       .eq('student_id', studentId)
       .eq('university_id', universityId);

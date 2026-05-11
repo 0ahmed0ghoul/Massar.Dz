@@ -49,7 +49,7 @@ export default function UniversityDashboard() {
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="space-y-6 sm:space-y-8">
           <div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">University Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Department Dashboard</h1>
             <p className="text-sm text-foreground/40 sm:text-base">Manage connections, track student outcomes.</p>
           </div>
 

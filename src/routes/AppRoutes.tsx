@@ -46,6 +46,11 @@ import UniversityStatsPage from "@/features/university/pages/StatsPage";
 import FeedbacksPage from "@/features/admin/pages/FeedbacksPage";
 import ApplicationDetailPage from "@/features/company/pages/ApplicationDetailPage";
 import DashboardRedirectPage from "@/pages/DashboardRedirectPage";
+import QuestionAnswerPage from "@/features/admin/pages/QuestionAnswerPage";
+import StudentQAPage from "@/features/student/pages/StudentQAPage";
+import UniversityAnalyticsPage from "@/features/university/pages/UniversityAnalyticsPage";
+import DepartmentSpecialitiesPage from "@/features/university/pages/DepartmentSpecialitiesPage";
+import SpecialityStatisticsPage from "@/features/university/pages/SpecialityStatisticsPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -106,6 +111,7 @@ const AppRoutes = () => {
               element={<CertificatePage />}
             />
             <Route path="/student/dashboard/skills" element={<SkillsPage />} />
+            <Route path="/student/dashboard/qa" element={<StudentQAPage />} />
           </Route>
         </Route>
 
@@ -173,6 +179,18 @@ const AppRoutes = () => {
                 path="university/dashboard/statistics"
                 element={<UniversityStatsPage />}
               />
+              <Route
+                path="/university/analytics"
+                element={<UniversityAnalyticsPage />}
+              />
+              <Route
+                path="/university/analytics/departments/:departmentName"
+                element={<DepartmentSpecialitiesPage />}
+              />
+              <Route
+                path="/university/analytics/departments/:departmentName/:speciality"
+                element={<SpecialityStatisticsPage />}
+              />
             </Route>
           </Route>
         </Route>
@@ -197,6 +215,10 @@ const AppRoutes = () => {
             element={<AdminPaymentsPage />}
           />
           <Route path="dashboard/admin/feedbacks" element={<FeedbacksPage />} />
+          <Route
+            path="/dashboard/admin/questionanswer"
+            element={<QuestionAnswerPage />}
+          />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -14,7 +14,6 @@ import {
   FileText,
   MapPin,
   Globe,
-  User,
   GraduationCap,
   CheckCircle,
   XCircle,
@@ -22,17 +21,37 @@ import {
   Shield,
   Award,
   ArrowRight,
-  Users,
-  BookOpen,
 } from "lucide-react";
+
 import { useUniversityCompleteProfile } from "@/features/auth/hooks/useUniversityCompleteProfile";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
-import { ALGERIAN_WILAYAS } from "@/constants/algeria.constants";
+import {
+  ALGERIAN_UNIVERSITIES,
+  ALGERIAN_WILAYAS,
+} from "@/constants/algeria.constants";
 import {
   ACADEMIC_POSITIONS,
   UNIVERSITY_DEPARTMENTS,
 } from "@/constants/university.constants";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useState } from "react";
 
 export default function UniversityCompleteProfilePage() {
   const { user, profile } = useAuth();
@@ -48,423 +67,273 @@ export default function UniversityCompleteProfilePage() {
     handleSubmit,
   } = useUniversityCompleteProfile(user, profile);
 
+  const [universityOpen, setUniversityOpen] = useState(false);
+
   const isFilled = (value: string) => value && value.trim().length > 0;
 
+  const isRectorate = form.position === "rectorate";
+  const isHeadOfDepartment = form.position === "head_of_department";
+
   return (
-    <div className="relative min-h-screen bg-background py-12 px-4 overflow-hidden">
-      {/* Background decoration */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[500px] -translate-x-1/4 rounded-full gradient-hero blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 right-1/2 h-96 w-[500px] translate-x-1/4 rounded-full bg-[#639922]/[0.05] blur-3xl" />
-
-      <div className="relative z-10 container mx-auto max-w-4xl">
-        {/* Progress indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between max-w-md mx-auto">
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-[#639922] flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-foreground" />
-              </div>
-              <span className="text-xs text-foreground/60 mt-2">Account</span>
-            </div>
-            <div className="flex-1 h-0.5 bg-[#639922]/30 mx-2" />
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-[#639922] flex items-center justify-center">
-                <Building className="h-5 w-5 text-foreground" />
-              </div>
-              <span className="text-xs text-foreground/60 mt-2">Profile</span>
-            </div>
-            <div className="flex-1 h-0.5 bg-white/10 mx-2" />
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-foreground/40" />
-              </div>
-              <span className="text-xs text-foreground/40 mt-2">Verify</span>
-            </div>
-          </div>
-        </div>
-
-        <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md shadow-2xl">
-          <CardHeader className="border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#639922]/10">
-                <GraduationCap className="h-6 w-6 text-[#639922]" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl text-foreground">
-                  Complete Your University Profile
-                </CardTitle>
-                <CardDescription className="text-foreground/40">
-                  Tell us more about your institution and upload verification
-                  documents
-                </CardDescription>
-              </div>
-            </div>
+    <div className="relative min-h-screen bg-background py-12 px-4">
+      <div className="container mx-auto max-w-4xl">
+        <Card className="border-white/10 bg-white/[0.03]">
+          <CardHeader>
+            <CardTitle>Complete University Profile</CardTitle>
+            <CardDescription>
+              Provide your details and upload required documents.
+            </CardDescription>
           </CardHeader>
 
-          <CardContent className="pt-6">
+          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Location Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                  <MapPin className="h-4 w-4 text-[#639922]" />
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
-                    Location
-                  </h3>
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleFileChange("logo", e.target.files?.[0] || null)
+                  }
+                  className="hidden"
+                  id="logo-upload"
+                />
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    document.getElementById("logo-upload")?.click()
+                  }
+                >
+                  Upload Logo
+                </Button>
+              </div>
+
+              {/* Personal Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>First Name *</Label>
+                  <Input
+                    value={form.firstName}
+                    onChange={(e) => updateForm("firstName", e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-foreground/80">
-                      Wilaya / City *
-                    </Label>
-                    {isFilled(form.wilaya) ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                  </div>
-                  <SearchableSelect
-                    options={ALGERIAN_WILAYAS}
-                    value={form.wilaya || ""}
-                    onChange={(value) => updateForm("wilaya", value)}
-                    placeholder="Select your wilaya..."
-                    emptyMessage="No wilaya found."
+                  <Label>Last Name *</Label>
+                  <Input
+                    value={form.lastName}
+                    onChange={(e) => updateForm("lastName", e.target.value)}
+                    required
                   />
                 </div>
               </div>
 
-              {/* University Details */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                  <GraduationCap className="h-4 w-4 text-[#639922]" />
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
-                    University Details
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">First Name *</Label>
-                      {isFilled(form.firstName) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <Input
-                      value={form.firstName}
-                      onChange={(e) => updateForm("firstName", e.target.value)}
-                      required
-                      className="mt-1.5 border-white/20 bg-white/10 text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">Last Name *</Label>
-                      {isFilled(form.lastName) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <Input
-                      value={form.lastName}
-                      onChange={(e) => updateForm("lastName", e.target.value)}
-                      required
-                      className="mt-1.5 border-white/20 bg-white/10 text-foreground"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">
-                        University Name *
-                      </Label>
-                      {isFilled(form.universityName) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <div className="relative mt-1.5">
-                      <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                      <Input
-                        value={form.universityName}
-                        onChange={(e) =>
-                          updateForm("universityName", e.target.value)
-                        }
-                        required
-                        className="pl-9 border-white/20 bg-white/10 text-foreground"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">
-                        Rector / President *
-                      </Label>
-                      {isFilled(form.rectorName) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <div className="relative mt-1.5">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                      <Input
-                        value={form.rectorName}
-                        onChange={(e) =>
-                          updateForm("rectorName", e.target.value)
-                        }
-                        required
-                        className="pl-9 border-white/20 bg-white/10 text-foreground"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">Department *</Label>
-                      {isFilled(form.department) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <div className="mt-1.5">
-                      <SearchableSelect
-                        options={UNIVERSITY_DEPARTMENTS}
-                        value={form.department || ""}
-                        onChange={(value) => updateForm("department", value)}
-                        placeholder="Select your department..."
-                        emptyMessage="No department found."
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">
-                        Your Position *
-                      </Label>
-                      {isFilled(form.position) ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-red-500" />
-                      )}
-                    </div>
-                    <div className="mt-1.5">
-                      <SearchableSelect
-                        options={ACADEMIC_POSITIONS}
-                        value={form.position || ""}
-                        onChange={(value) => updateForm("position", value)}
-                        placeholder="Select your position..."
-                        emptyMessage="No position found."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80">Website</Label>
-                    {isFilled(form.website) ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="relative mt-1.5">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                    <Input
-                      value={form.website}
-                      onChange={(e) => updateForm("website", e.target.value)}
-                      className="pl-9 border-white/20 bg-white/10 text-foreground"
-                      placeholder="https://..."
-                    />
-                  </div>
-                </div>
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => updateForm("email", e.target.value)}
+                  required
+                />
               </div>
 
-              {/* Verification Documents */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                  <Shield className="h-4 w-4 text-[#639922]" />
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
-                    Verification Documents
-                  </h3>
-                </div>
+              {/* Wilaya */}
+              <div>
+                <Label>Wilaya (State) *</Label>
+                <SearchableSelect
+                  options={ALGERIAN_WILAYAS}
+                  value={form.wilaya || ""}
+                  onChange={(v) => updateForm("wilaya", v)}
+                  placeholder="Select wilaya"
+                />
+              </div>
 
-                {/* Logo Upload */}
-                <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80 flex items-center gap-2">
-                      <Award className="h-4 w-4 text-[#639922]" /> Institution
-                      Logo *
-                    </Label>
-                    {previewUrls.logo ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="mt-3 flex flex-col sm:flex-row items-start gap-4">
-                    <div className="relative">
-                      {previewUrls.logo ? (
-                        <div className="relative">
-                          <img
-                            src={previewUrls.logo}
-                            alt="Logo preview"
-                            className="h-20 w-20 rounded-full object-cover border-2 border-[#639922]/30"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeFile("logo")}
-                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        </div>
+              {/* University Selection */}
+              <div>
+                <Label>University *</Label>
+                <Popover open={universityOpen} onOpenChange={setUniversityOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-between bg-white/10 border-white/20 text-foreground hover:bg-white/10"
+                    >
+                      {form.university_name ? (
+                        <span className="truncate">{form.university_name}</span>
                       ) : (
-                        <div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center border-2 border-dashed border-white/20">
-                          <Building2 className="h-8 w-8 text-foreground/40" />
-                        </div>
+                        "Select university..."
                       )}
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          handleFileChange("logo", e.target.files?.[0] || null)
-                        }
-                        className="hidden"
-                        id="logo-upload"
-                      />
-                      <label htmlFor="logo-upload">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          asChild
-                          className="cursor-pointer border-white/20 text-foreground hover:bg-white/10"
-                        >
-                          <span>
-                            <Upload className="mr-2 h-4 w-4" /> Choose Logo
-                          </span>
-                        </Button>
-                      </label>
-                      <p className="text-xs text-foreground/40 mt-1">
-                        PNG, JPG up to 2MB. Square recommended.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0 bg-background border-white/20">
+                    <Command>
+                      <CommandInput placeholder="Search university..." />
+                      <CommandList>
+                        <CommandEmpty>No university found.</CommandEmpty>
+                        <CommandGroup>
+                          {ALGERIAN_UNIVERSITIES.map((uni) => (
+                            <CommandItem
+                              key={uni}
+                              value={uni}
+                              onSelect={(currentValue) => {
+                                updateForm("university_name", currentValue);
+                                setUniversityOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  form.university_name === uni
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                }`}
+                              />
+                              {uni}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                {/* Registration Certificate */}
-                <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80 flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-[#639922]" />{" "}
-                      Registration Certificate *
-                    </Label>
-                    {previewUrls.certificate ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="mt-3 flex flex-col sm:flex-row items-start gap-4">
-                    {previewUrls.certificate && (
-                      <div className="relative">
-                        <FileText className="h-12 w-12 text-[#639922]" />
-                        <button
-                          type="button"
-                          onClick={() => removeFile("certificate")}
-                          className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground"
-                        >
-                          <XCircle className="h-3 w-3" />
-                        </button>
+              {/* Position */}
+              <div>
+                <Label>Position *</Label>
+                <SearchableSelect
+                  options={ACADEMIC_POSITIONS.map((p) => p.label)}
+                  value={
+                    ACADEMIC_POSITIONS.find((p) => p.value === form.position)
+                      ?.label || ""
+                  }
+                  onChange={(label) => {
+                    const selected = ACADEMIC_POSITIONS.find(
+                      (p) => p.label === label
+                    );
+                    const value = selected?.value || "";
+                    updateForm("position", value);
+                    if (value === "rectorate") {
+                      updateForm("department", "");
+                    }
+                  }}
+                  placeholder="Select position"
+                />
+              </div>
+
+              {/* Department (if head of department) */}
+              {!isRectorate && (
+                <div>
+                  <Label>Department *</Label>
+                  <SearchableSelect
+                    options={UNIVERSITY_DEPARTMENTS}
+                    value={form.department || ""}
+                    onChange={(v) => updateForm("department", v)}
+                    placeholder="Select department"
+                  />
+                </div>
+              )}
+
+              {/* Website */}
+              <div>
+                <Label>Website</Label>
+                <Input
+                  value={form.website}
+                  onChange={(e) => updateForm("website", e.target.value)}
+                />
+              </div>
+
+              {/* Proof Documents Section */}
+              {(isRectorate || isHeadOfDepartment) && (
+                <div className="border-t border-white/10 pt-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {isRectorate
+                      ? "Rectorate Proof Document"
+                      : "Head of Department Proof Document"}
+                  </h3>
+                  <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-[#639922]" />
+
+                        <div>
+                          <p className="text-sm font-medium">
+                            {isRectorate
+                              ? "Official Appointment Decree"
+                              : "Department Head Appointment Letter"}
+                          </p>
+
+                          <p className="text-xs text-white/40">
+                            PDF, JPG, PNG (max 5MB)
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1">
+
                       <input
                         type="file"
-                        accept="image/*,.pdf"
+                        accept=".pdf,image/*"
                         onChange={(e) =>
                           handleFileChange(
-                            "certificate",
+                            isRectorate ? "rectorateProof" : "headOfDeptProof",
                             e.target.files?.[0] || null
                           )
                         }
                         className="hidden"
-                        id="cert-upload"
+                        id="proof-upload"
                       />
-                      <label htmlFor="cert-upload">
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          document.getElementById("proof-upload")?.click()
+                        }
+                      >
+                        Upload
+                      </Button>
+                    </div>
+
+                    {docs[
+                      isRectorate ? "rectorateProof" : "headOfDeptProof"
+                    ] && (
+                      <div className="mt-4 flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+
+                        <span className="flex-1 truncate text-sm text-white/70">
+                          {
+                            docs[
+                              isRectorate ? "rectorateProof" : "headOfDeptProof"
+                            ]?.name
+                          }
+                        </span>
+
                         <Button
                           type="button"
-                          variant="outline"
-                          asChild
-                          className="cursor-pointer border-white/20 text-foreground hover:bg-white/10"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() =>
+                            removeFile(
+                              isRectorate ? "rectorateProof" : "headOfDeptProof"
+                            )
+                          }
+                          className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                         >
-                          <span>
-                            <Upload className="mr-2 h-4 w-4" /> Upload Document
-                          </span>
+                          <X className="h-4 w-4" />
                         </Button>
-                      </label>
-                      <p className="text-xs text-foreground/40 mt-1">
-                        PDF or image, max 5MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tax ID */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80">
-                      Tax ID / Registration Number
-                    </Label>
-                    {isFilled(docs.taxId) ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      </div>
                     )}
                   </div>
-                  <Input
-                    value={docs.taxId}
-                    onChange={(e) => updateTaxId(e.target.value)}
-                    className="mt-1.5 border-white/20 bg-white/10 text-foreground"
-                    placeholder="e.g., 123456789"
-                  />
                 </div>
-              </div>
+              )}
 
-              {/* Submit */}
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#639922] to-[#4f7a1a] text-foreground hover:from-[#4f7a1a] hover:to-[#3b5e14]"
-                >
-                  {loading ? "Submitting..." : "Submit for Verification"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <p className="text-center text-xs text-foreground/30 mt-4">
-                  Your information will be reviewed by our team. We'll notify
-                  you once approved.
-                </p>
-              </div>
+              {/* Submit Button */}
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "Submitting..." : "Submit for Approval"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </form>
           </CardContent>
         </Card>

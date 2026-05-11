@@ -31,7 +31,7 @@ class ChatService {
   // Get all connected students for this university admin
   async getConnectedStudents(universityId: string): Promise<ChatParticipant[]> {
     const { data: connections, error: connError } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .select('student_id')
       .eq('university_id', universityId)
       .eq('status', 'accepted');
@@ -191,7 +191,7 @@ class ChatService {
 
   async getStudentConnectedUniversity(studentId: string): Promise<ChatParticipant | null> {
     const { data: connection, error: connError } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .select('university_id')
       .eq('student_id', studentId)
       .eq('status', 'accepted')

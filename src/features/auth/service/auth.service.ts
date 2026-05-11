@@ -251,8 +251,7 @@ async uploadCompanyLogo(userId: string, file: File): Promise<string> {
       profileData.skills = params.profile.skills;
     } else if (params.role === "professional") {
       profileData.candidate_type = params.profile.candidateType;
-      profileData.current_role = params.profile.currentRole;
-      profileData.current_company = params.profile.company;
+      profileData.role = params.profile.currentRole;
       profileData.years_of_experience = params.profile.yearsOfExperience;
       profileData.skills = params.profile.skills;
       profileData.looking_for = params.profile.lookingFor;

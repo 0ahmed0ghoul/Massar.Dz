@@ -6,9 +6,13 @@ import RecommendedJobs from "../components/dashboard/RecommendedJobs";
 import ActivityTimeline from "../components/dashboard/ActivityTimeline";
 import UpcomingInterviews from "../components/dashboard/UpcomingInterviews";
 import { useStudentDashboard } from "../hooks/useStudentDashboard";
-
+import { useStudentQA } from "../hooks/useStudentQA";
+import { Link } from "react-router-dom";
+import { FileQuestion, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 const DashboardPage = () => {
   const { stats, applications, jobs, activities, interviews, profile, loading } = useStudentDashboard();
+  const { pendingCount, loading: qaLoading } = useStudentQA();
 
   if (loading) {
     return (
@@ -46,7 +50,28 @@ const DashboardPage = () => {
               </p>
             </div>
           </header>
-
+ {/* Pending Questions Banner */}
+ {!qaLoading && pendingCount > 0 && (
+            <div className="rounded-2xl border border-[#639922]/30 bg-[#639922]/5 p-4 backdrop-blur-sm flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#639922]/20">
+                  <FileQuestion className="h-5 w-5 text-[#639922]" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Action Required</p>
+                  <p className="text-sm text-foreground/60">
+                    You have {pendingCount} unanswered question{pendingCount !== 1 ? "s" : ""} from the admin.
+                  </p>
+                </div>
+              </div>
+              <Link to="/student/dashboard/qa">
+                <Button
+                size="sm" className="bg-[#639922] text-black hover:bg-[#4f7a1a]">
+                  Answer Now <ArrowRight className="ml-2 h-3 w-3" />
+                </Button>
+              </Link>
+            </div>
+          )}
           {/* Profile Header */}
           {profile && <ProfileHeader profile={profile} />}
 

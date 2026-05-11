@@ -73,7 +73,7 @@ export default function UniversityDashboard() {
         <div className="space-y-6 sm:space-y-8">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">University Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Department Dashboard</h1>
             <p className="text-sm text-foreground/40 sm:text-base">
               Overview of student registrations and connection status.
             </p>

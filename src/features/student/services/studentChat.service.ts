@@ -13,7 +13,7 @@ class StudentChatService {
   ): Promise<StudentConversation | null> {
     // Get accepted connection
     const { data: connection, error: connError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select("university_id")
       .eq("student_id", studentId)
       .eq("status", "accepted")

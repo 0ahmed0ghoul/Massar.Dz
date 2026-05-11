@@ -27,6 +27,7 @@ import {
   MessageCircleCodeIcon,
   BriefcaseBusiness,
   MessageCircleMoreIcon,
+  BarChart3,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -72,7 +73,8 @@ const universityItems = [
   { title: "Students Database", url: "/university/dashboard/students", icon: Database },
   { title: "Chat", url: "/university/dashboard/chat", icon: MessageCircleMore },
   { title: "Certificates", url: "/university/dashboard/certificates", icon: LucidePartyPopper },
-  { title: "Statistics", url: "/university/dashboard/statistics", icon: ChartBarIncreasingIcon },
+  { title: "Analytics", url: "/university/analytics", icon: BarChart3 }
+
 ];
 
 const adminItems = [
@@ -81,6 +83,7 @@ const adminItems = [
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
   { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
   { title: "Feedbacks", url: "/dashboard/admin/feedbacks", icon: MessageCircleCodeIcon },
+  { title: "Q/A", url: "/dashboard/admin/questionanswer", icon: MessageCircleMoreIcon },
 ];
 
 const roleLabels: Record<UserRole, string> = {

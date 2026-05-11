@@ -101,7 +101,7 @@ export interface StudentProfile extends BaseProfile {
   student_card_url: string | null;
   academic_year: string | null;
 
-  current_role: string | null;
+  role: string | null;
   current_company: string | null;
   years_of_experience: number | null;
 

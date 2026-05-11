@@ -130,7 +130,7 @@ export const universityProfileService = {
   // Get pending connection requests for this university
   async getPendingRequests(universityId: string): Promise<PendingRequest[]> {
     const { data, error } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select(`
         id,
         student_id,
@@ -170,7 +170,7 @@ export const universityProfileService = {
   async acceptRequest(requestId: string, studentId: string): Promise<void> {
     // 1. Update invitation status
     const { error: connError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .update({ status: "accepted", updated_at: new Date().toISOString() })
       .eq("id", requestId);
     if (connError) throw new Error(connError.message);
@@ -187,7 +187,7 @@ export const universityProfileService = {
   async rejectRequest(requestId: string, studentId: string): Promise<void> {
     // 1. Update invitation status
     const { error: connError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .update({ status: "rejected", updated_at: new Date().toISOString() })
       .eq("id", requestId);
     if (connError) throw new Error(connError.message);

@@ -103,7 +103,7 @@ export const universityInvitationService = {
     universityId: string
   ): Promise<InvitationWithStudent[]> {
     const { data, error } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select(`
         id,
         student_id,
@@ -145,7 +145,7 @@ export const universityInvitationService = {
     universityId: string
   ): Promise<InvitationWithStudent[]> {
     const { data, error } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select(`
         id,
         student_id,
@@ -184,7 +184,7 @@ export const universityInvitationService = {
   // =========================
   async acceptInvitation(invitationId: string, studentId: string) {
     const { error: connError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .update({
         status: "accepted",
         updated_at: new Date().toISOString(),
@@ -208,7 +208,7 @@ export const universityInvitationService = {
   // =========================
   async rejectInvitation(invitationId: string, studentId: string) {
     const { error: connError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .update({
         status: "rejected",
         updated_at: new Date().toISOString(),

@@ -496,7 +496,7 @@ export default function ApplicationDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResumeParser resumeUrl={candidate.resume_url} />
+              {/* <ResumeParser resumeUrl={candidate.resume_url} /> */}Coming Soon
             </CardContent>
           </Card>
         )}

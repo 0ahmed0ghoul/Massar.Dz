@@ -48,7 +48,7 @@ export const adminVerificationService = {
   
       // Prevent duplicates
       const { data: existingConnection } = await supabase
-        .from("university_connections")
+        .from("department_connections")
         .select("id")
         .eq("student_id", profile.id)
         .eq("university_id", universityId)
@@ -56,7 +56,7 @@ export const adminVerificationService = {
   
       if (!existingConnection) {
         const { error: connectionError } = await supabase
-          .from("university_connections")
+          .from("department_connections")
           .insert({
             student_id: profile.id,
             university_id: universityId,
@@ -98,7 +98,7 @@ export const adminVerificationService = {
   async sendConnectionInvitation(studentId: string, universityId: string, invitedBy: string): Promise<void> {
     // 1. Check if invitation already exists
     const { data: existing } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select("id")
       .eq("student_id", studentId)
       .eq("university_id", universityId)
@@ -107,7 +107,7 @@ export const adminVerificationService = {
 
     // 2. Insert invitation record
     const { error: insertError } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .insert({
         student_id: studentId,
         university_id: universityId,
@@ -126,7 +126,7 @@ export const adminVerificationService = {
 
   async getConnectionStatus(studentId: string, universityId: string): Promise<string | null> {
     const { data, error } = await supabase
-      .from("university_connections")
+      .from("department_connections")
       .select("status")
       .eq("student_id", studentId)
       .eq("university_id", universityId)

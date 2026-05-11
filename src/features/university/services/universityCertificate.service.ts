@@ -29,7 +29,7 @@ class UniversityCertificateService {
   async getPendingRequests(universityId: string): Promise<CertificateRequest[]> {
     // Get all accepted student connections
     const { data: connections, error: connError } = await supabase
-      .from('university_connections')
+      .from('department_connections')
       .select('student_id')
       .eq('university_id', universityId)
       .eq('status', 'accepted');

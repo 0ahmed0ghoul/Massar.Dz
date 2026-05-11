@@ -8,7 +8,6 @@ import { PasswordInput } from "../PasswordInput";
 import { FieldError } from "../FieldError";
 import { universitySchema, UniversityFields } from "../../schemas/auth.schemas";
 import {
-  ALGERIAN_UNIVERSITIES,
   ALGERIAN_WILAYAS,
 } from "../../../../constants/algeria.constants";
 import { SearchableSelect } from "../searchable-select";
@@ -33,7 +32,6 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
   } = useForm<UniversityFields>({
     resolver: zodResolver(universitySchema),
     defaultValues: {
-      universityName: "",
       firstName: "",
       lastName: "",
       email: "",
@@ -55,31 +53,9 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
         }
       )}
     >
-      <div>
-        <Label className={labelCls}>University name *</Label>
-        <div className="mt-1.5">
-          <Controller
-            name="universityName"
-            control={control}
-            render={({ field }) => (
-              <SearchableSelect
-                options={ALGERIAN_UNIVERSITIES}
-                value={field.value || ""}
-                onChange={(val) => field.onChange(val)}
-                onBlur={field.onBlur} // ✅ ADD THIS
-                placeholder="Select or search your university..."
-                emptyMessage="No university found."
-              />
-            )}
-          />
-        </div>
-        <FieldError message={errors.universityName?.message} />
-      </div>
-
-      {/* Admin name */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className={labelCls}>Admin first name</Label>
+          <Label className={labelCls}>First name</Label>
           <Input
             placeholder="Jane"
             {...register("firstName")}
@@ -90,7 +66,7 @@ export function UniversityForm({ isLoading, onSubmit }: UniversityFormProps) {
           <FieldError message={errors.firstName?.message} />
         </div>
         <div>
-          <Label className={labelCls}>Admin last name</Label>
+          <Label className={labelCls}>Last name</Label>
           <Input
             placeholder="Doe"
             {...register("lastName")}
