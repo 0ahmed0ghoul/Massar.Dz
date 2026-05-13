@@ -166,7 +166,11 @@ export const studentService = {
   async updateProfile(studentId: string, payload: Partial<Profile>): Promise<void> {
     // Create a clean copy to avoid mutating the original payload
     const cleanedPayload: any = { ...payload };
-  
+    if (cleanedPayload.student_id === "") {
+      cleanedPayload.student_id = null;
+    }
+    console.log("Updating payload:", cleanedPayload);
+
     // Fields that are enums (should never be an empty string)
     const enumFields = [
       'speciality',

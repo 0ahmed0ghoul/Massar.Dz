@@ -182,21 +182,34 @@ const ProfileForm = ({
     }
 
     const changedFields: any = {};
+
     for (const key in payload) {
-      const currentValue = payload[key];
-      const originalValue = profile?.[key as keyof typeof profile];
-      if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
-        if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
+      const currentValue =
+        payload[key] === "" ? null : payload[key];
+    
+      const originalValue =
+        profile?.[key as keyof typeof profile] === ""
+          ? null
+          : profile?.[key as keyof typeof profile];
+    
+      if (Array.isArray(currentValue) || Array.isArray(originalValue)) {
+        if (
+          JSON.stringify(currentValue || []) !==
+          JSON.stringify(originalValue || [])
+        ) {
           changedFields[key] = currentValue;
         }
-      } else if (currentValue !== originalValue) {
-        changedFields[key] = currentValue;
+      } else {
+        if (String(currentValue ?? "") !== String(originalValue ?? "")) {
+          changedFields[key] = currentValue;
+        }
       }
     }
 
     if (Object.keys(changedFields).length === 0) return;
 
     const wasComplete = await studentService.isProfileComplete(profile.id);
+    console.log("Changed fields:", changedFields);
     await updateProfile(changedFields);
 
     if (profile?.role === "student") {
@@ -517,8 +530,8 @@ const ProfileForm = ({
                     options={[
                       { value: "", label: "Select degree" },
                       { value: "bachelor", label: "Bachelor's" },
-                      { value: "master", label: "Master's" },
-                      { value: "phd", label: "PhD" },
+                      { value: "Master", label: "Master" },
+                      { value: "Doctorate", label: "Doctorate" },
                       { value: "license", label: "License" },
                     ]}
                     isFilled={isFilled(localForm.degree_level)}

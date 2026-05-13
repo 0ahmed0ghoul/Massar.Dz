@@ -108,8 +108,8 @@ export const COMMON_DEGREES = [
 
 export const EDUCATION_LEVELS = [
   { value: "bachelor", label: "Bachelor's" },
-  { value: "master", label: "Master's" },
-  { value: "phd", label: "PhD" },
+  { value: "Master", label: "Master" },
+  { value: "Doctorate", label: "Doctorate" },
   { value: "bootcamp", label: "Bootcamp" },
 ];
 
