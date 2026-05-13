@@ -27,7 +27,6 @@ const DashboardLayout = ({ role }: Props) => {
   const { user, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -41,46 +40,14 @@ const DashboardLayout = ({ role }: Props) => {
           | null)
       : null;
 
-  // ── Notifications ─────────────────────────────────────────
-  useEffect(() => {
-    if (!user) return;
-    const fetchUnreadCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("is_read", false);
-        if (!error && count !== null) setNotificationCount(count);
-        else if (error) console.warn("Notification fetch error:", error);
-      } catch (err) {
-        console.error("Failed to fetch notification count:", err);
-      }
-    };
-    fetchUnreadCount();
-
-    let channel: any;
-    try {
-      channel = supabase
-        .channel("notifications-count")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${user.id}`,
-          },
-          () => fetchUnreadCount()
-        )
-        .subscribe();
-    } catch (err) {
-      console.warn("Failed to subscribe to notifications changes:", err);
-    }
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, [user]);
+  // Get univ admin type for university admins
+  const univAdminType =
+    role === "university_admin"
+      ? (profile?.univ_admin_type as
+          | "head_of_department"
+          | "rectorate"
+          | undefined)
+      : undefined;
 
   // ── Profile completion ────────────────────────────────────
   useEffect(() => {
@@ -89,7 +56,8 @@ const DashboardLayout = ({ role }: Props) => {
 
   // ── Pending accounts (super admin only) ───────────────────
   useEffect(() => {
-    if (role !== "super_admin") return;
+    if (role !== "super_admin" || !user) return;
+
     const fetchPendingCount = async () => {
       const { count, error } = await supabase
         .from("profiles")
@@ -102,7 +70,9 @@ const DashboardLayout = ({ role }: Props) => {
       }
       setPendingCount(count || 0);
     };
+
     fetchPendingCount();
+
     const channel = supabase
       .channel("profiles-pending-updates")
       .on(
@@ -111,10 +81,11 @@ const DashboardLayout = ({ role }: Props) => {
         () => fetchPendingCount()
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [role]);
+  }, [role, user]);
 
   // ── Unread messages (students only) ───────────────────────
   useEffect(() => {
@@ -161,25 +132,89 @@ const DashboardLayout = ({ role }: Props) => {
     };
   }, [user, role]);
 
-  const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
-  const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+  // ── Unread messages for university admins (head_of_department only) ──
+  useEffect(() => {
+    if (
+      !user ||
+      role !== "university_admin" ||
+      univAdminType !== "head_of_department"
+    )
+      return;
+
+    const fetchUnreadMessages = async () => {
+      const { count, error } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("read", false);
+      if (!error && count !== null) setUnreadMessagesCount(count);
+      else if (error) console.warn("Failed to fetch unread messages:", error);
+    };
+
+    fetchUnreadMessages();
+
+    const channel = supabase
+      .channel(`messages-unread-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => fetchUnreadMessages()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => fetchUnreadMessages()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, role, univAdminType]);
+
+  const initials =
+    (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "");
+  const fullName = `${profile?.first_name || ""} ${
+    profile?.last_name || ""
+  }`.trim();
   const email = profile?.email || "";
 
+  // Determine role label for display
+  const getRoleLabel = () => {
+    if (role === "university_admin") {
+      return univAdminType === "rectorate" ? "Rectorate" : "Department Head";
+    }
+    return role;
+  };
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <DashboardSidebar
         role={role}
         isOpen={sidebarOpen}
         isCollapsed={sidebarCollapsed}
         onClose={() => setSidebarOpen(false)}
-        notificationCount={notificationCount}
+        notificationCount={0} // Disabled for now
         isProfileComplete={isProfileComplete}
         pendingCount={pendingCount}
         candidateType={candidateType}
         unreadMessagesCount={unreadMessagesCount}
+        univAdminType={univAdminType} // Pass this to sidebar
       />
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 flex items-center justify-between border-b border-white/10 px-4">
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="sticky top-0 z-40 h-14 flex items-center justify-between border-b border-white/10 bg-background/95 backdrop-blur px-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -200,14 +235,32 @@ const DashboardLayout = ({ role }: Props) => {
               />
             </button>
           </div>
+
           <div className="flex items-center gap-3">
+            {/* Role badge */}
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-xs px-2 py-0.5 rounded-full border border-white/10 text-foreground/60">
+                {getRoleLabel()}
+              </span>
+            </div>
+
+            {/* User info */}
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium truncate max-w-[150px]">{fullName || "User"}</p>
-              <p className="text-xs text-foreground/40 truncate max-w-[150px]">{email}</p>
+              <p className="text-sm font-medium truncate max-w-[150px]">
+                {fullName || "User"}
+              </p>
+              <p className="text-xs text-foreground/40 truncate max-w-[150px]">
+                {email}
+              </p>
             </div>
+
             <div className="text-right block sm:hidden">
-              <p className="text-sm font-medium">{fullName?.split(" ")[0] || "User"}</p>
+              <p className="text-sm font-medium">
+                {fullName?.split(" ")[0] || "User"}
+              </p>
             </div>
+
+            {/* Avatar */}
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -216,7 +269,7 @@ const DashboardLayout = ({ role }: Props) => {
               />
             ) : (
               <div
-                className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold uppercase"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold uppercase text-white"
                 style={{ background: roleColors[role] }}
               >
                 {initials || "U"}
@@ -224,8 +277,10 @@ const DashboardLayout = ({ role }: Props) => {
             )}
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <Outlet />
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <Outlet />
         </main>
       </div>
     </div>

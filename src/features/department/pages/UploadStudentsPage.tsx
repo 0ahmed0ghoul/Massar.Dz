@@ -1,6 +1,6 @@
 // features/university/pages/UploadStudentsPage.tsx
-import { useUploadStudents } from "../hooks/useUploadStudents";
 import { Button } from "@/components/ui/button";
+import { useUploadStudents } from "@/features/university/hooks/useUploadStudents";
 import { useState } from "react";
 
 export default function UploadStudentsPage() {

@@ -550,6 +550,6 @@ export const UNIVERSITY_DEPARTMENTS = [
     ],
   };
   export const ACADEMIC_POSITIONS = [
-    { value: "department_head", label: "Department Head" },
+    { value: "head_of_department", label: "Department Head" },
     { value: "rectorate", label: "Rectorate" },
   ];

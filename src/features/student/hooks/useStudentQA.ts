@@ -1,14 +1,17 @@
+// Updated useStudentQA.ts
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { studentQAService, Question } from "../services/student-qa.service";
+import { authService } from "@/features/auth/service/auth.service";
 
 export function useStudentQA() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [completed, setCompleted] = useState(false);
   const { toast } = useToast();
 
   const loadUnanswered = useCallback(async () => {
@@ -19,6 +22,7 @@ export function useStudentQA() {
       setQuestions(data);
       const count = await studentQAService.getPendingQuestionsCount(user.id);
       setPendingCount(count);
+      setCompleted(count === 0);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
@@ -35,9 +39,10 @@ export function useStudentQA() {
     setSubmitting(true);
     try {
       await studentQAService.submitAnswer(user.id, questionId, answer);
-      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
-      setPendingCount((c) => c - 1);
-      toast({ title: "Answer submitted", description: "Thank you for your response!" });
+      
+      // Reload questions to get updated list (conditionals may appear/disappear)
+      await loadUnanswered();
+      
       return true;
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -47,11 +52,31 @@ export function useStudentQA() {
     }
   };
 
+  // Check if user is already questioned on mount
+  const checkQuestionedStatus = useCallback(async () => {
+    if (!user) return;
+    try {
+      const profile = await authService.fetchProfile(user.id);
+      if (profile?.is_questioned) {
+        setCompleted(true);
+        setPendingCount(0);
+        setQuestions([]);
+      }
+    } catch (error) {
+      console.error("Error checking questioned status:", error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    checkQuestionedStatus();
+  }, [checkQuestionedStatus]);
+
   return {
     questions,
     loading,
     submitting,
     pendingCount,
+    completed,
     refresh: loadUnanswered,
     submitAnswer,
   };

@@ -14,7 +14,6 @@ interface UniversityFormData {
   rector_name: string;
   website: string;
   department: string;
-  position: string;
   email: string;
 }
 
@@ -40,7 +39,6 @@ export function useUniversityCompleteProfile(
     rector_name: profile?.rector_name || "",
     website: profile?.website || "",
     department: profile?.department || "",
-    position: profile?.position || "",
     email: profile?.email || "",
   });
 
@@ -159,7 +157,6 @@ export function useUniversityCompleteProfile(
         website: form.website,
         wilaya: form.wilaya,
         department: form.department,
-        position: form.position,
         email: form.email,
       };
 

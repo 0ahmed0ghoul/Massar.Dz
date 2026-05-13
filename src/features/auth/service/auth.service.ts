@@ -54,6 +54,7 @@ class AuthService {
       status: "pending",
       is_completed: false,
       is_verified: false,
+      is_questioned: false,
       first_name: profileData.first_name || null,
       last_name: profileData.last_name || null,
       degree_level: profileData.degree_level || null,
@@ -63,12 +64,12 @@ class AuthService {
       company_type: profileData.company_type || null,
       industry: profileData.industry || null,
       wilaya: profileData.wilaya || null,
-      position: profileData.position || null,
       graduation_year: profileData.graduation_year || null,
       speciality: profileData.speciality || null,
       years_of_experience: profileData.years_of_experience || null,
       looking_for: profileData.looking_for || null,
       skills: profileData.skills || null,
+      univ_admin_type: profileData.univ_admin_type || null,
       student_id: profileData.student_id || null,
     });
 
@@ -81,7 +82,18 @@ class AuthService {
 
     return authData.user;
   }
+  // Add this new method to the AuthService class:
+  async markAsQuestioned(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_questioned: true })
+      .eq("id", userId);
 
+    if (error) {
+      console.error("Error marking as questioned:", error);
+      throw error;
+    }
+  }
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -99,7 +111,6 @@ class AuthService {
 
     return data.subscription;
   }
-
 
   async fetchProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
@@ -159,23 +170,25 @@ class AuthService {
   // ───────────────────────── STORAGE ─────────────────────────
 
   // Inside AuthService class
-async uploadCompanyLogo(userId: string, file: File): Promise<string> {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
-  const filePath = `company-logos/${fileName}`;
+  async uploadCompanyLogo(userId: string, file: File): Promise<string> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+    const filePath = `company-logos/${fileName}`;
 
-  // Make sure bucket "company-files" exists; otherwise create it via Supabase storage
-  const { error: uploadError } = await supabase.storage
-    .from("company-files")
-    .upload(filePath, file, { upsert: true });
+    // Make sure bucket "company-files" exists; otherwise create it via Supabase storage
+    const { error: uploadError } = await supabase.storage
+      .from("company-files")
+      .upload(filePath, file, { upsert: true });
 
-  if (uploadError) throw new Error(uploadError.message);
+    if (uploadError) throw new Error(uploadError.message);
 
-  const { data } = supabase.storage.from("company-files").getPublicUrl(filePath);
-  if (!data?.publicUrl) throw new Error("Failed to generate public URL");
+    const { data } = supabase.storage
+      .from("company-files")
+      .getPublicUrl(filePath);
+    if (!data?.publicUrl) throw new Error("Failed to generate public URL");
 
-  return data.publicUrl;
-}
+    return data.publicUrl;
+  }
 
   async uploadUniversityLogo(userId: string, file: File): Promise<string> {
     const fileExt = file.name.split(".").pop();
@@ -263,7 +276,7 @@ async uploadCompanyLogo(userId: string, file: File): Promise<string> {
     } else if (params.role === "university_admin") {
       profileData.university_name = params.profile.universityName;
       profileData.department = params.profile.department;
-      profileData.position = params.profile.position;
+      profileData.univ_admin_type = params.profile.univ_admin_type;
       profileData.wilaya = params.profile.wilaya;
     }
 

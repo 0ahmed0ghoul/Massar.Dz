@@ -127,7 +127,6 @@ export interface CompanyProfile extends BaseProfile {
 
   certificate_url: string | null;
 
-  position: string | null;
   rector_name: string | null;
 
   verification_docs: Record<string, any> | null;

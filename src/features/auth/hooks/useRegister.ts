@@ -12,6 +12,10 @@ export interface RegisterFormData {
   password: string;
   firstName?: string;
   lastName?: string;
+
+  // ADD THIS
+  univ_admin_type?: "rectorate" | "head_of_department";
+
   degreeLevel?: string;
   companyName?: string;
   companyType?: CompanyType;
@@ -19,7 +23,6 @@ export interface RegisterFormData {
   universityName?: string;
   wilaya?: string;
   department?: string;
-  position?: string;
   graduationYear?: string;
   university?: string;
   degree?: string;
@@ -32,7 +35,7 @@ export interface RegisterFormData {
   registrationNumber?: string;
   location?: string;
   candidateType?: string;
-  studentId?: string; // ✅ added
+  studentId?: string;
 }
 type BaseFormData = Partial<RegisterFormData>;
 

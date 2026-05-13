@@ -196,7 +196,7 @@ export const studentService = {
     // Optional: convert any empty string in any field to null
     // (be careful – some fields like email might not be nullable)
     // You can restrict to specific fields or just do it safely
-    const nullableFields = ['first_name', 'last_name', 'phone', 'wilaya', 'university_name', 'department', 'position', 'company_name', 'industry', 'company_description'];
+    const nullableFields = ['first_name', 'last_name', 'phone', 'wilaya', 'university_name', 'department', 'company_name', 'industry', 'company_description'];
     nullableFields.forEach(field => {
       if (cleanedPayload[field] === '') {
         cleanedPayload[field] = null;

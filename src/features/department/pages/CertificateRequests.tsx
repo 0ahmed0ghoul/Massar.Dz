@@ -9,7 +9,7 @@ import {
   Clock, Award, ExternalLink, ShieldCheck, AlertTriangle,
   Image as ImageIcon,
 } from 'lucide-react';
-import { useUniversityCertificateRequests } from '../hooks/useUniversityCertificateRequests';
+import { useUniversityCertificateRequests } from '../../university/hooks/useUniversityCertificateRequests';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type CertRequest = any; // replace with your actual type

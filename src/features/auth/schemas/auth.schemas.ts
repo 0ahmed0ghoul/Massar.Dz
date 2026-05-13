@@ -98,6 +98,11 @@ export const universitySchema = z.object({
   wilaya: z
     .string()
     .min(1, "Wilaya required"),
+
+    univ_admin_type: z.enum([
+      "rectorate",
+      "head_of_department",
+    ]),
 });
 
 export type UniversityFields = z.infer<typeof universitySchema>;

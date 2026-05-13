@@ -1,6 +1,11 @@
+// pages/university/complete-profile.tsx
+
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import {
   Card,
   CardContent,
@@ -8,32 +13,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import {
   Upload,
   Building2,
   FileText,
-  MapPin,
-  Globe,
-  GraduationCap,
   CheckCircle,
-  XCircle,
-  Building,
-  Shield,
-  Award,
   ArrowRight,
+  Loader2,
+  Landmark,
+  GraduationCap,
+  ShieldCheck,
+  X,
+  Globe,
 } from "lucide-react";
 
 import { useUniversityCompleteProfile } from "@/features/auth/hooks/useUniversityCompleteProfile";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
+
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
+
 import {
   ALGERIAN_UNIVERSITIES,
   ALGERIAN_WILAYAS,
 } from "@/constants/algeria.constants";
-import {
-  ACADEMIC_POSITIONS,
-  UNIVERSITY_DEPARTMENTS,
-} from "@/constants/university.constants";
+
+import { UNIVERSITY_DEPARTMENTS } from "@/constants/university.constants";
 
 import {
   Popover,
@@ -50,18 +55,16 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { useState } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 export default function UniversityCompleteProfilePage() {
   const { user, profile } = useAuth();
+
   const {
     loading,
     form,
     docs,
-    previewUrls,
     updateForm,
-    updateTaxId,
     handleFileChange,
     removeFile,
     handleSubmit,
@@ -69,214 +72,116 @@ export default function UniversityCompleteProfilePage() {
 
   const [universityOpen, setUniversityOpen] = useState(false);
 
-  const isFilled = (value: string) => value && value.trim().length > 0;
+  const adminType = profile?.univ_admin_type || form.univ_admin_type;
 
-  const isRectorate = form.position === "rectorate";
-  const isHeadOfDepartment = form.position === "head_of_department";
+  const isRectorate = adminType === "rectorate";
+  const isHeadOfDepartment = adminType === "head_of_department";
+
+  const inputCls =
+    "mt-1.5 h-11 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/80 placeholder:text-white/20 focus:border-[#639922]/35 focus:bg-[#639922]/[0.03] focus:ring-2 focus:ring-[#639922]/10 transition-all";
+
+  const labelCls =
+    "text-[11px] font-medium uppercase tracking-wider text-white/45";
 
   return (
-    <div className="relative min-h-screen bg-background py-12 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <Card className="border-white/10 bg-white/[0.03]">
-          <CardHeader>
-            <CardTitle>Complete University Profile</CardTitle>
-            <CardDescription>
-              Provide your details and upload required documents.
-            </CardDescription>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* Background */}
+      <div className="pointer-events-none fixed inset-0 bg-grid-pattern opacity-[0.035]" />
+
+      <div
+        className="pointer-events-none fixed -top-48 left-1/2 h-[500px] w-[700px]
+                   -translate-x-1/3 rounded-full bg-[#639922]/[0.07] blur-[130px]"
+      />
+
+      <div
+        className="pointer-events-none fixed bottom-0 right-0 h-72 w-72
+                   rounded-full bg-[#639922]/[0.04] blur-[90px]
+                   translate-x-1/3 translate-y-1/3"
+      />
+
+      <div
+        className="pointer-events-none fixed top-0 left-0 right-0 h-px
+                   bg-gradient-to-r from-transparent via-[#639922]/35 to-transparent"
+      />
+
+      <div className="relative z-10 container mx-auto max-w-5xl px-4 py-10">
+        <Card className="border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl">
+          <CardHeader className="border-b border-white/[0.06]">
+            <div className="flex items-start gap-4">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-2xl
+                           border border-[#639922]/20 bg-[#639922]/10"
+              >
+                {isRectorate ? (
+                  <Landmark className="h-6 w-6 text-[#639922]" />
+                ) : (
+                  <GraduationCap className="h-6 w-6 text-[#639922]" />
+                )}
+              </div>
+
+              <div className="flex-1">
+                <CardTitle className="text-2xl font-bold text-white/90">
+                  Complete University Profile
+                </CardTitle>
+
+                <CardDescription className="mt-2 text-sm text-white/35">
+                  Fill in your institution information and upload the required
+                  verification documents.
+                </CardDescription>
+
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#639922]/20 bg-[#639922]/10 px-3 py-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#639922]" />
+
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#639922]">
+                    {isRectorate
+                      ? "Rectorate Account"
+                      : "Head of Department"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    handleFileChange("logo", e.target.files?.[0] || null)
-                  }
-                  className="hidden"
-                  id="logo-upload"
-                />
+              {/* ===================================================== */}
+              {/* PROOF DOCUMENT FIRST */}
+              {/* ===================================================== */}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    document.getElementById("logo-upload")?.click()
-                  }
-                >
-                  Upload Logo
-                </Button>
-              </div>
+              <div
+                className="rounded-2xl border border-[#639922]/15
+                           bg-[#639922]/[0.04] p-5"
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl
+                               border border-[#639922]/20 bg-[#639922]/10"
+                  >
+                    <FileText className="h-5 w-5 text-[#639922]" />
+                  </div>
 
-              {/* Personal Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>First Name *</Label>
-                  <Input
-                    value={form.firstName}
-                    onChange={(e) => updateForm("firstName", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label>Last Name *</Label>
-                  <Input
-                    value={form.lastName}
-                    onChange={(e) => updateForm("lastName", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-white/85">
+                      {isRectorate
+                        ? "Rectorate Verification Document"
+                        : "Department Head Verification"}
+                    </h3>
 
-              <div>
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => updateForm("email", e.target.value)}
-                  required
-                />
-              </div>
+                    <p className="mt-1 text-sm leading-relaxed text-white/35">
+                      {isRectorate
+                        ? "Upload an official rectorate appointment or authorization document."
+                        : "Upload an official department head appointment document."}
+                    </p>
 
-              {/* Wilaya */}
-              <div>
-                <Label>Wilaya (State) *</Label>
-                <SearchableSelect
-                  options={ALGERIAN_WILAYAS}
-                  value={form.wilaya || ""}
-                  onChange={(v) => updateForm("wilaya", v)}
-                  placeholder="Select wilaya"
-                />
-              </div>
-
-              {/* University Selection */}
-              <div>
-                <Label>University *</Label>
-                <Popover open={universityOpen} onOpenChange={setUniversityOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full justify-between bg-white/10 border-white/20 text-foreground hover:bg-white/10"
-                    >
-                      {form.university_name ? (
-                        <span className="truncate">{form.university_name}</span>
-                      ) : (
-                        "Select university..."
-                      )}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0 bg-background border-white/20">
-                    <Command>
-                      <CommandInput placeholder="Search university..." />
-                      <CommandList>
-                        <CommandEmpty>No university found.</CommandEmpty>
-                        <CommandGroup>
-                          {ALGERIAN_UNIVERSITIES.map((uni) => (
-                            <CommandItem
-                              key={uni}
-                              value={uni}
-                              onSelect={(currentValue) => {
-                                updateForm("university_name", currentValue);
-                                setUniversityOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  form.university_name === uni
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                }`}
-                              />
-                              {uni}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Position */}
-              <div>
-                <Label>Position *</Label>
-                <SearchableSelect
-                  options={ACADEMIC_POSITIONS.map((p) => p.label)}
-                  value={
-                    ACADEMIC_POSITIONS.find((p) => p.value === form.position)
-                      ?.label || ""
-                  }
-                  onChange={(label) => {
-                    const selected = ACADEMIC_POSITIONS.find(
-                      (p) => p.label === label
-                    );
-                    const value = selected?.value || "";
-                    updateForm("position", value);
-                    if (value === "rectorate") {
-                      updateForm("department", "");
-                    }
-                  }}
-                  placeholder="Select position"
-                />
-              </div>
-
-              {/* Department (if head of department) */}
-              {!isRectorate && (
-                <div>
-                  <Label>Department *</Label>
-                  <SearchableSelect
-                    options={UNIVERSITY_DEPARTMENTS}
-                    value={form.department || ""}
-                    onChange={(v) => updateForm("department", v)}
-                    placeholder="Select department"
-                  />
-                </div>
-              )}
-
-              {/* Website */}
-              <div>
-                <Label>Website</Label>
-                <Input
-                  value={form.website}
-                  onChange={(e) => updateForm("website", e.target.value)}
-                />
-              </div>
-
-              {/* Proof Documents Section */}
-              {(isRectorate || isHeadOfDepartment) && (
-                <div className="border-t border-white/10 pt-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    {isRectorate
-                      ? "Rectorate Proof Document"
-                      : "Head of Department Proof Document"}
-                  </h3>
-                  <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-[#639922]" />
-
-                        <div>
-                          <p className="text-sm font-medium">
-                            {isRectorate
-                              ? "Official Appointment Decree"
-                              : "Department Head Appointment Letter"}
-                          </p>
-
-                          <p className="text-xs text-white/40">
-                            PDF, JPG, PNG (max 5MB)
-                          </p>
-                        </div>
-                      </div>
-
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                       <input
                         type="file"
                         accept=".pdf,image/*"
                         onChange={(e) =>
                           handleFileChange(
-                            isRectorate ? "rectorateProof" : "headOfDeptProof",
+                            isRectorate
+                              ? "rectorateProof"
+                              : "headOfDeptProof",
                             e.target.files?.[0] || null
                           )
                         }
@@ -286,53 +191,362 @@ export default function UniversityCompleteProfilePage() {
 
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
                         onClick={() =>
                           document.getElementById("proof-upload")?.click()
                         }
+                        className="rounded-xl border border-[#639922]/30 bg-[#639922]/15 text-[#639922]
+                                   hover:bg-[#639922]/25 hover:border-[#639922]/50"
                       >
-                        Upload
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Proof
                       </Button>
+
+                      <span className="text-[11px] text-white/25">
+                        PDF, PNG or JPG • Max 5MB
+                      </span>
                     </div>
 
                     {docs[
-                      isRectorate ? "rectorateProof" : "headOfDeptProof"
+                      isRectorate
+                        ? "rectorateProof"
+                        : "headOfDeptProof"
                     ] && (
-                      <div className="mt-4 flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                      <div
+                        className="mt-5 flex items-center gap-3 rounded-xl
+                                   border border-white/[0.08] bg-white/[0.03]
+                                   px-4 py-3"
+                      >
+                        <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
 
-                        <span className="flex-1 truncate text-sm text-white/70">
-                          {
-                            docs[
-                              isRectorate ? "rectorateProof" : "headOfDeptProof"
-                            ]?.name
-                          }
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white/75">
+                            {
+                              docs[
+                                isRectorate
+                                  ? "rectorateProof"
+                                  : "headOfDeptProof"
+                              ]?.name
+                            }
+                          </p>
+                        </div>
 
-                        <Button
+                        <button
                           type="button"
-                          size="icon"
-                          variant="ghost"
                           onClick={() =>
                             removeFile(
-                              isRectorate ? "rectorateProof" : "headOfDeptProof"
+                              isRectorate
+                                ? "rectorateProof"
+                                : "headOfDeptProof"
                             )
                           }
-                          className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg
+                                     text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
                         >
                           <X className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* ===================================================== */}
+              {/* LOGO - ONLY RECTORATE */}
+              {/* ===================================================== */}
+
+              {isRectorate && (
+                <div>
+                  <Label className={labelCls}>University Logo</Label>
+
+                  <div
+                    className="mt-2 flex items-center gap-4 rounded-2xl
+                               border border-white/[0.08] bg-white/[0.03]
+                               p-4"
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleFileChange(
+                          "logo",
+                          e.target.files?.[0] || null
+                        )
+                      }
+                      className="hidden"
+                      id="logo-upload"
+                    />
+
+                    <div
+                      className="flex h-14 w-14 items-center justify-center rounded-xl
+                                 border border-white/[0.08] bg-white/[0.04]"
+                    >
+                      <Building2 className="h-6 w-6 text-white/30" />
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white/75">
+                        Upload university logo
+                      </p>
+
+                      <p className="mt-1 text-[11px] text-white/25">
+                        Recommended: PNG with transparent background
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        document.getElementById("logo-upload")?.click()
+                      }
+                      className="border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+                    >
+                      Upload
+                    </Button>
+                  </div>
+                </div>
               )}
 
-              {/* Submit Button */}
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Submitting..." : "Submit for Approval"}
-                <ArrowRight className="ml-2 h-4 w-4" />
+              {/* ===================================================== */}
+              {/* PERSONAL INFO */}
+              {/* ===================================================== */}
+
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl
+                               border border-[#639922]/20 bg-[#639922]/10"
+                  >
+                    <ShieldCheck className="h-5 w-5 text-[#639922]" />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-white/85">
+                      Personal Information
+                    </h3>
+
+                    <p className="text-sm text-white/30">
+                      Administrator details
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <Label className={labelCls}>First Name *</Label>
+
+                    <Input
+                      value={form.firstName}
+                      onChange={(e) =>
+                        updateForm("firstName", e.target.value)
+                      }
+                      className={inputCls}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label className={labelCls}>Last Name *</Label>
+
+                    <Input
+                      value={form.lastName}
+                      onChange={(e) =>
+                        updateForm("lastName", e.target.value)
+                      }
+                      className={inputCls}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className={labelCls}>Institutional Email *</Label>
+
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      updateForm("email", e.target.value)
+                    }
+                    className={inputCls}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* ===================================================== */}
+              {/* UNIVERSITY INFO */}
+              {/* ===================================================== */}
+
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl
+                               border border-[#639922]/20 bg-[#639922]/10"
+                  >
+                    <Building2 className="h-5 w-5 text-[#639922]" />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-white/85">
+                      University Information
+                    </h3>
+
+                    <p className="text-sm text-white/30">
+                      Institution details
+                    </p>
+                  </div>
+                </div>
+
+                {/* Wilaya */}
+                <div>
+                  <Label className={labelCls}>Wilaya *</Label>
+
+                  <div className="mt-1.5">
+                    <SearchableSelect
+                      options={ALGERIAN_WILAYAS}
+                      value={form.wilaya || ""}
+                      onChange={(v) => updateForm("wilaya", v)}
+                      placeholder="Select wilaya"
+                    />
+                  </div>
+                </div>
+
+                {/* University */}
+                <div>
+                  <Label className={labelCls}>University *</Label>
+
+                  <Popover
+                    open={universityOpen}
+                    onOpenChange={setUniversityOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-1.5 h-11 w-full justify-between rounded-xl border-white/[0.08]
+                                   bg-white/[0.03] text-white/75 hover:bg-white/[0.05]"
+                      >
+                        {form.university_name ? (
+                          <span className="truncate">
+                            {form.university_name}
+                          </span>
+                        ) : (
+                          "Select university..."
+                        )}
+
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-[400px] border-white/[0.08] bg-background p-0">
+                      <Command>
+                        <CommandInput placeholder="Search university..." />
+
+                        <CommandList>
+                          <CommandEmpty>
+                            No university found.
+                          </CommandEmpty>
+
+                          <CommandGroup>
+                            {ALGERIAN_UNIVERSITIES.map((uni) => (
+                              <CommandItem
+                                key={uni}
+                                value={uni}
+                                onSelect={(currentValue) => {
+                                  updateForm(
+                                    "university_name",
+                                    currentValue
+                                  );
+
+                                  setUniversityOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    form.university_name === uni
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  }`}
+                                />
+
+                                {uni}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Department only for HOD */}
+                {isHeadOfDepartment && (
+                  <div>
+                    <Label className={labelCls}>Department *</Label>
+
+                    <div className="mt-1.5">
+                      <SearchableSelect
+                        options={UNIVERSITY_DEPARTMENTS}
+                        value={form.department || ""}
+                        onChange={(v) =>
+                          updateForm("department", v)
+                        }
+                        placeholder="Select department"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Website only for rectorate */}
+                {isRectorate && (
+                  <div>
+                    <Label className={labelCls}>Website</Label>
+
+                    <div className="relative mt-1.5">
+                      <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
+
+                      <Input
+                        value={form.website}
+                        onChange={(e) =>
+                          updateForm("website", e.target.value)
+                        }
+                        placeholder="https://university.edu.dz"
+                        className="h-11 rounded-xl border border-white/[0.08]
+                                   bg-white/[0.03] pl-10 text-white/80
+                                   placeholder:text-white/20
+                                   focus:border-[#639922]/35
+                                   focus:ring-2 focus:ring-[#639922]/10"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ===================================================== */}
+              {/* SUBMIT */}
+              {/* ===================================================== */}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full rounded-xl border border-[#639922]/30
+                           bg-[#639922]/15 text-[13px] font-semibold text-[#639922]
+                           hover:bg-[#639922]/25 hover:border-[#639922]/50
+                           hover:shadow-[0_4px_14px_rgba(99,153,34,0.25)]
+                           transition-all duration-200 disabled:opacity-40"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit for Approval
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>

@@ -1,7 +1,7 @@
 // features/university/hooks/useChat.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { chatService, Message, ChatParticipant } from '../services/chat.service';
+import { chatService, Message, ChatParticipant } from '../../university/services/chat.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 export function useChat(adminId: string, selectedStudentId?: string) {

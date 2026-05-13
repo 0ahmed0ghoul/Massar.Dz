@@ -1,103 +1,432 @@
-// features/university/hooks/useUniversityStats.ts
-import { useState, useEffect } from 'react';
+// features/university/hooks/useUniversityHooks.ts
+import { useEffect, useState } from 'react';
+import { 
+  universityService,
+  DepartmentStats, 
+  DetailedStats, 
+  UniversityStats, 
+  SpecialitySummary,
+  DepartmentWithStats,
+  GraduateStatistics,
+  DepartmentOverview,
+  UniversityDashboardSummary
+} from '../services/university.analysis.service';
 
-export interface UniversityStats {
-  totalStudents: number;
-  studentsByYear: Record<string, number>;
-  studentsBySpeciality: Record<string, number>;
-  studentsByStatus: { studying: number; graduated: number; self_taught: number };
-  topSkills: { name: string; count: number }[];
-  skillDistribution: { name: string; value: number }[];
-  certificatesByType: Record<string, number>;
-  totalCertificates: number;
-  starsCertificateHolders: number;
-  applicationsByStatus: Record<string, number>;
-  totalApplications: number;
-  applicationTrend: { month: string; count: number }[];
-  averageExperienceYears: number;
-  employedCount: number;
-  employmentRate: number;
-}
+// ==========================================
+// SPECIALITY-LEVEL STATISTICS
+// ==========================================
 
-function generateMockStats(): UniversityStats {
-  return {
-    totalStudents: 342,
-    studentsByYear: {
-      "1st Year": 78,
-      "2nd Year": 85,
-      "3rd Year": 92,
-      "4th Year": 54,
-      "5th Year": 33,
-    },
-    studentsBySpeciality: {
-      "Computer Science": 120,
-      "Software Engineering": 65,
-      "Data Science": 48,
-      "Cybersecurity": 42,
-      "AI & ML": 35,
-      "Business Informatics": 32,
-    },
-    studentsByStatus: {
-      studying: 245,
-      graduated: 67,
-      self_taught: 30,
-    },
-    topSkills: [
-      { name: "JavaScript", count: 156 },
-      { name: "Python", count: 142 },
-      { name: "React", count: 110 },
-      { name: "Node.js", count: 89 },
-      { name: "TypeScript", count: 76 },
-      { name: "SQL", count: 68 },
-      { name: "Java", count: 55 },
-      { name: "Git", count: 52 },
-      { name: "Docker", count: 41 },
-      { name: "Machine Learning", count: 37 },
-    ],
-    skillDistribution: [],
-    certificatesByType: {
-      major: 210,
-      stars: 48,
-      graduation: 98,
-      hackathon: 67,
-      english: 89,
-    },
-    totalCertificates: 512,
-    starsCertificateHolders: 48,
-    applicationsByStatus: {
-      pending: 45,
-      reviewing: 28,
-      shortlisted: 19,
-      interview: 12,
-      rejected: 33,
-      hired: 8,
-    },
-    totalApplications: 145,
-    applicationTrend: [
-      { month: "Dec 2024", count: 12 },
-      { month: "Jan 2025", count: 18 },
-      { month: "Feb 2025", count: 23 },
-      { month: "Mar 2025", count: 28 },
-      { month: "Apr 2025", count: 35 },
-      { month: "May 2025", count: 29 },
-    ],
-    averageExperienceYears: 1.8,
-    employedCount: 48,
-    employmentRate: 14,
-  };
-}
-
-export function useUniversityStats() {
-  const [stats, setStats] = useState<UniversityStats | null>(null);
+export function useSpecialityStatistics(universityName: string, speciality: string) {
+  const [stats, setStats] = useState<DepartmentStats | null>(null);
+  const [details, setDetails] = useState<DetailedStats | null>(null);
+  const [graduateStats, setGraduateStats] = useState<GraduateStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats(generateMockStats());
+    if (!universityName || !speciality) {
       setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const [chartsData, detailedData] = await Promise.all([
+          universityService.getDepartmentCharts(universityName, speciality),
+          universityService.getDetailedStatistics(universityName, speciality)
+        ]);
+        
+        setStats(chartsData);
+        setDetails(detailedData);
+      } catch (err: any) {
+        console.error('Error fetching speciality statistics:', err);
+        setError(err.message || 'Failed to load statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [universityName, speciality]);
+
+  const hasData = stats && (
+    stats.situation.length > 0 ||
+    stats.sectors.length > 0 ||
+    stats.functions.length > 0 ||
+    stats.salaryDistribution.length > 0
+  );
+
+  const refresh = async () => {
+    if (!universityName || !speciality) return;
+    setLoading(true);
+    try {
+      const [chartsData, detailedData] = await Promise.all([
+        universityService.getDepartmentCharts(universityName, speciality),
+        universityService.getDetailedStatistics(universityName, speciality)
+      ]);
+      setStats(chartsData);
+      setDetails(detailedData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { stats, details, graduateStats, loading, error, hasData, refresh };
+}
+
+// ==========================================
+// UNIVERSITY-LEVEL STATISTICS
+// ==========================================
+
+export function useUniversityStatistics(universityName: string) {
+  const [stats, setStats] = useState<UniversityStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityName) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchStats = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const universityStats = await universityService.getUniversityStats(universityName);
+        setStats(universityStats);
+      } catch (err: any) {
+        console.error('Error fetching university statistics:', err);
+        setError(err.message || 'Failed to load university statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [universityName]);
+
+  const refresh = async () => {
+    if (!universityName) return;
+    setLoading(true);
+    try {
+      const universityStats = await universityService.getUniversityStats(universityName);
+      setStats(universityStats);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { stats, loading, error, refresh };
+}
+
+// ==========================================
+// UNIVERSITY SPECIALITIES
+// ==========================================
+
+export function useUniversitySpecialities(universityName: string) {
+  const [specialities, setSpecialities] = useState<SpecialitySummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityName) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchSpecialities = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getUniversitySpecialitiesStats(universityName);
+        setSpecialities(data);
+      } catch (err: any) {
+        console.error('Error fetching specialities:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpecialities();
+  }, [universityName]);
+
+  const refresh = async () => {
+    if (!universityName) return;
+    setLoading(true);
+    try {
+      const data = await universityService.getUniversitySpecialitiesStats(universityName);
+      setSpecialities(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { specialities, loading, error, refresh };
+}
+
+// ==========================================
+// UNIVERSITIES WITH GRADUATES
+// ==========================================
+
+export function useUniversitiesWithGraduates() {
+  const [universities, setUniversities] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getUniversitiesWithGraduates();
+        setUniversities(data);
+      } catch (err: any) {
+        console.error('Error fetching universities:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUniversities();
   }, []);
 
-  return { stats: stats || generateMockStats(), loading };
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const data = await universityService.getUniversitiesWithGraduates();
+      setUniversities(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { universities, loading, error, refresh };
+}
+
+// ==========================================
+// DEPARTMENT OVERVIEW (for department head)
+// ==========================================
+
+export function useDepartmentOverview(universityId: string, department: string) {
+  const [overview, setOverview] = useState<DepartmentOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityId || !department) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchOverview = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getDepartmentOverview(universityId, department);
+        setOverview(data);
+      } catch (err: any) {
+        console.error('Error fetching department overview:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOverview();
+  }, [universityId, department]);
+
+  return { overview, loading, error };
+}
+
+// ==========================================
+// ALL DEPARTMENTS WITH STATS (for rectorate)
+// ==========================================
+
+export function useAllDepartmentsWithStats(universityId: string) {
+  const [departments, setDepartments] = useState<DepartmentWithStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchDepartments = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getAllDepartmentsWithStats(universityId);
+        setDepartments(data);
+      } catch (err: any) {
+        console.error('Error fetching departments:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, [universityId]);
+
+  const refresh = async () => {
+    if (!universityId) return;
+    setLoading(true);
+    try {
+      const data = await universityService.getAllDepartmentsWithStats(universityId);
+      setDepartments(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { departments, loading, error, refresh };
+}
+
+// ==========================================
+// UNIVERSITY DASHBOARD SUMMARY
+// ==========================================
+
+export function useUniversityDashboardSummary(universityId: string) {
+  const [summary, setSummary] = useState<UniversityDashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchSummary = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getUniversityDashboardSummary(universityId);
+        setSummary(data);
+      } catch (err: any) {
+        console.error('Error fetching dashboard summary:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, [universityId]);
+
+  return { summary, loading, error };
+}
+
+// ==========================================
+// GRADUATE STATISTICS
+// ==========================================
+
+export function useGraduateStatistics(
+  universityId: string, 
+  department: string, 
+  speciality: string
+) {
+  const [graduateStats, setGraduateStats] = useState<GraduateStatistics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!universityId || !department || !speciality) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchStats = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await universityService.getGraduateStatistics(
+          universityId, 
+          department, 
+          speciality
+        );
+        setGraduateStats(data);
+      } catch (err: any) {
+        console.error('Error fetching graduate statistics:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [universityId, department, speciality]);
+
+  return { graduateStats, loading, error };
+}
+
+// ==========================================
+// COMBINED HOOK FOR UNIFIED ANALYTICS PAGE
+// ==========================================
+
+export function useUnifiedAnalytics(universityId: string, universityName?: string, speciality?: string) {
+  // Rectorate hooks
+  const { 
+    summary, 
+    loading: summaryLoading 
+  } = useUniversityDashboardSummary(universityId);
+  
+  const { 
+    departments, 
+    loading: deptsLoading 
+  } = useAllDepartmentsWithStats(universityId);
+
+  // Speciality hooks (when viewing specific speciality)
+  const { 
+    stats: specialityStats, 
+    details: specialityDetails, 
+    loading: specialityLoading,
+    error: specialityError 
+  } = useSpecialityStatistics(universityName || '', speciality || '');
+
+  // University stats
+  const { 
+    stats: universityStats, 
+    loading: uniStatsLoading 
+  } = useUniversityStatistics(universityName || '');
+
+  // Determine loading states
+  const isLoading = summaryLoading || deptsLoading || specialityLoading || uniStatsLoading;
+
+  return {
+    // Rectorate data
+    summary,
+    departments,
+    
+    // Speciality data
+    specialityStats,
+    specialityDetails,
+    specialityError,
+    
+    // University data
+    universityStats,
+    
+    // State
+    isLoading,
+    hasSpeciality: !!speciality,
+  };
 }

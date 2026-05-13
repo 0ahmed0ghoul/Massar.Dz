@@ -1,7 +1,7 @@
 // pages/university/dashboard/chat.tsx
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useChat } from '@/features/university/hooks/useChat';
+import { useChat } from '@/features/department/hooks/useChat';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Send, MessageCircle, Users, Paperclip, File,

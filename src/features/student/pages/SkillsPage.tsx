@@ -8,7 +8,7 @@ import {
   Loader2, Plus, Pencil, Trash2, Search, Zap,
   ChevronDown, Sparkles, BarChart2, Star, Trophy,
 } from 'lucide-react';
-import { useStudentSkills } from '@/features/university/hooks/useSkills';
+import { useStudentSkills } from '@/features/department/hooks/useSkills';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

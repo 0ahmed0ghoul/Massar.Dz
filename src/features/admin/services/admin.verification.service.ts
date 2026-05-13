@@ -22,6 +22,7 @@ export const adminVerificationService = {
   // Approval / Rejection
   // ─────────────────────────────────────────────
   async approveProfile(profile: Profile): Promise<void> {
+    console.log("PROFILE:", profile);
     // Approve profile
     const { error } = await supabase
       .from("profiles")
@@ -37,7 +38,7 @@ export const adminVerificationService = {
     // only for students that are currently studying
     if (
       profile.role === "student" &&
-      profile.candidate_role === "studying" &&
+      profile.candidate_type === "studying" &&
       profile.university_name
     ) {
       const universityId = await this.getUniversityIdByName(
@@ -67,12 +68,16 @@ export const adminVerificationService = {
           throw new Error(connectionError.message);
         }
   
-        await supabase
-          .from("profiles")
-          .update({
-            university_connection_status: "pending",
-          })
-          .eq("id", profile.id);
+        const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({
+          university_connection_status: "pending",
+        })
+        .eq("id", profile.id);
+      
+      if (profileUpdateError) {
+        throw new Error(profileUpdateError.message);
+      }
       }
     }
   },

@@ -1,80 +1,77 @@
 // features/student/services/studentChat.service.ts
 import { supabase } from "@/lib/supabaseClient";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { Message } from "@/features/university/services/chat.service"; // reuse Message interface
+import { Message } from "@/features/university/services/chat.service";
 import { StudentConversation } from "@/types/student";
 
 class StudentChatService {
   private channel: RealtimeChannel | null = null;
 
-  // Get the one university the student is connected to (accepted status)
-  async getConnectedUniversity(
-    studentId: string
-  ): Promise<StudentConversation | null> {
-    // Get accepted connection
-    const { data: connection, error: connError } = await supabase
-      .from("department_connections")
-      .select("university_id")
-      .eq("student_id", studentId)
-      .eq("status", "accepted")
-      .maybeSingle();
-
-    if (connError) throw new Error(connError.message);
-    if (!connection) return null;
-
-    const universityId = connection.university_id;
-
-    // Fetch university admin profile
-    const { data: profile, error: profileError } = await supabase
+  // Get university conversation from the student's own profile (no join table)
+  async getConnectedUniversity(studentId: string): Promise<StudentConversation | null> {
+    // 1. Get student profile
+    const { data: student, error: studentError } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, email, avatar_url, university_name")
-      .eq("id", universityId)
+      .select("university_name")
+      .eq("id", studentId)
       .single();
-    if (profileError) throw new Error(profileError.message);
-
-    const universityName =
-      profile.university_name ||
-      `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
-
-    // Get last message between student and university
+  
+    if (studentError || !student?.university_name) {
+      return null;
+    }
+  
+    // 2. Get university profile (ROLE FILTER IS IMPORTANT)
+    const { data: university, error: uniError } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, avatar_url, university_name")
+      .eq("role", "university_admin")
+      .eq("university_name", student.university_name)
+      .maybeSingle();
+  
+    if (uniError || !university) {
+      return null;
+    }
+  
+    // 3. Last message
     const { data: lastMsg } = await supabase
       .from("messages")
       .select("content, created_at")
       .or(
-        `and(sender_id.eq.${studentId},receiver_id.eq.${universityId}),and(sender_id.eq.${universityId},receiver_id.eq.${studentId})`
+        `and(sender_id.eq.${studentId},receiver_id.eq.${university.id}),and(sender_id.eq.${university.id},receiver_id.eq.${studentId})`
       )
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-
-    // Count unread messages for student (receiver)
-    const { count: unreadCount } = await supabase
+  
+    // 4. unread count
+    const { count } = await supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
       .eq("receiver_id", studentId)
-      .eq("sender_id", universityId)
+      .eq("sender_id", university.id)
       .eq("read", false);
-
+  
     return {
-      id: universityId,
-      universityName,
-      universityAvatar: profile.avatar_url,
+      id: university.id,
+      universityName: university.university_name,
+      universityAvatar: university.avatar_url,
       lastMessage: lastMsg?.content || null,
       lastMessageAt: lastMsg?.created_at || null,
-      unreadCount: unreadCount || 0,
+      unreadCount: count || 0,
     };
   }
-  // Fetch messages between student and university
+
+  // Fetch messages between student and university (or company)
   async getMessages(
     studentId: string,
-    universityId: string,
+    otherPartyId: string,
     limit = 50
   ): Promise<Message[]> {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
       .or(
-        `and(sender_id.eq.${studentId},receiver_id.eq.${universityId}),and(sender_id.eq.${universityId},receiver_id.eq.${studentId})`
+        `and(sender_id.eq.${studentId},receiver_id.eq.${otherPartyId}),and(sender_id.eq.${otherPartyId},receiver_id.eq.${studentId})`
       )
       .order("created_at", { ascending: true })
       .limit(limit);
@@ -82,17 +79,17 @@ class StudentChatService {
     return data || [];
   }
 
-  // Send a message from student to university
+  // Send a message from student to university/company
   async sendMessage(
     studentId: string,
-    universityId: string,
+    receiverId: string,
     content: string
   ): Promise<Message> {
     const { data, error } = await supabase
       .from("messages")
       .insert({
         sender_id: studentId,
-        receiver_id: universityId,
+        receiver_id: receiverId,
         content,
         read: false,
       })
@@ -101,7 +98,7 @@ class StudentChatService {
     if (error) throw new Error(error.message);
     return data;
   }
-  // Upload file to Supabase Storage (reuse same bucket)
+
   async uploadFile(
     file: File,
     folder = "chat-files"
@@ -125,7 +122,7 @@ class StudentChatService {
 
   async sendMessageWithFile(
     studentId: string,
-    universityId: string,
+    receiverId: string,
     content: string,
     file?: File
   ): Promise<Message> {
@@ -144,7 +141,7 @@ class StudentChatService {
       .from("messages")
       .insert({
         sender_id: studentId,
-        receiver_id: universityId,
+        receiver_id: receiverId,
         content: content || (file ? "📎 Sent a file" : ""),
         file_url: fileUrl,
         file_name: fileName,
@@ -156,43 +153,43 @@ class StudentChatService {
     if (error) throw new Error(error.message);
     return data;
   }
-  // Mark messages as read (when student views conversation)
-  async markAsRead(studentId: string, universityId: string): Promise<void> {
+
+  async markAsRead(studentId: string, senderId: string): Promise<void> {
     const { error } = await supabase
       .from("messages")
       .update({ read: true })
       .eq("receiver_id", studentId)
-      .eq("sender_id", universityId)
+      .eq("sender_id", senderId)
       .eq("read", false);
     if (error) throw new Error(error.message);
   }
-  async getCompanyConversations(studentId: string): Promise<StudentConversation[]> {
-    // 1. Fetch all applications by the student, get distinct company ids
+
+  async getCompanyConversations(
+    studentId: string
+  ): Promise<StudentConversation[]> {
+    // Fetch distinct company IDs from applications
     const { data: applications, error: appsError } = await supabase
       .from("applications")
       .select("job:jobs(company_id)")
       .eq("student_id", studentId);
     if (appsError) throw new Error(appsError.message);
-  
+
     const companyIds = new Set<string>();
     applications.forEach((app) => {
       const companyId = app.job?.company_id;
       if (companyId) companyIds.add(companyId);
     });
-  
     if (companyIds.size === 0) return [];
-  
-    // 2. Fetch company profiles
+
+    // Fetch company profiles
     const { data: companies, error: compError } = await supabase
       .from("profiles")
       .select("id, first_name, last_name, email, avatar_url, company_name")
       .in("id", Array.from(companyIds));
     if (compError) throw new Error(compError.message);
-  
+
     const conversations: StudentConversation[] = [];
-  
     for (const company of companies) {
-      // Last message between student and this company
       const { data: lastMsg } = await supabase
         .from("messages")
         .select("content, created_at")
@@ -202,37 +199,34 @@ class StudentChatService {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-  
-      // Unread messages for student
+
       const { count: unreadCount } = await supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("receiver_id", studentId)
         .eq("sender_id", company.id)
         .eq("read", false);
-  
+
       conversations.push({
         id: company.id,
-        universityName: company.company_name || `${company.first_name || ""} ${company.last_name || ""}`.trim(),
+        universityName:
+          company.company_name ||
+          `${company.first_name || ""} ${company.last_name || ""}`.trim(),
         universityAvatar: company.avatar_url,
         lastMessage: lastMsg?.content || null,
         lastMessageAt: lastMsg?.created_at || null,
         unreadCount: unreadCount || 0,
-        role: "company", // add a flag to differentiate
+        role: "company",
       });
     }
-  
     return conversations;
   }
-  // Subscribe to new messages sent to the student
+
   subscribeToMessages(
     studentId: string,
     onNewMessage: (message: Message) => void
   ): RealtimeChannel {
-    // Unsubscribe from any existing channel first
     this.unsubscribe();
-
-    // Create a new channel with a unique name per subscription
     const channelName = `student-messages-${studentId}-${Date.now()}`;
     this.channel = supabase
       .channel(channelName)

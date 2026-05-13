@@ -28,6 +28,7 @@ import {
   BriefcaseBusiness,
   MessageCircleMoreIcon,
   BarChart3,
+  FanIcon,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -40,18 +41,35 @@ interface DashboardSidebarProps {
   pendingCount: number;
   candidateType?: "studying" | "graduated" | "self_taught" | null;
   unreadMessagesCount?: number;
+  univAdminType?: "head_of_department" | "rectorate"; // Add this
 }
 
-type UserRole = "student" | "company_admin" | "university_admin" | "super_admin";
+type UserRole =
+  | "student"
+  | "company_admin"
+  | "university_admin"
+  | "super_admin";
 
 const studentBaseItems = [
   { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
   { title: "Profile", url: "/student/dashboard/profile", icon: User },
   { title: "Skills", url: "/student/dashboard/skills", icon: Sparkle },
-  { title: "Certificates", url: "/student/dashboard/certificate", icon: Paperclip },
-  { title: "Messages", url: "/student/dashboard/messages", icon: MessageCircleMoreIcon },
+  {
+    title: "Certificates",
+    url: "/student/dashboard/certificate",
+    icon: Paperclip,
+  },
+  {
+    title: "Messages",
+    url: "/student/dashboard/messages",
+    icon: MessageCircleMoreIcon,
+  },
   { title: "Browse Jobs", url: "/experience", icon: BriefcaseBusiness },
-  { title: "Notifications", url: "/student/dashboard/notifications", icon: Bell },
+  {
+    title: "Notifications",
+    url: "/student/dashboard/notifications",
+    icon: Bell,
+  },
 ];
 
 const studyingOnlyItems = [
@@ -62,19 +80,31 @@ const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
   { title: "Profile", url: "/dashboard/company/profile", icon: User },
   { title: "Jobs", url: "/dashboard/company/jobs", icon: Briefcase },
-  { title: "Applications", url: "/company/dashboard/applications", icon: FileText },
+  {
+    title: "Applications",
+    url: "/company/dashboard/applications",
+    icon: FileText,
+  },
   { title: "Talent", url: "/dashboard/company/talent", icon: Star },
 ];
 
-const universityItems = [
+const departmentHeadItems = [
   { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
   { title: "Profile", url: "/university/dashboard/profile", icon: User },
-  { title: "Invitations", url: "/university/dashboard/invitations", icon: Clock },
-  { title: "Students Database", url: "/university/dashboard/students", icon: Database },
-  { title: "Chat", url: "/university/dashboard/chat", icon: MessageCircleMore },
-  { title: "Certificates", url: "/university/dashboard/certificates", icon: LucidePartyPopper },
-  { title: "Analytics", url: "/university/analytics", icon: BarChart3 }
+  // { title: "Students", url: "/department/dashboard/students", icon: Users },
+  {
+    title: "Invitations",
+    url: "/department/dashboard/invitations",
+    icon: Clock,
+  },
+  { title: "Chat", url: "/department/dashboard/chat", icon: MessageCircleMore },
+  { title: "Statistics", url: "/university/analytics", icon: BarChart3 },
+];
 
+const rectorateItems = [
+  { title: "Dashboard", url: "/university/dashboard", icon: LayoutDashboard },
+  { title: "Profile", url: "/university/dashboard/profile", icon: User },
+  { title: "Analytics", url: "/university/analytics", icon: BarChart3 },
 ];
 
 const adminItems = [
@@ -82,8 +112,16 @@ const adminItems = [
   { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
   { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
-  { title: "Feedbacks", url: "/dashboard/admin/feedbacks", icon: MessageCircleCodeIcon },
-  { title: "Q/A", url: "/dashboard/admin/questionanswer", icon: MessageCircleMoreIcon },
+  {
+    title: "Feedbacks",
+    url: "/dashboard/admin/feedbacks",
+    icon: MessageCircleCodeIcon,
+  },
+  {
+    title: "Q/A",
+    url: "/dashboard/admin/questionanswer",
+    icon: MessageCircleMoreIcon,
+  },
 ];
 
 const roleLabels: Record<UserRole, string> = {
@@ -102,6 +140,7 @@ export function DashboardSidebar({
   pendingCount,
   candidateType,
   unreadMessagesCount = 0,
+  univAdminType,
 }: DashboardSidebarProps) {
   let items: { title: string; url: string; icon: any }[] = [];
 
@@ -113,11 +152,16 @@ export function DashboardSidebar({
   } else if (role === "company_admin") {
     items = companyItems;
   } else if (role === "university_admin") {
-    items = universityItems;
+    // Differentiate between head_of_department and rectorate
+    if (univAdminType === "rectorate") {
+      items = rectorateItems;
+    } else {
+      // Default to head_of_department items
+      items = departmentHeadItems;
+    }
   } else if (role === "super_admin") {
     items = adminItems;
   }
-
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -142,7 +186,8 @@ export function DashboardSidebar({
 
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 
+          fixed top-0 left-0 z-50 h-screen transform border-r border-white/10 overflow-hidden
+flex-shrink-0
           bg-background text-foreground transition-all duration-300 ease-in-out
           md:relative
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -217,11 +262,13 @@ export function DashboardSidebar({
                         {notificationCount > 99 ? "99+" : notificationCount}
                       </span>
                     )}
-                    {isPending && role === "super_admin" && pendingCount > 0 && (
-                      <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-black">
-                        {pendingCount > 99 ? "99+" : pendingCount}
-                      </span>
-                    )}
+                    {isPending &&
+                      role === "super_admin" &&
+                      pendingCount > 0 && (
+                        <span className="absolute -top-2 -right-3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-black">
+                          {pendingCount > 99 ? "99+" : pendingCount}
+                        </span>
+                      )}
                   </div>
                   {!isCollapsed && <span>{item.title}</span>}
                 </Link>

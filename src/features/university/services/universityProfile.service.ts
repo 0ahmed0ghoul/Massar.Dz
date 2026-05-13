@@ -7,7 +7,6 @@ export interface UniversityProfile extends Profile {
   rector_name: string | null;
   website: string | null;
   department: string | null;
-  position: string | null;
   wilaya: string | null;
   verification_docs: {
     registration_certificate?: string;

@@ -11,12 +11,12 @@ import PendingApproval from "@/features/auth/pages/PendingApproval";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
 import { AdminPendingPage } from "@/features/admin/pages/AdminPendingPage";
 import { AdminAccountsPage } from "@/features/admin/pages/AdminAccountsPage";
-import StudentsPage from "@/features/university/pages/StudentsPage";
-import UniversityDashboard from "@/features/university/pages/Dashboard";
+import StudentsPage from "@/features/department/pages/StudentsPage";
+import UniversityDashboard from "@/features/department/pages/Dashboard";
 import CertificatePage from "@/features/student/pages/CertificatePage";
 import PendingRoute from "./PendingRoute";
 import ProfilePage from "@/features/student/pages/ProfilePage";
-import InvitationsPage from "@/features/university/pages/InvitaionsPage";
+import InvitationsPage from "@/features/department/pages/InvitaionsPage";
 import UniversityProfilePage from "@/features/university/pages/ProfilePage";
 import CompanyProfilePage from "@/features/company/pages/CompanyProfilePage";
 import CompanyApplicationsPage from "@/features/company/pages/ApplicationsPage";
@@ -37,20 +37,17 @@ import PricingPage from "@/features/landing/pages/PricingPage";
 import PaymentPage from "@/features/landing/pages/PaymentPage";
 import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
 import NotFound from "@/pages/NotFound";
-import UniversityChatPage from "@/features/university/pages/chat";
-import CertificateRequestsPage from "@/features/university/pages/CertificateRequests";
+import CertificateRequestsPage from "@/features/department/pages/CertificateRequests";
 import SkillsPage from "@/features/student/pages/SkillsPage";
 import CompanyPublicProfilePage from "@/features/landing/pages/CompanyPublicProfilePage";
 import ExperiencePage from "@/features/student/pages/ExperiencePage";
-import UniversityStatsPage from "@/features/university/pages/StatsPage";
 import FeedbacksPage from "@/features/admin/pages/FeedbacksPage";
 import ApplicationDetailPage from "@/features/company/pages/ApplicationDetailPage";
 import DashboardRedirectPage from "@/pages/DashboardRedirectPage";
 import QuestionAnswerPage from "@/features/admin/pages/QuestionAnswerPage";
 import StudentQAPage from "@/features/student/pages/StudentQAPage";
-import UniversityAnalyticsPage from "@/features/university/pages/UniversityAnalyticsPage";
-import DepartmentSpecialitiesPage from "@/features/university/pages/DepartmentSpecialitiesPage";
-import SpecialityStatisticsPage from "@/features/university/pages/SpecialityStatisticsPage";
+import UnifiedAnalyticsPage from "@/features/university/pages/UnifiedAnalyticsPage";
+import UniversityChatPage from "@/features/department/pages/Chat";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -83,8 +80,11 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<DashboardRedirectPage />} />
 
       {/* ================= PROTECTED ================= */}
+
       <Route element={<ProtectedRoute />}>
+
         {/* ================= STUDENT ================= */}
+
         <Route element={<RoleRoute allowedRoles={["student"]} />}>
           <Route element={<DashboardLayout role="student" />}>
             <Route path="/student/dashboard" element={<StudentDashboard />} />
@@ -116,6 +116,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* ================= COMPANY ================= */}
+
         <Route element={<RoleRoute allowedRoles={["company_admin"]} />}>
           <Route element={<PendingRoute />}>
             <Route element={<DashboardLayout role="company_admin" />}>
@@ -147,51 +148,25 @@ const AppRoutes = () => {
         </Route>
 
         {/* ================= UNIVERSITY ================= */}
+
         <Route element={<RoleRoute allowedRoles={["university_admin"]} />}>
+
           <Route element={<PendingRoute />}>
-            University of Example
+
             <Route element={<DashboardLayout role="university_admin" />}>
-              <Route
-                path="/university/dashboard"
-                element={<UniversityDashboard />}
-              />
-              <Route
-                path="/university/dashboard/students"
-                element={<StudentsPage />}
-              />
-              <Route
-                path="/university/dashboard/profile"
-                element={<UniversityProfilePage />}
-              />
-              <Route
-                path="/university/dashboard/invitations"
-                element={<InvitationsPage />}
-              />
-              <Route
-                path="/university/dashboard/chat"
-                element={<UniversityChatPage />}
-              />
-              <Route
-                path="university/dashboard/certificates"
-                element={<CertificateRequestsPage />}
-              />
-              <Route
-                path="university/dashboard/statistics"
-                element={<UniversityStatsPage />}
-              />
-              <Route
-                path="/university/analytics"
-                element={<UniversityAnalyticsPage />}
-              />
-              <Route
-                path="/university/analytics/departments/:departmentName"
-                element={<DepartmentSpecialitiesPage />}
-              />
-              <Route
-                path="/university/analytics/departments/:departmentName/:speciality"
-                element={<SpecialityStatisticsPage />}
-              />
-            </Route>
+
+              <Route path="/university/dashboard" element={<UniversityDashboard />}/>
+              <Route path="/university/dashboard/profile" element={<UniversityProfilePage />}/>
+              <Route path="/university/statistics" element={<UniversityProfilePage />}/>
+              <Route path="/university/analytics" element={<UnifiedAnalyticsPage />} />
+              <Route path="/university/analytics/:universityName/:speciality" element={<UnifiedAnalyticsPage />} />
+
+              <Route path="/department/dashboard/students" element={<StudentsPage />}/>
+              <Route path="/department/dashboard/certificates" element={<CertificateRequestsPage />}/>
+              <Route path="/department/dashboard/invitations" element={<InvitationsPage />}/>
+              <Route path="/department/dashboard/chat" element={<UniversityChatPage />}/> 
+
+</Route>
           </Route>
         </Route>
 

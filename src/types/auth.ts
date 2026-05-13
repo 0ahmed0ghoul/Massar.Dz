@@ -56,7 +56,6 @@ export interface UniversityFormData {
   email: string;
   password: string;
   department: string;
-  position: string;
   wilaya: string;
   rectorName: string;
   website: string;

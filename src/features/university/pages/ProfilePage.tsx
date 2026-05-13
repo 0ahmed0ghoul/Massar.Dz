@@ -4,7 +4,12 @@ import { useUniversityProfile } from "../hooks/useUniversityProfile";
 import UniversityProfileHeader from "../components/UniversityProfileHeader";
 import UniversityProfileForm from "../components/UniversityProfileForm";
 import UniversityConnectionsCard from "../components/UniversityConnectionsCard";
-import { BookOpen, GraduationCap, Loader2, Building2, ChevronRight, Sparkles } from "lucide-react";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { 
+  BookOpen, GraduationCap, Loader2, Building2, ChevronRight, 
+  Sparkles, Landmark, Users, Clock, MessageCircleMore 
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 // ─── Loading Screen ───────────────────────────────────────────────────────────
 
@@ -111,9 +116,54 @@ function SectionLabel({ icon: Icon, label, sub }: {
   );
 }
 
+// ─── Quick Action Card ────────────────────────────────────────────────────────
+
+function QuickActionCard({ 
+  icon: Icon, 
+  title, 
+  description, 
+  to, 
+  badge 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  description: string; 
+  to: string;
+  badge?: string;
+}) {
+  return (
+    <Link to={to}>
+      <div className="group relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-[#639922]/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#639922]/20 bg-[#639922]/10">
+            <Icon className="h-5 w-5 text-[#639922]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-white/80">{title}</h3>
+              {badge && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#639922]/20 text-[#639922] font-medium">
+                  {badge}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-white/35 mt-1">{description}</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-[#639922] transition-colors shrink-0 mt-1" />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const UniversityProfilePage = () => {
+  const { profile } = useAuth();
+  const univAdminType = profile?.univ_admin_type; // 'head_of_department' or 'rectorate'
+  const isRectorate = univAdminType === 'rectorate';
+  const isDepartmentHead = univAdminType === 'head_of_department';
+
   const {
     university,
     loading,
@@ -156,21 +206,16 @@ const UniversityProfilePage = () => {
         {/* ── Page header ── */}
         <header className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
-            {/* Eyebrow */}
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#639922]/20
-                               bg-[#639922]/8 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#639922]">
-                <Building2 className="h-3 w-3" />
-                University Admin
-              </span>
-            </div>
+
             {/* Title */}
             <h1 className="text-3xl font-bold tracking-tight text-white/90 sm:text-4xl">
-              Department Profile
+              {isRectorate ? 'University Profile' : 'Department Profile'}
             </h1>
             <p className="text-sm text-white/35 max-w-md leading-relaxed">
-              Manage your institution's information, upload your student roster,
-              and oversee department connection requests.
+              {isRectorate 
+                ? 'Manage your university\'s information, oversee all departments, and view analytics.'
+                : 'Manage your department\'s information, handle connection requests, and communicate with students.'
+              }
             </p>
           </div>
 
@@ -179,32 +224,17 @@ const UniversityProfilePage = () => {
             <ThemeToggle />
           </div>
         </header>
-
         {/* ── Cards stack ── */}
         <div className="space-y-5">
-
-          {/* 1 — Profile header card */}
-          <Section
-            accent
-            style={{ animationDelay: "0ms" }}
-            className="overflow-hidden"
-          >
-            <SectionLabel
-              icon={Building2}
-              label="Institution Identity"
-              sub="Logo, name and public-facing details"
-            />
-            <div className="p-6">
-              <UniversityProfileHeader university={university} />
-            </div>
-          </Section>
-
           {/* 2 — Profile form card */}
           <Section style={{ animationDelay: "60ms" }}>
             <SectionLabel
               icon={Sparkles}
               label="Profile Information"
-              sub="Contact details, description and institutional data"
+              sub={isRectorate 
+                ? "University details, contact information and description"
+                : "Department details, contact information and description"
+              }
             />
             <div className="p-6">
               <UniversityProfileForm
@@ -218,57 +248,24 @@ const UniversityProfilePage = () => {
             </div>
           </Section>
 
-          {/* 3 — Connections card */}
-          <Section style={{ animationDelay: "120ms" }}>
-            <SectionLabel
-              icon={GraduationCap}
-              label="Student Connections"
-              sub="Pending requests and connected department members"
-            />
-            <div className="p-6">
-              <UniversityConnectionsCard
-                connectedStudents={connectedStudents}
-                pendingRequests={pendingRequests}
-                onAccept={acceptRequest}
-                onReject={rejectRequest}
+          {/* 3 — Department Head: Connection Management */}
+          {isDepartmentHead && (
+            <Section style={{ animationDelay: "120ms" }}>
+              <SectionLabel
+                icon={Users}
+                label="Connection Management"
+                sub="Review and manage student connections"
               />
-            </div>
-          </Section>
-
-          {/* 4 — Help / docs banner */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/[0.06]
-                          bg-gradient-to-r from-[#639922]/[0.05] via-white/[0.01] to-transparent p-6">
-            {/* Corner accent */}
-            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32
-                            bg-[#639922]/[0.06] blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
-
-            <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl
-                                border border-[#639922]/20 bg-[#639922]/10">
-                  <BookOpen className="h-4.5 w-4.5 text-[#639922]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white/80">Need help managing connections?</h3>
-                  <p className="mt-1 text-[13px] text-white/35 leading-relaxed max-w-lg">
-                    Import students via XLSX, verify their profiles against your official records,
-                    and review connection requests. Once connected, students can claim certificates and update outcomes.
-                  </p>
-                </div>
+              <div className="p-6">
+                <UniversityConnectionsCard
+                  connectedStudents={connectedStudents}
+                  pendingRequests={pendingRequests}
+                  onAccept={acceptRequest}
+                  onReject={rejectRequest}
+                />
               </div>
-
-              <a
-                href="#"
-                className="self-start shrink-0 inline-flex items-center gap-2 rounded-xl border border-[#639922]/25
-                           bg-[#639922]/10 px-4 py-2.5 text-sm font-medium text-[#639922]
-                           hover:bg-[#639922]/20 hover:border-[#639922]/40
-                           transition-all duration-150 md:self-auto"
-              >
-                Documentation
-                <ChevronRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
+            </Section>
+          )}
 
         </div>
 

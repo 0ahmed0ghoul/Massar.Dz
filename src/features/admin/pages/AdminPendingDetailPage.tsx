@@ -286,102 +286,173 @@ export const AdminPendingDetailPage = () => {
             </div>
           </div>
 
-          {/* Institution Details (university or company) */}
-          {(isUniversity || isCompany) && (
-            <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md p-5 sm:p-6">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
-                {isUniversity ? (
-                  <GraduationCap className="h-5 w-5 text-[#639922]" />
-                ) : (
-                  <Building2 className="h-5 w-5 text-[#639922]" />
-                )}
-                {isUniversity ? "University Details" : "Company Details"}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {isUniversity ? (
-                  <>
-                    <div className="sm:col-span-2">
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        University Name
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.university_name || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Rector Name
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.rector_name || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Website
-                      </label>
-                      <p className="mt-1 text-foreground flex items-center gap-1">
-                        <Globe className="h-3 w-3 text-foreground/40" />{" "}
-                        {profile.website || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Department
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.department || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Position
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.position || "—"}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="sm:col-span-2">
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Company Name
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.company_name || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Company Type
-                      </label>
-                      <p className="mt-1 text-foreground">
-                        {profile.company_type || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Industry
-                      </label>
-                      <p className="mt-1 text-foreground flex items-center gap-1">
-                        <Briefcase className="h-3 w-3 text-foreground/40" />{" "}
-                        {profile.industry || "—"}
-                      </p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-xs uppercase tracking-wider text-foreground/40">
-                        Company Description
-                      </label>
-                      <p className="mt-1 text-foreground/80">
-                        {profile.company_description || "—"}
-                      </p>
-                    </div>
-                  </>
-                )}
+{/* Institution Details (university or company) */}
+{(isUniversity || isCompany) && (
+  <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md p-5 sm:p-6">
+    <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
+      {isUniversity ? (
+        <GraduationCap className="h-5 w-5 text-[#639922]" />
+      ) : (
+        <Building2 className="h-5 w-5 text-[#639922]" />
+      )}
+
+      {isUniversity ? "University Details" : "Company Details"}
+    </h2>
+
+    <div className="grid gap-4 sm:grid-cols-2">
+      {/* ───────────────── UNIVERSITY ───────────────── */}
+      {isUniversity ? (
+        <>
+          {/* University Name */}
+          <div className="sm:col-span-2">
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              University Name
+            </label>
+
+            <p className="mt-1 text-foreground">
+              {profile.university_name || "—"}
+            </p>
+          </div>
+
+          {/* Admin Type */}
+          <div>
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Administration Type
+            </label>
+
+            <p className="mt-1 text-foreground">
+              {profile.univ_admin_type === "rectorate"
+                ? "Rectorate"
+                : profile.univ_admin_type === "head_of_department"
+                ? "Head of Department"
+                : "—"}
+            </p>
+          </div>
+
+          {/* Wilaya */}
+          <div>
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Wilaya
+            </label>
+
+            <p className="mt-1 text-foreground flex items-center gap-1">
+              <MapPin className="h-3 w-3 text-foreground/40" />
+              {profile.wilaya || "—"}
+            </p>
+          </div>
+
+          {/* ───────────── RECTORATE ───────────── */}
+          {profile.univ_admin_type === "rectorate" && (
+            <>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-foreground/40">
+                  Website
+                </label>
+
+                <p className="mt-1 text-foreground flex items-center gap-1">
+                  <Globe className="h-3 w-3 text-foreground/40" />
+                  {profile.website || "—"}
+                </p>
               </div>
-            </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs uppercase tracking-wider text-foreground/40">
+                  Institutional Access
+                </label>
+
+                <div className="mt-2 rounded-xl border border-[#639922]/20 bg-[#639922]/10 p-3">
+                  <div className="flex items-center gap-2 text-[#639922]">
+                    <Shield className="h-4 w-4" />
+
+                    <span className="text-sm font-medium">
+                      Full university administration access
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
+
+          {/* ───────── HEAD OF DEPARTMENT ───────── */}
+          {profile.univ_admin_type === "head_of_department" && (
+            <>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-foreground/40">
+                  Department
+                </label>
+
+                <p className="mt-1 text-foreground">
+                  {profile.department || "—"}
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs uppercase tracking-wider text-foreground/40">
+                  Department Access
+                </label>
+
+                <div className="mt-2 rounded-xl border border-[#639922]/20 bg-[#639922]/10 p-3">
+                  <div className="flex items-center gap-2 text-[#639922]">
+                    <Users className="h-4 w-4" />
+
+                    <span className="text-sm font-medium">
+                      Department-level student management access
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          {/* ───────────────── COMPANY ───────────────── */}
+
+          <div className="sm:col-span-2">
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Company Name
+            </label>
+
+            <p className="mt-1 text-foreground">
+              {profile.company_name || "—"}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Company Type
+            </label>
+
+            <p className="mt-1 text-foreground">
+              {profile.company_type || "—"}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Industry
+            </label>
+
+            <p className="mt-1 text-foreground flex items-center gap-1">
+              <Briefcase className="h-3 w-3 text-foreground/40" />
+              {profile.industry || "—"}
+            </p>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="text-xs uppercase tracking-wider text-foreground/40">
+              Company Description
+            </label>
+
+            <p className="mt-1 text-foreground/80">
+              {profile.company_description || "—"}
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
 
           {/* Student Academic Information */}
           {isStudent && (
