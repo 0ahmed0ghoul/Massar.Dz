@@ -13,130 +13,131 @@ export const adminVerificationService = {
       .eq("is_completed", true)
       .eq("is_verified", false)
       .order("created_at", { ascending: false });
+
     if (error) throw new Error(error.message);
+
     return data as Profile[];
   },
-
 
   // ─────────────────────────────────────────────
   // Approval / Rejection
   // ─────────────────────────────────────────────
   async approveProfile(profile: Profile): Promise<void> {
     console.log("PROFILE:", profile);
-    // Approve profile
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_verified: true,
-        status: "active",
-      })
-      .eq("id", profile.id);
-  
-    if (error) throw new Error(error.message);
-  
-    // Automatically create university connection invitation
-    // only for students that are currently studying
+
+    // Default update
+    const updates: any = {
+      is_verified: true,
+      status: "active",
+    };
+
+    // If student → auto mark connection as pending
     if (
       profile.role === "student" &&
       profile.candidate_type === "studying" &&
       profile.university_name
     ) {
-      const universityId = await this.getUniversityIdByName(
-        profile.university_name
-      );
-  
-      if (!universityId) return;
-  
-      // Prevent duplicates
-      const { data: existingConnection } = await supabase
-        .from("department_connections")
-        .select("id")
-        .eq("student_id", profile.id)
-        .eq("university_id", universityId)
-        .maybeSingle();
-  
-      if (!existingConnection) {
-        const { error: connectionError } = await supabase
-          .from("department_connections")
-          .insert({
-            student_id: profile.id,
-            university_id: universityId,
-            status: "pending",
-          });
-  
-        if (connectionError) {
-          throw new Error(connectionError.message);
-        }
-  
-        const { error: profileUpdateError } = await supabase
-        .from("profiles")
-        .update({
-          university_connection_status: "pending",
-        })
-        .eq("id", profile.id);
-      
-      if (profileUpdateError) {
-        throw new Error(profileUpdateError.message);
-      }
-      }
+      updates.university_connection_status = "pending";
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", profile.id);
+
+    if (error) {
+      throw new Error(error.message);
     }
   },
+
   async rejectProfile(id: string): Promise<void> {
-    const { error } = await supabase.from("profiles").delete().eq("id", id);
-    if (error) throw new Error(error.message);
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   },
 
   // ─────────────────────────────────────────────
-  // University Connection Invitations
+  // University Helpers
   // ─────────────────────────────────────────────
-  async getUniversityIdByName(universityName: string): Promise<string | null> {
+  async getUniversityIdByName(
+    universityName: string
+  ): Promise<string | null> {
     const { data, error } = await supabase
       .from("profiles")
       .select("id")
       .eq("role", "university_admin")
       .eq("university_name", universityName)
       .limit(1);
-    if (error) throw new Error(error.message);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
     return data?.[0]?.id || null;
   },
 
-  async sendConnectionInvitation(studentId: string, universityId: string, invitedBy: string): Promise<void> {
-    // 1. Check if invitation already exists
-    const { data: existing } = await supabase
-      .from("department_connections")
-      .select("id")
-      .eq("student_id", studentId)
-      .eq("university_id", universityId)
+  // ─────────────────────────────────────────────
+  // Connection Invitation
+  // ─────────────────────────────────────────────
+  async sendConnectionInvitation(
+    studentId: string,
+    universityId: string,
+    invitedBy: string
+  ): Promise<void> {
+    // Get university info
+    const { data: university, error: universityError } = await supabase
+      .from("profiles")
+      .select("id, university_name")
+      .eq("id", universityId)
       .maybeSingle();
-    if (existing) throw new Error("Connection invitation already sent");
 
-    // 2. Insert invitation record
-    const { error: insertError } = await supabase
-      .from("department_connections")
-      .insert({
-        student_id: studentId,
-        university_id: universityId,
-        status: "pending",
-        invited_by: invitedBy,
-      });
-    if (insertError) throw new Error(insertError.message);
+    if (universityError) {
+      throw new Error(universityError.message);
+    }
 
-    // 3. Update student's profile to mark connection status as 'pending'
+    if (!university) {
+      throw new Error("University not found");
+    }
+
+    // Update student profile directly
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ university_connection_status: "pending" })
+      .update({
+        university_connection_status: "pending",
+        university_name: university.university_name,
+      })
       .eq("id", studentId);
-    if (updateError) throw new Error(updateError.message);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    console.log(
+      `✅ Invitation sent from ${invitedBy} to student ${studentId}`
+    );
   },
 
-  async getConnectionStatus(studentId: string, universityId: string): Promise<string | null> {
+  // ─────────────────────────────────────────────
+  // Connection Status
+  // ─────────────────────────────────────────────
+  async getConnectionStatus(
+    studentId: string
+  ): Promise<string | null> {
     const { data, error } = await supabase
-      .from("department_connections")
-      .select("status")
-      .eq("student_id", studentId)
-      .eq("university_id", universityId)
+      .from("profiles")
+      .select("university_connection_status")
+      .eq("id", studentId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
-    return data?.status || null;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data?.university_connection_status || null;
   },
 };

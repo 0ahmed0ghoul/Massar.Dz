@@ -17,14 +17,14 @@ export interface Invitation {
   studentId: string;
   universityId: string;
   profileData: StudentProfile;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "connected" | "rejected";
   createdAt: string;
 }
 export interface InvitationWithStudent {
   id: string;
   student_id: string;
   university_id: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "connected" | "rejected";
   invited_by: string | null;
   created_at: string;
   updated_at: string;

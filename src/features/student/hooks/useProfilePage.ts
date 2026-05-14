@@ -123,8 +123,8 @@ export const useProfilePage = () => {
   const requestUniversityConnection = async () => {
     if (!user || profile?.status !== 'pending') return; // use correct snake_case field name
     try {
-      await studentService.updateProfile(user.id, { university_connection_status: "accepted" });
-      setProfile((prev) => prev ? { ...prev, university_connection_status: "accepted" } : null);
+      await studentService.updateProfile(user.id, { university_connection_status: "connected" });
+      setProfile((prev) => prev ? { ...prev, university_connection_status: "connected" } : null);
     } catch (error) {
       console.error("Failed to request university connection:", error);
     }

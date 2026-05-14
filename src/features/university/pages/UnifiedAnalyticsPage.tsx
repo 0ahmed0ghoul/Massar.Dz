@@ -55,7 +55,7 @@ export default function UnifiedAnalyticsPage() {
     registeredStudents,
   } = useUniversityStudentConnection(profile);
   const { specialities } = useUniversitySpecialities(isRectorate ? universityName : "");
-  const connected = registeredStudents.filter(s => s.connection_status === "accepted").length;
+  const connected = registeredStudents.filter(s => s.university_connection_status === "connected").length;
 
   // ============== MAIN DATA FETCH ==============
   useEffect(() => {
@@ -184,19 +184,6 @@ export default function UnifiedAnalyticsPage() {
         </ChartCard>
       )}
 
-      {/* Sectors Bar */}
-      {charts && charts.sectors.length > 0 && (
-        <ChartCard title="Sectors of Activity" icon={<Briefcase className="h-5 w-5" />}>
-          <ResponsiveContainer width="100%" height={Math.max(200, charts.sectors.length * 40)}>
-            <BarChart data={charts.sectors} layout="vertical" margin={{ left: 150 }}>
-              <XAxis type="number" />
-              <YAxis dataKey="answer" type="category" width={140} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#639922" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      )}
 
       {/* Functions Bar */}
       {charts && charts.functions.length > 0 && (
@@ -255,7 +242,7 @@ export default function UnifiedAnalyticsPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Connected Students</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalStudents}</div></CardContent></Card>
           <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Graduates</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalGraduates}</div></CardContent></Card>
-          <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Specialities</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{allDepartments.length}</div></CardContent></Card>
+          <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Departments</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{allDepartments.length}</div></CardContent></Card>
         </div>
         <div className="flex gap-4 items-center">
           <div className="relative w-72"><Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" /></div>

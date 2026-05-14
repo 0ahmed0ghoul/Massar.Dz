@@ -31,8 +31,38 @@ class ChatService {
   // ─────────────────────────────────────────────
   // GET ALL CHAT PARTICIPANTS (BASED ONLY ON MESSAGES)
   // ─────────────────────────────────────────────
+  // In chat.service.ts
+
   async getConnectedStudents(universityId: string): Promise<ChatParticipant[]> {
-    // 1. Get all unique user IDs that chatted with this university
+    // 1. Get the current university admin (head_of_department) info
+    const { data: currentAdmin, error: adminError } = await supabase
+      .from("profiles")
+      .select("id, university_name, first_name, last_name")
+      .eq("id", universityId)
+      .single();
+
+    if (adminError) {
+      console.error("Error fetching current admin:", adminError);
+      return [];
+    }
+
+    // 2. Fetch the rectorate account to get the official university avatar
+    const { data: rectorateAccount, error: rectorError } = await supabase
+      .from("profiles")
+      .select("id, avatar_url")
+      .eq("role", "university_admin")
+      .eq("university_name", currentAdmin?.university_name)
+      .eq("univ_admin_type", "rectorate")
+      .maybeSingle();
+
+    if (rectorError) {
+      console.error("Error fetching rectorate account:", rectorError);
+    }
+
+    // Use rectorate avatar if available
+    const universityAvatar = rectorateAccount?.avatar_url || null;
+
+    // 3. Get all unique user IDs that chatted with this university
     const { data: messages, error } = await supabase
       .from("messages")
       .select("sender_id, receiver_id, content, created_at")
@@ -49,7 +79,7 @@ class ChatService {
 
     if (userIds.size === 0) return [];
 
-    // 2. Fetch profiles for those users
+    // 4. Fetch profiles for those users (students)
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
       .select("id, student_id, first_name, last_name, email, avatar_url")
@@ -57,7 +87,7 @@ class ChatService {
 
     if (profileError) throw new Error(profileError.message);
 
-    // 3. Build conversations
+    // 5. Build conversations with the rectorate avatar
     const participants: ChatParticipant[] = [];
 
     for (const profile of profiles || []) {
@@ -85,7 +115,9 @@ class ChatService {
       participants.push({
         id: profile.id,
         student_id: profile.student_id || profile.id,
-        full_name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim(),
+        full_name: `${profile.first_name || ""} ${
+          profile.last_name || ""
+        }`.trim(),
         email: profile.email || "",
         avatar_url: profile.avatar_url,
         last_message: lastMsg?.content,
@@ -94,7 +126,7 @@ class ChatService {
       });
     }
 
-    // 4. Sort by latest message
+    // 6. Sort by latest message
     participants.sort((a, b) => {
       if (!a.last_message_time) return 1;
       if (!b.last_message_time) return -1;
@@ -110,7 +142,11 @@ class ChatService {
   // ─────────────────────────────────────────────
   // GET MESSAGES
   // ─────────────────────────────────────────────
-  async getMessages(userId1: string, userId2: string, limit = 50): Promise<Message[]> {
+  async getMessages(
+    userId1: string,
+    userId2: string,
+    limit = 50
+  ): Promise<Message[]> {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -127,7 +163,10 @@ class ChatService {
   // ─────────────────────────────────────────────
   // UPLOAD FILE
   // ─────────────────────────────────────────────
-  async uploadFile(file: File, folder = "chat-files"): Promise<{ url: string; path: string }> {
+  async uploadFile(
+    file: File,
+    folder = "chat-files"
+  ): Promise<{ url: string; path: string }> {
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}_${Math.random()
       .toString(36)
@@ -210,7 +249,10 @@ class ChatService {
   // ─────────────────────────────────────────────
   // REALTIME
   // ─────────────────────────────────────────────
-  subscribeToMessages(userId: string, onNewMessage: (msg: Message) => void): RealtimeChannel {
+  subscribeToMessages(
+    userId: string,
+    onNewMessage: (msg: Message) => void
+  ): RealtimeChannel {
     this.unsubscribe();
 
     const channelName = `messages-${userId}-${Date.now()}`;

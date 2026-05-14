@@ -9,56 +9,87 @@ class StudentChatService {
 
   // Get university conversation from the student's own profile (no join table)
   async getConnectedUniversity(studentId: string): Promise<StudentConversation | null> {
-    // 1. Get student profile
-    const { data: student, error: studentError } = await supabase
-      .from("profiles")
-      .select("university_name")
-      .eq("id", studentId)
-      .single();
+    try {
+      // 1. Get student profile
+      const { data: student, error: studentError } = await supabase
+        .from("profiles")
+        .select("university_name, university_connection_status")
+        .eq("id", studentId)
+        .single();
   
-    if (studentError || !student?.university_name) {
+      if (studentError || !student?.university_name) {
+        return null;
+      }
+  
+      if (student.university_connection_status !== "connected") {
+        return null;
+      }
+  
+      // 2. Get head of department for user info
+      const { data: headOfDepartment, error: headError } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name, university_name")
+        .eq("role", "university_admin")
+        .eq("university_name", student.university_name)
+        .eq("univ_admin_type", "head_of_department")
+        .maybeSingle();
+  
+      if (headError || !headOfDepartment) {
+        console.error("No head_of_department found");
+        return null;
+      }
+  
+      // 3. Get rectorate account for avatar
+      const { data: rectorate, error: rectorError } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("role", "university_admin")
+        .eq("university_name", student.university_name)
+        .eq("univ_admin_type", "rectorate")
+        .maybeSingle();
+  
+      if (rectorError) {
+        console.error("Error fetching rectorate:", rectorError);
+      }
+  
+      // Use rectorate avatar if available
+      const universityAvatar = rectorate?.avatar_url || null;
+  
+      console.log("✅ Found head_of_department:", headOfDepartment.id);
+      console.log("✅ Using rectorate avatar:", universityAvatar ? "Yes" : "No");
+  
+      // 4. Get last message
+      const { data: lastMsg } = await supabase
+        .from("messages")
+        .select("content, created_at")
+        .or(
+          `and(sender_id.eq.${studentId},receiver_id.eq.${headOfDepartment.id}),` +
+          `and(sender_id.eq.${headOfDepartment.id},receiver_id.eq.${studentId})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+  
+      // 5. Get unread count
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", studentId)
+        .eq("sender_id", headOfDepartment.id)
+        .eq("read", false);
+  
+      return {
+        id: headOfDepartment.id,
+        universityName: headOfDepartment.university_name,
+        universityAvatar: universityAvatar, // ✅ Rectorate's avatar
+        lastMessage: lastMsg?.content || null,
+        lastMessageAt: lastMsg?.created_at || null,
+        unreadCount: count || 0,
+      };
+    } catch (error) {
+      console.error("Unexpected error:", error);
       return null;
     }
-  
-    // 2. Get university profile (ROLE FILTER IS IMPORTANT)
-    const { data: university, error: uniError } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name, avatar_url, university_name")
-      .eq("role", "university_admin")
-      .eq("university_name", student.university_name)
-      .maybeSingle();
-  
-    if (uniError || !university) {
-      return null;
-    }
-  
-    // 3. Last message
-    const { data: lastMsg } = await supabase
-      .from("messages")
-      .select("content, created_at")
-      .or(
-        `and(sender_id.eq.${studentId},receiver_id.eq.${university.id}),and(sender_id.eq.${university.id},receiver_id.eq.${studentId})`
-      )
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-  
-    // 4. unread count
-    const { count } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("receiver_id", studentId)
-      .eq("sender_id", university.id)
-      .eq("read", false);
-  
-    return {
-      id: university.id,
-      universityName: university.university_name,
-      universityAvatar: university.avatar_url,
-      lastMessage: lastMsg?.content || null,
-      lastMessageAt: lastMsg?.created_at || null,
-      unreadCount: count || 0,
-    };
   }
 
   // Fetch messages between student and university (or company)

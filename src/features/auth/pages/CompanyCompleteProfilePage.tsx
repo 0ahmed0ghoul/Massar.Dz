@@ -23,12 +23,15 @@ import {
   Shield,
   Award,
   ArrowRight,
+  Download,
+  X,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useCompanyCompleteProfile } from "@/features/auth/hooks/useCompanyCompleteProfile";
 import { SearchableSelect } from "@/features/auth/components/searchable-select";
 import { ALGERIAN_WILAYAS } from "@/constants/algeria.constants";
-
+import { useEffect, useState } from "react";
 
 export default function CompanyCompleteProfilePage() {
   const { user, profile } = useAuth();
@@ -44,7 +47,35 @@ export default function CompanyCompleteProfilePage() {
     handleSubmit,
   } = useCompanyCompleteProfile(user, profile);
 
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<"image" | "pdf" | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>("");
   const isFilled = (value: string) => value && value.trim().length > 0;
+
+  // Preview document/logo
+  const handlePreview = (file: File, title: string) => {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setPreviewType(file.type.startsWith("image/") ? "image" : "pdf");
+    setPreviewTitle(title);
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewType(null);
+    setPreviewTitle("");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="relative min-h-screen bg-background py-12 px-4 overflow-hidden">
@@ -98,7 +129,8 @@ export default function CompanyCompleteProfilePage() {
                   Complete Your Company Profile
                 </CardTitle>
                 <CardDescription className="text-foreground/40">
-                  Tell us more about your company and upload verification documents
+                  Tell us more about your company and upload verification
+                  documents
                 </CardDescription>
               </div>
             </div>
@@ -116,7 +148,9 @@ export default function CompanyCompleteProfilePage() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-foreground/80">Wilaya / City *</Label>
+                    <Label className="text-foreground/80">
+                      Wilaya / City *
+                    </Label>
                     {isFilled(form.wilaya) ? (
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     ) : (
@@ -180,7 +214,9 @@ export default function CompanyCompleteProfilePage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground/80">Company Name *</Label>
+                      <Label className="text-foreground/80">
+                        Company Name *
+                      </Label>
                       {isFilled(form.companyName) ? (
                         <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                       ) : (
@@ -191,7 +227,9 @@ export default function CompanyCompleteProfilePage() {
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                       <Input
                         value={form.companyName}
-                        onChange={(e) => updateForm("companyName", e.target.value)}
+                        onChange={(e) =>
+                          updateForm("companyName", e.target.value)
+                        }
                         required
                         className="pl-9 border-white/20 bg-white/10 text-foreground"
                       />
@@ -217,7 +255,9 @@ export default function CompanyCompleteProfilePage() {
 
                 <div>
                   <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80">Company Description</Label>
+                    <Label className="text-foreground/80">
+                      Company Description
+                    </Label>
                     {isFilled(form.companyDescription) ? (
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     ) : (
@@ -226,7 +266,9 @@ export default function CompanyCompleteProfilePage() {
                   </div>
                   <Textarea
                     value={form.companyDescription}
-                    onChange={(e) => updateForm("companyDescription", e.target.value)}
+                    onChange={(e) =>
+                      updateForm("companyDescription", e.target.value)
+                    }
                     rows={3}
                     className="mt-1.5 border-white/20 bg-white/10 text-foreground"
                     placeholder="Tell us about your company's mission, culture, and values..."
@@ -247,9 +289,10 @@ export default function CompanyCompleteProfilePage() {
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-foreground/80 flex items-center gap-2">
-                      <Award className="h-4 w-4 text-[#639922]" /> Company Logo *
+                      <Award className="h-4 w-4 text-[#639922]" /> Company Logo
+                      *
                     </Label>
-                    {previewUrls.logo ? (
+                    {docs.logo ? (
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     ) : (
                       <XCircle className="h-3.5 w-3.5 text-red-500" />
@@ -257,19 +300,31 @@ export default function CompanyCompleteProfilePage() {
                   </div>
                   <div className="mt-3 flex flex-col sm:flex-row items-start gap-4">
                     <div className="relative">
-                      {previewUrls.logo ? (
-                        <div className="relative">
+                      {docs.logo ? (
+                        <div className="relative group">
                           <img
                             src={previewUrls.logo}
                             alt="Logo preview"
                             className="h-20 w-20 rounded-full object-cover border-2 border-[#639922]/30"
                           />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                docs.logo &&
+                                handlePreview(docs.logo, "Company Logo")
+                              }
+                              className="p-1.5 bg-[#639922] rounded-full"
+                            >
+                              <Eye className="h-4 w-4 text-black" />
+                            </button>
+                          </div>
                           <button
                             type="button"
                             onClick={() => removeFile("logo")}
-                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground"
+                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600 transition-colors"
                           >
-                            <XCircle className="h-4 w-4" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       ) : (
@@ -282,7 +337,9 @@ export default function CompanyCompleteProfilePage() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleFileChange("logo", e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          handleFileChange("logo", e.target.files?.[0] || null)
+                        }
                         className="hidden"
                         id="logo-upload"
                       />
@@ -309,24 +366,51 @@ export default function CompanyCompleteProfilePage() {
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-foreground/80 flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-[#639922]" /> Registration Certificate *
+                      <FileText className="h-4 w-4 text-[#639922]" />{" "}
+                      Registration Certificate *
                     </Label>
-                    {previewUrls.certificate ? (
+                    {docs.registrationCertificate ? (
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     ) : (
                       <XCircle className="h-3.5 w-3.5 text-red-500" />
                     )}
                   </div>
                   <div className="mt-3 flex flex-col sm:flex-row items-start gap-4">
-                    {previewUrls.certificate && (
-                      <div className="relative">
-                        <FileText className="h-12 w-12 text-[#639922]" />
+                    {docs.registrationCertificate && (
+                      <div className="relative group">
+                        {previewUrls.certificate &&
+                        previewUrls.certificate.endsWith(".pdf") ? (
+                          <FileText className="h-12 w-12 text-[#639922]" />
+                        ) : previewUrls.certificate ? (
+                          <img
+                            src={previewUrls.certificate}
+                            alt="Certificate preview"
+                            className="h-12 w-12 rounded object-cover"
+                          />
+                        ) : (
+                          <FileText className="h-12 w-12 text-[#639922]" />
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              docs.registrationCertificate &&
+                              handlePreview(
+                                docs.registrationCertificate,
+                                "Registration Certificate"
+                              )
+                            }
+                            className="p-1.5 bg-[#639922] rounded-full"
+                          >
+                            <Eye className="h-3 w-3 text-black" />
+                          </button>
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeFile("registrationCertificate")}
-                          className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground"
+                          className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-foreground hover:bg-red-600 transition-colors"
                         >
-                          <XCircle className="h-3 w-3" />
+                          <X className="h-3 w-3" />
                         </button>
                       </div>
                     )}
@@ -334,7 +418,12 @@ export default function CompanyCompleteProfilePage() {
                       <input
                         type="file"
                         accept="image/*,.pdf"
-                        onChange={(e) => handleFileChange("registrationCertificate", e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          handleFileChange(
+                            "registrationCertificate",
+                            e.target.files?.[0] || null
+                          )
+                        }
                         className="hidden"
                         id="cert-upload"
                       />
@@ -360,7 +449,9 @@ export default function CompanyCompleteProfilePage() {
                 {/* Tax ID */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80">Tax ID / Registration Number</Label>
+                    <Label className="text-foreground/80">
+                      Tax ID / Registration Number
+                    </Label>
                     {isFilled(docs.taxId) ? (
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     ) : (
@@ -387,13 +478,76 @@ export default function CompanyCompleteProfilePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <p className="text-center text-xs text-foreground/30 mt-4">
-                  Your information will be reviewed by our team. We'll notify you once approved.
+                  Your information will be reviewed by our team. We'll notify
+                  you once approved.
                 </p>
               </div>
             </form>
           </CardContent>
         </Card>
       </div>
+      {/* Document/Logo Preview Modal */}
+{previewUrl && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+    onClick={closePreview}
+  >
+    <div
+      className="relative max-h-[90vh] max-w-[90vw] rounded-xl border border-white/[0.1] bg-[#0f1115] p-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between border-b border-white/[0.1] pb-3">
+        <h3 className="text-lg font-semibold text-white/85">{previewTitle}</h3>
+        <button
+          onClick={closePreview}
+          className="flex h-8 w-8 items-center justify-center rounded-lg
+                     text-white/40 transition-all hover:bg-white/[0.08] hover:text-white/80"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex items-center justify-center">
+        {previewType === "image" ? (
+          <img
+            src={previewUrl}
+            alt={previewTitle}
+            className="max-h-[70vh] max-w-[80vw] rounded-lg object-contain"
+          />
+        ) : (
+          <iframe
+            src={previewUrl}
+            className="h-[70vh] w-[80vw] rounded-lg"
+            title={previewTitle}
+          />
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 flex justify-end gap-3 pt-3 border-t border-white/[0.1]">
+        <a
+          href={previewUrl}
+          download
+          className="rounded-lg border border-[#639922]/30 bg-[#639922]/15 px-4 py-2 text-[13px] text-[#639922] transition-all hover:bg-[#639922]/25"
+        >
+          <Download className="mr-2 inline h-4 w-4" />
+          Download
+        </a>
+        <Button
+          onClick={closePreview}
+          variant="outline"
+          className="border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
+
+

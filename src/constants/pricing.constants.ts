@@ -10,46 +10,20 @@ export const CCP_ACCOUNT = {
 
 export const STUDENT_PLANS: Plan[] = [
   {
-    id: 'student_monthly',
-    name: 'Student Monthly',
-    price: 999,
-    period: 'month',
-    for: 'student',
-    features: ['AI job recommendations', 'Priority support', 'Profile boost'],
-  },
-  {
     id: 'student_yearly',
     name: 'Student Yearly',
     price: 9999,
     period: 'year',
     for: 'student',
-    features: ['Save 16%', 'All monthly features', 'Extended support'],
-  },
-  {
-    id: 'student_premium',
-    name: 'Student Premium',
-    price: 14999,
-    period: 'year',
-    for: 'student',
-    features: ['1-on-1 career coaching', 'CV review', 'Priority application review'],
-    recommended: true,
-  },
+    features: [
+      'Unlimited job applies',
+      'AI Resume auto‑extract skills & experience',
+      'Smart Ranking – AI match scoring',
+      'Priority support',
+    ],  },
 ];
 
 export const COMPANY_PLANS: Plan[] = [
-  {
-    id: 'company_monthly',
-    name: 'Company Starter',
-    price: 4999,
-    period: 'month',
-    for: 'company',
-    features: [
-      'Post up to 10 jobs',
-      'Basic candidate search',
-      'Email support',
-      'Standard analytics',
-    ],
-  },
   {
     id: 'company_yearly',
     name: 'Company Growth',
@@ -65,21 +39,6 @@ export const COMPANY_PLANS: Plan[] = [
       'Priority support',
     ],
     recommended: true,
-  },
-  {
-    id: 'company_enterprise',
-    name: 'Enterprise',
-    price: 149999,
-    period: 'year',
-    for: 'company',
-    features: [
-      'Everything in Growth',
-      'Dedicated account manager',
-      'Custom integrations (ATS, HRIS)',
-      'Branded career page',
-      'API access',
-      'SLA guarantee',
-    ],
   },
 ];
 

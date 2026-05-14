@@ -55,14 +55,14 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
         setCheckingConnection(true);
         try {
           if (profile?.university_connection_status !== undefined) {
-            setConnectionStatus(profile.university_connection_status === "accepted");
+            setConnectionStatus(profile.university_connection_status === "connected");
           } else {
             const { data, error } = await supabase
               .from("profiles")
               .select("university_connection_status")
               .eq("id", user?.id)
               .single();
-            if (!error && data) setConnectionStatus(data.university_connection_status === "accepted");
+            if (!error && data) setConnectionStatus(data.university_connection_status === "connected");
             else setConnectionStatus(false);
           }
         } catch { setConnectionStatus(false); }
@@ -113,23 +113,31 @@ export function AddCertificateModal({ open, onOpenChange, onAdd }: AddCertificat
 
   const getUniversityName = async () => {
     if (!user) return "University";
-    const { data: connection } = await supabase
-      .from("department_connections")
-      .select("university_id")
-      .eq("student_id", user.id)
-      .eq("status", "accepted")
+  
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select(`
+        university_name,
+        university_connection_status
+      `)
+      .eq("id", user.id)
       .maybeSingle();
-    if (connection) {
-      const { data: uniProfile } = await supabase
-        .from("profiles")
-        .select("university_name")
-        .eq("id", connection.university_id)
-        .single();
-      return uniProfile?.university_name || "University";
+  
+    if (error) {
+      console.error("Error fetching university name:", error);
+      return "University";
     }
+  
+    // Only return university if connection is approved
+    if (
+      profile?.university_connection_status === "connected" &&
+      profile?.university_name
+    ) {
+      return profile.university_name;
+    }
+  
     return "University";
   };
-
   const uploadProofFile = async (userId: string, file: File, starType: string): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${userId}/stars/${starType}_${Date.now()}.${fileExt}`;

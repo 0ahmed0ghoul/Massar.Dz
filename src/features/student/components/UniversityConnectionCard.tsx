@@ -9,7 +9,7 @@ export const UniversityConnectionCard = ({
   isRequesting = false,
 }: UniversityConnectionCardProps) => {
   const isVerified = profile.is_verified === true;
-  const isConnected = profile.university_connection_status === "accepted";
+  const isConnected = profile.university_connection_status === "connected";
   const navigate = useNavigate();
 
   const handleMessage = () => {

@@ -36,6 +36,7 @@ export interface RegisterFormData {
   location?: string;
   candidateType?: string;
   studentId?: string;
+  student_card_url?: string;
 }
 type BaseFormData = Partial<RegisterFormData>;
 

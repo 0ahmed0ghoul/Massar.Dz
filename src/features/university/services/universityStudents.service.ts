@@ -26,7 +26,8 @@ export interface PlatformStudent {
   speciality_type: string;
   academic_year?: string;
   is_profile_verified: boolean;
-  connection_status: "none" | "pending" | "connected" | "rejected";
+  student_card_url?: string;
+  university_connection_status: "none" | "pending" | "connected" | "rejected";
   rejection_reason?: string; // not stored, only for email
 }
 
@@ -182,12 +183,44 @@ class UniversityStudentsService {
     universityName: string
   ): Promise<PlatformStudent[]> {
     console.log("🔍 Fetching registered students for university:", universityName);
-    
-    // First, try exact match
+  
+    // Fetch directly from profiles table
     let { data: students, error } = await supabase
       .from("profiles")
-      .select(
-        `
+      .select(`
+        id,
+        student_id,
+        email,
+        first_name,
+        last_name,
+        speciality,
+        speciality_type,
+        academic_year,
+        is_verified,
+        avatar_url,
+        university_connection_status,
+        university_name,
+        role,
+        student_card_url,
+        candidate_type
+      `)
+      .eq("role", "student")
+      .eq("university_name", universityName);
+  
+    if (error) {
+      console.error("❌ Error fetching students:", error);
+      throw new Error(error.message);
+    }
+  
+    console.log("📊 Exact match students count:", students?.length);
+  
+    // Fallback → case-insensitive search
+    if (!students || students.length === 0) {
+      console.log("🔍 Trying case-insensitive search...");
+  
+      const { data: studentsILike, error: likeError } = await supabase
+        .from("profiles")
+        .select(`
           id,
           student_id,
           email,
@@ -200,93 +233,60 @@ class UniversityStudentsService {
           avatar_url,
           university_connection_status,
           university_name,
+          student_card_url,
           role,
           candidate_type
-        `
-      )
-      .eq("role", "student")
-      .eq("university_name", universityName);
-  
-    if (error) {
-      console.error("❌ Error fetching students:", error);
-      throw new Error(error.message);
-    }
-  
-    console.log("📊 Exact match students count:", students?.length);
-  
-    // If no exact matches, try case-insensitive search
-    if (!students || students.length === 0) {
-      console.log("🔍 Trying case-insensitive search...");
-      
-      const { data: studentsILike, error: likeError } = await supabase
-        .from("profiles")
-        .select(
-          `
-            id,
-            student_id,
-            email,
-            first_name,
-            last_name,
-            speciality,
-            speciality_type,
-            academic_year,
-            is_verified,
-            avatar_url,
-            university_connection_status,
-            university_name,
-            role,
-            candidate_type
-          `
-        )
+        `)
         .eq("role", "student")
         .ilike("university_name", universityName);
   
       if (likeError) {
         console.error("❌ Error in case-insensitive search:", likeError);
       } else {
-        console.log("📊 Case-insensitive match students count:", studentsILike?.length);
+        console.log(
+          "📊 Case-insensitive match students count:",
+          studentsILike?.length
+        );
+  
         students = studentsILike;
       }
     }
   
-    // If still no matches, try fetching by connection
+    // Optional fallback:
+    // fetch students that already have ANY university connection
     if (!students || students.length === 0) {
-      console.log("🔍 Trying to find students by department_connections...");
-      
-      // Get student IDs from department_connections
-      const { data: connections } = await supabase
-        .from("department_connections")
-        .select("student_id")
-        .eq("university_id", universityId);
+      console.log("🔍 Fetching students with university connections...");
   
-      if (connections && connections.length > 0) {
-        const studentIds = connections.map(c => c.student_id);
-        
-        const { data: connectedStudents } = await supabase
-          .from("profiles")
-          .select(
-            `
-              id,
-              student_id,
-              email,
-              first_name,
-              last_name,
-              speciality,
-              speciality_type,
-              academic_year,
-              is_verified,
-              avatar_url,
-              university_connection_status,
-              university_name,
-              role,
-              candidate_type
-            `
-          )
-          .in("id", studentIds)
-          .eq("role", "student");
+      const { data: connectedStudents, error: connectedError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          student_id,
+          email,
+          first_name,
+          last_name,
+          speciality,
+          speciality_type,
+          academic_year,
+          is_verified,
+          avatar_url,
+          university_connection_status,
+          university_name,
+          student_card_url,
+          role,
+          candidate_type
+        `)
+        .eq("role", "student")
+        .neq("university_connection_status", "none");
   
+      if (connectedError) {
+        console.error("❌ Error fetching connected students:", connectedError);
+      } else {
         students = connectedStudents;
-        console.log("📊 Students found via connections:", students?.length);
+        console.log(
+          "📊 Students found via university_connection_status:",
+          students?.length
+        );
       }
     }
   
@@ -303,8 +303,12 @@ class UniversityStudentsService {
       academic_year: student.academic_year || undefined,
       is_profile_verified: student.is_verified || false,
       avatar_url: student.avatar_url || undefined,
-      connection_status: (student.university_connection_status as PlatformStudent['connection_status']) || "none",
+      student_card_url: student.student_card_url || '',
+      university_connection_status:
+        (student.university_connection_status as PlatformStudent["university_connection_status"]) ||
+        "none",
       rejection_reason: undefined,
+      university_name: student.university_name || undefined,
     }));
   }
   // ---------- Compare Student against Official Records ----------
@@ -366,30 +370,9 @@ class UniversityStudentsService {
     return data;
   }
 
-  // ---------- Send Connection Invitation ----------
-  async sendInvitation(request: InvitationRequest): Promise<void> {
-    // Upsert into department_connections (ensure only one record per student-university pair)
-    const { error } = await supabase.from("department_connections").upsert(
-      {
-        student_id: request.studentId,
-        university_id: request.departmentId,
-        status: "pending",
-        invited_by: request.invitedBy,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "student_id, university_id",
-        ignoreDuplicates: false,
-      }
-    );
-    if (error) throw new Error(error.message);
-  }
-
-  // ---------- Reject Student (update connection status) ----------
-// Update rejectStudent in universityStudents.service.ts
-
+// ---------- Reject Student ----------
 async rejectStudent(rejection: RejectionData): Promise<void> {
-  // Update the profile's university_connection_status to 'rejected'
+  // Update student's profile status only
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
@@ -397,20 +380,8 @@ async rejectStudent(rejection: RejectionData): Promise<void> {
     })
     .eq("id", rejection.studentId);
 
-  if (profileError) throw new Error(profileError.message);
-
-  // Update department_connections
-  const { error: connError } = await supabase
-    .from("department_connections")
-    .update({ 
-      status: "rejected",
-      updated_at: new Date().toISOString()
-    })
-    .eq("student_id", rejection.studentId)
-    .eq("university_id", rejection.universityId);
-
-  if (connError) {
-    console.warn("Could not update department_connections:", connError);
+  if (profileError) {
+    throw new Error(profileError.message);
   }
 
   // Send rejection email
@@ -423,28 +394,55 @@ async rejectStudent(rejection: RejectionData): Promise<void> {
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2>Connection Request Update</h2>
+
           <p>Dear ${rejection.studentName},</p>
-          <p>Your connection request to the university department has been reviewed and was not approved at this time.</p>
-          <p><strong>Reason for rejection:</strong> ${rejection.reason}</p>
-          <p>You can update your profile information and submit a new connection request from your dashboard.</p>
-          <p>Best regards,<br/>University Administration</p>
+
+          <p>
+            Your connection request to the university department
+            has been reviewed and was not approved at this time.
+          </p>
+
+          <p>
+            <strong>Reason for rejection:</strong>
+            ${rejection.reason}
+          </p>
+
+          <p>
+            You can update your profile information and
+            submit a new connection request from your dashboard.
+          </p>
+
+          <p>
+            Best regards,<br/>
+            University Administration
+          </p>
         </div>
       `,
       },
     }
   );
-  if (emailError)
+
+  if (emailError) {
     console.error("Failed to send rejection email:", emailError);
+  }
 }
 
-async approveStudentConnection(studentId: string, universityName: string): Promise<void> {
-  console.log("🚀 approveStudentConnection called with:", { studentId, universityName });
+// ---------- Approve Student Connection ----------
+async approveStudentConnection(
+  studentId: string,
+  universityName: string
+): Promise<void> {
+  console.log("🚀 approveStudentConnection called with:", {
+    studentId,
+    universityName,
+  });
 
-  // Update the profile's university_connection_status
+  // Update student profile only
   const { data, error } = await supabase
     .from("profiles")
     .update({
-      university_connection_status: "accepted",
+      university_connection_status: "connected",
+      university_name: universityName,
     })
     .eq("id", studentId)
     .select();
@@ -459,37 +457,30 @@ async approveStudentConnection(studentId: string, universityName: string): Promi
 
   if (!data || data.length === 0) {
     console.warn("⚠️ NO ROWS UPDATED → ID not found or RLS issue");
-    throw new Error("Failed to update student connection status");
-  }
 
-  // Also update the department_connections table if it exists
-  const { error: connError } = await supabase
-    .from("department_connections")
-    .update({ 
-      status: "accepted",
-      updated_at: new Date().toISOString()
-    })
-    .eq("student_id", studentId);
-
-  if (connError) {
-    console.warn("⚠️ Could not update department_connections:", connError);
-    // Don't throw - the profile update was successful
+    throw new Error(
+      "Failed to update student connection status"
+    );
   }
 }
 
-  // ---------- Reset Connection Request (allow student to retry) ----------
-  async resetConnectionRequest(
-    studentId: string,
-    universityId: string
-  ): Promise<void> {
-    // Update status to 'pending' so admin can reconsider
-    const { error } = await supabase
-      .from("department_connections")
-      .update({ status: "pending" })
-      .eq("student_id", studentId)
-      .eq("university_id", universityId);
-    if (error) throw new Error(error.message);
+// ---------- Reset Connection Request ----------
+async resetConnectionRequest(
+  studentId: string
+): Promise<void> {
+  // Allow student to retry connection
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      university_connection_status: "pending",
+    })
+    .eq("id", studentId);
+
+  if (error) {
+    throw new Error(error.message);
   }
+}
+
 }
 
 export const universityStudentsService = new UniversityStudentsService();

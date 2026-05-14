@@ -22,6 +22,7 @@ import {
   X,
   Clock,
   Users,
+  Check,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -224,67 +225,58 @@ export const AdminPendingDetailPage = () => {
 
         <div className="space-y-6">
           {/* Basic Information - Fixed status badge */}
-          <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] backdrop-blur-md p-5 sm:p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
-              <User className="h-5 w-5 text-[#639922]" /> Basic Information
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-xs uppercase tracking-wider text-foreground/40">
-                  Full Name
-                </label>
-                <p className="mt-1 text-foreground">
-                  {profile.first_name} {profile.last_name}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-foreground/40">
-                  Email
-                </label>
-                <p className="mt-1 text-foreground flex items-center gap-1">
-                  <Mail className="h-3 w-3 text-foreground/40" />{" "}
-                  {profile.email}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-foreground/40">
-                  Role
-                </label>
-                <p className="mt-1 text-foreground capitalize">
-                  {profile.role.replace("_", " ")}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-foreground/40">
-                  Wilaya / City
-                </label>
-                <p className="mt-1 text-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-foreground/40" />{" "}
-                  {profile.wilaya || profile.city || "—"}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-foreground/40">
-                  Status
-                </label>
-                <p className="mt-1">
-                  {profile.is_verified ? (
-                    <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-500">
-                      Approved
-                    </span>
-                  ) : profile.is_completed === false ? (
-                    <span className="rounded-full bg-red-400/20 px-2 py-0.5 text-xs text-red-400">
-                      Profile incomplete
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs text-amber-400">
-                      Pending verification
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
+          <div className="sm:col-span-2 flex items-center gap-4 pb-2 border-b border-white/[0.06]">
+  <div className="relative">
+    {profile.avatar_url ? (
+      <img
+        src={profile.avatar_url}
+        alt={`${profile.first_name} ${profile.last_name}`}
+        className="h-20 w-20 rounded-2xl object-cover border border-white/10 shadow-lg"
+      />
+    ) : (
+      <div className="h-20 w-20 rounded-2xl bg-[#639922]/15 border border-[#639922]/20 flex items-center justify-center text-2xl font-semibold text-[#639922]">
+        {profile.first_name?.charAt(0)}
+        {profile.last_name?.charAt(0)}
+      </div>
+    )}
+
+    {profile.is_verified && (
+      <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-background flex items-center justify-center">
+        <Check className="h-3.5 w-3.5 text-white" />
+      </div>
+    )}
+  </div>
+
+  <div className="flex-1 min-w-0">
+    <h3 className="text-lg font-semibold text-foreground truncate">
+      {profile.first_name} {profile.last_name}
+    </h3>
+
+    <p className="text-sm text-foreground/55 truncate">
+      {profile.email}
+    </p>
+
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <span className="rounded-full bg-[#639922]/15 px-2.5 py-1 text-[11px] font-medium text-[#8dc63f] capitalize">
+        {profile.role.replace("_", " ")}
+      </span>
+
+      {profile.is_verified ? (
+        <span className="rounded-full bg-green-500/20 px-2.5 py-1 text-[11px] text-green-400">
+          Verified
+        </span>
+      ) : profile.is_completed === false ? (
+        <span className="rounded-full bg-red-400/20 px-2.5 py-1 text-[11px] text-red-400">
+          Incomplete
+        </span>
+      ) : (
+        <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-[11px] text-amber-400">
+          Pending Review
+        </span>
+      )}
+    </div>
+  </div>
+</div>
 
 {/* Institution Details (university or company) */}
 {(isUniversity || isCompany) && (
@@ -384,6 +376,7 @@ export const AdminPendingDetailPage = () => {
                 <p className="mt-1 text-foreground">
                   {profile.department || "—"}
                 </p>
+                
               </div>
 
               <div className="sm:col-span-2">

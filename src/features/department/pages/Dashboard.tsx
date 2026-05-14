@@ -1,5 +1,17 @@
 // features/university/pages/Dashboard.tsx
-import { Users, UserCheck, UserPlus, UserX, Send, CheckCircle2, Clock, BarChart3, School, TrendingUp, Building2 } from "lucide-react";
+import {
+  Users,
+  UserCheck,
+  UserPlus,
+  UserX,
+  Send,
+  CheckCircle2,
+  Clock,
+  BarChart3,
+  School,
+  TrendingUp,
+  Building2,
+} from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useUniversityStudentConnection } from "@/features/department/hooks/useUniversityStudentConnection";
 import { Link } from "react-router-dom";
@@ -12,7 +24,6 @@ export default function Dashboard() {
   const univAdminType = profile?.univ_admin_type; // 'head_of_department' or 'rectorate'
   const universityName = profile?.university_name;
   const departmentName = profile?.department;
-
   const {
     registeredStudents,
     officialStudents,
@@ -21,25 +32,40 @@ export default function Dashboard() {
   console.log("🚀 [Dashboard] registeredStudents:", registeredStudents);
   console.log("🚀 [Dashboard] officialStudents:", officialStudents);
   // Fetch university statistics for rectorate
-  const { 
-    stats: universityStats, 
-    loading: statsLoading 
-  } = useUniversityStatistics(univAdminType === 'rectorate' ? universityName || '' : '');
-
+  const { stats: universityStats, loading: statsLoading } =
+    useUniversityStatistics(
+      univAdminType === "rectorate" ? universityName || "" : ""
+    );
+  // Add debug logs
+  console.log("🔍 Rectorate Debug:", {
+    univAdminType,
+    universityName,
+    universityStats,
+    statsLoading,
+    totalGraduates: universityStats?.totalGraduates,
+    specialitiesCount: universityStats?.specialitiesCount,
+    specialities: universityStats?.specialities,
+  });
   // Fetch department overview for department head
-  const { 
-    overview: departmentOverview, 
-    loading: deptOverviewLoading 
-  } = useDepartmentOverview(
-    univAdminType === 'head_of_department' ? universityId || '' : '',
-    univAdminType === 'head_of_department' ? departmentName || '' : ''
-  );
+  const { overview: departmentOverview, loading: deptOverviewLoading } =
+    useDepartmentOverview(
+      univAdminType === "head_of_department" ? universityId || "" : "",
+      univAdminType === "head_of_department" ? departmentName || "" : ""
+    );
 
   // Stats based on registered students (for head_of_department)
-  const totalRegistered = registeredStudents.length;
-  const connected = registeredStudents.filter(s => s.connection_status === "accepted").length;
-  const pendingInvitations = registeredStudents.filter(s => s.connection_status === "pending").length;
-  const pendingReview = registeredStudents.filter(s => s.connection_status === "none").length;
+  const totalRegistered = registeredStudents.filter(
+    (s) => s.university_name === universityName
+  ).length;
+  const connected = registeredStudents.filter(
+    (s) => s.university_connection_status === "connected"
+  ).length;
+  const pendingInvitations = registeredStudents.filter(
+    (s) => s.university_connection_status === "pending"
+  ).length;
+  const pendingReview = registeredStudents.filter(
+    (s) => s.university_connection_status === "none"
+  ).length;
 
   const departmentStats = [
     {
@@ -67,17 +93,21 @@ export default function Dashboard() {
 
   // Recent connection activities
   const recentActivity = registeredStudents
-    .filter(s => s.connection_status !== "none")
+    .filter((s) => s.university_connection_status !== "none")
     .slice(0, 5);
 
   // Calculate rectorate statistics
   const totalSpecialities = universityStats?.specialitiesCount || 0;
   const totalGraduates = universityStats?.totalGraduates || 0;
   const totalEmployed = universityStats?.aggregatedDetails?.employedCount || 0;
-  const overallAvgSalary = universityStats?.aggregatedDetails?.averageSalary || 0;
+  const overallAvgSalary =
+    universityStats?.aggregatedDetails?.averageSalary || 0;
   const responseRate = universityStats?.overallResponseRate || 0;
 
-  const isLoading = univAdminType === 'rectorate' ? statsLoading : connectionLoading || deptOverviewLoading;
+  const isLoading =
+    univAdminType === "rectorate"
+      ? statsLoading
+      : connectionLoading || deptOverviewLoading;
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -98,18 +128,19 @@ export default function Dashboard() {
           {/* Header */}
           <div>
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              {univAdminType === 'rectorate' ? 'University Dashboard' : 'Department Dashboard'}
+              {univAdminType === "rectorate"
+                ? "University Dashboard"
+                : "Department Dashboard"}
             </h1>
             <p className="text-sm text-foreground/40 sm:text-base">
-              {univAdminType === 'rectorate' 
+              {univAdminType === "rectorate"
                 ? `Overview of all departments in ${universityName}`
-                : `Manage ${departmentName} - Student registrations and connections`
-              }
+                : `Manage ${departmentName} - Student registrations and connections`}
             </p>
           </div>
 
           {/* DEPARTMENT HEAD VIEW */}
-          {univAdminType === 'head_of_department' && (
+          {univAdminType === "head_of_department" && (
             <>
               {/* Stats Cards Grid */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -136,25 +167,69 @@ export default function Dashboard() {
 
               {/* Department Overview Cards */}
               {departmentOverview && (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <Card className="border-white/10">
                     <CardContent className="pt-6">
                       <div className="flex items-center gap-2">
                         <GraduationCap className="h-4 w-4 text-blue-500" />
-                        <p className="text-sm text-muted-foreground">Total Graduates</p>
+                        <p className="text-sm text-muted-foreground">
+                          Graduated
+                        </p>
                       </div>
-                      <p className="text-2xl font-bold mt-2">{departmentOverview.totalGraduates}</p>
-                      <p className="text-xs text-muted-foreground mt-1">In {departmentName}</p>
+                      <p className="text-2xl font-bold mt-2">
+                        {departmentOverview.totalGraduates}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Completed studies
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-white/10">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-green-500" />
+                        <p className="text-sm text-muted-foreground">
+                          Studying
+                        </p>
+                      </div>
+                      <p className="text-2xl font-bold mt-2">
+                        {departmentOverview.totalStudying}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Currently enrolled
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-white/10">
                     <CardContent className="pt-6">
                       <div className="flex items-center gap-2">
                         <UserCheck className="h-4 w-4 text-[#639922]" />
-                        <p className="text-sm text-muted-foreground">Connected Students</p>
+                        <p className="text-sm text-muted-foreground">
+                          Connected
+                        </p>
                       </div>
-                      <p className="text-2xl font-bold mt-2">{connected}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Active connections</p>
+                      <p className="text-2xl font-bold mt-2">
+                        {departmentOverview.totalConnected}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Active connections
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-white/10">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-purple-500" />
+                        <p className="text-sm text-muted-foreground">
+                          Total Students
+                        </p>
+                      </div>
+                      <p className="text-2xl font-bold mt-2">
+                        {departmentOverview.totalStudents}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        All students
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
@@ -184,7 +259,9 @@ export default function Dashboard() {
                         <BarChart3 className="h-8 w-8 text-[#e2c245]" />
                         <div>
                           <p className="font-semibold">Department Statistics</p>
-                          <p className="text-sm text-foreground/40">View graduate outcomes</p>
+                          <p className="text-sm text-foreground/40">
+                            View graduate outcomes
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -195,24 +272,40 @@ export default function Dashboard() {
           )}
 
           {/* RECTORATE VIEW */}
-          {univAdminType === 'rectorate' && (
+          {univAdminType === "rectorate" && (
             <>
               {statsLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#639922] border-t-transparent" />
                 </div>
-              ) : universityStats && universityStats.totalGraduates > 0 ? (
+              ) : !universityStats ? (
+                <Card className="border-white/10">
+                  <CardContent className="py-12 text-center">
+                    <School className="h-12 w-12 mx-auto text-foreground/20 mb-3" />
+                    <p className="text-foreground/40">
+                      Unable to load statistics
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                // Show dashboard even if totalGraduates is 0, but show counts
                 <>
-                  {/* Overview Cards */}
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {/* Overview Cards - Always show counts */}
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     <Card className="border-white/10">
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-2">
                           <School className="h-4 w-4 text-[#639922]" />
-                          <p className="text-sm text-muted-foreground">Departments</p>
+                          <p className="text-sm text-muted-foreground">
+                            Departments
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">{totalSpecialities}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Active specialities</p>
+                        <p className="text-2xl font-bold mt-2">
+                          {totalSpecialities}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Active specialities
+                        </p>
                       </CardContent>
                     </Card>
 
@@ -220,10 +313,33 @@ export default function Dashboard() {
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-blue-500" />
-                          <p className="text-sm text-muted-foreground">Total Graduates</p>
+                          <p className="text-sm text-muted-foreground">
+                            Graduated
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">{totalGraduates}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Registered on platform</p>
+                        <p className="text-2xl font-bold mt-2">
+                          {universityStats?.totalGraduates || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Completed studies
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/10">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-green-500" />
+                          <p className="text-sm text-muted-foreground">
+                            Studying
+                          </p>
+                        </div>
+                        <p className="text-2xl font-bold mt-2">
+                          {universityStats?.totalStudying || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Currently enrolled
+                        </p>
                       </CardContent>
                     </Card>
 
@@ -231,11 +347,17 @@ export default function Dashboard() {
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-[#e2c245]" />
-                          <p className="text-sm text-muted-foreground">Employed</p>
+                          <p className="text-sm text-muted-foreground">
+                            Survey Responses
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">{totalEmployed}</p>
+                        <p className="text-2xl font-bold mt-2">
+                          {universityStats?.totalRespondents || 0}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {responseRate.toFixed(1)}% response rate
+                          {universityStats?.overallResponseRate?.toFixed(1) ||
+                            0}
+                          % response rate
                         </p>
                       </CardContent>
                     </Card>
@@ -244,15 +366,23 @@ export default function Dashboard() {
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-2">
                           <BarChart3 className="h-4 w-4 text-purple-500" />
-                          <p className="text-sm text-muted-foreground">Avg. Salary</p>
+                          <p className="text-sm text-muted-foreground">
+                            Avg. Salary
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">{overallAvgSalary.toLocaleString()}DZ</p>
-                        <p className="text-xs text-muted-foreground mt-1">Annual gross</p>
+                        <p className="text-2xl font-bold mt-2">
+                          {universityStats?.aggregatedDetails?.averageSalary?.toLocaleString() ||
+                            0}
+                          DZ
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          From survey responses
+                        </p>
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* Specialities Summary */}
+                  {/* Specialities Summary - Show even if no data */}
                   <Card className="border-white/10">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -262,48 +392,106 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       {universityStats.specialities.length === 0 ? (
-                        <p className="text-center py-8 text-foreground/40">
-                          No specialities with graduates yet
-                        </p>
+                        <div className="text-center py-8">
+                          <p className="text-foreground/40">
+                            No specialities found
+                          </p>
+                          <p className="text-xs text-foreground/30 mt-1">
+                            Make sure department heads are assigned to
+                            specialities
+                          </p>
+                        </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b border-white/10">
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Speciality</th>
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Graduates</th>
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Response Rate</th>
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Employed</th>
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Avg. Salary</th>
-                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">Actions</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Speciality
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Graduated
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Studying
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Total
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Response Rate
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Employed
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Avg. Salary
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground/60">
+                                  Actions
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               {universityStats.specialities
-                                .sort((a, b) => b.totalGraduates - a.totalGraduates)
-                                .slice(0, 10) // Show top 10
+                                .sort(
+                                  (a, b) => b.totalStudents - a.totalStudents
+                                )
                                 .map((speciality) => (
-                                  <tr key={speciality.speciality} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                    <td className="py-3 px-4 font-medium">{speciality.speciality}</td>
-                                    <td className="py-3 px-4">{speciality.totalGraduates}</td>
+                                  <tr
+                                    key={speciality.speciality}
+                                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                                  >
+                                    <td className="py-3 px-4 font-medium">
+                                      {speciality.speciality}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {speciality.totalGraduates}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {speciality.totalStudying}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {speciality.totalStudents}
+                                    </td>
                                     <td className="py-3 px-4">
                                       <div className="flex items-center gap-2">
                                         <div className="flex-1 bg-white/10 rounded-full h-2 max-w-[60px]">
-                                          <div 
-                                            className="bg-[#639922] h-2 rounded-full" 
-                                            style={{ width: `${Math.min(speciality.responseRate, 100)}%` }}
+                                          <div
+                                            className="bg-[#639922] h-2 rounded-full"
+                                            style={{
+                                              width: `${Math.min(
+                                                speciality.responseRate,
+                                                100
+                                              )}%`,
+                                            }}
                                           />
                                         </div>
-                                        <span className="text-xs">{speciality.responseRate.toFixed(0)}%</span>
+                                        <span className="text-xs">
+                                          {speciality.responseRate.toFixed(0)}%
+                                        </span>
                                       </div>
                                     </td>
-                                    <td className="py-3 px-4">{speciality.employedCount}</td>
-                                    <td className="py-3 px-4">{speciality.averageSalary.toLocaleString()}DZ</td>
+                                    <td className="py-3 px-4">
+                                      {speciality.employedCount}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {speciality.averageSalary.toLocaleString()}
+                                      DZ
+                                    </td>
                                     <td className="py-3 px-4">
                                       <Link
-                                        to={`/university/analytics/${encodeURIComponent(universityName || '')}/${encodeURIComponent(speciality.speciality)}`}
+                                        to={`/university/analytics/${encodeURIComponent(
+                                          universityName || ""
+                                        )}/${encodeURIComponent(
+                                          speciality.speciality
+                                        )}`}
                                       >
-                                        <Button variant="ghost" size="sm" className="text-[#639922] hover:text-[#4f7a1a]">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-[#639922] hover:text-[#4f7a1a]"
+                                        >
                                           View Stats
                                         </Button>
                                       </Link>
@@ -325,22 +513,29 @@ export default function Dashboard() {
                           <div className="flex items-center gap-3">
                             <BarChart3 className="h-8 w-8 text-[#639922]" />
                             <div>
-                              <p className="font-semibold">View Detailed Analytics</p>
-                              <p className="text-sm text-foreground/40">See all department statistics</p>
+                              <p className="font-semibold">
+                                View Detailed Analytics
+                              </p>
+                              <p className="text-sm text-foreground/40">
+                                See all department statistics
+                              </p>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
                     </Link>
-                    
+
                     <Card className="border-white/10">
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
                           <School className="h-8 w-8 text-[#e2c245]" />
                           <div>
-                            <p className="font-semibold">{totalSpecialities} Departments Active</p>
+                            <p className="font-semibold">
+                              {totalSpecialities} Departments Active
+                            </p>
                             <p className="text-sm text-foreground/40">
-                              {totalGraduates} graduates registered
+                              {universityStats?.totalStudents || 0} total
+                              students registered
                             </p>
                           </div>
                         </div>
@@ -348,16 +543,6 @@ export default function Dashboard() {
                     </Card>
                   </div>
                 </>
-              ) : (
-                <Card className="border-white/10">
-                  <CardContent className="py-12 text-center">
-                    <School className="h-12 w-12 mx-auto text-foreground/20 mb-3" />
-                    <p className="text-foreground/40">No statistics available yet</p>
-                    <p className="text-xs text-foreground/30 mt-1">
-                      Data will appear once graduates complete the questionnaire
-                    </p>
-                  </CardContent>
-                </Card>
               )}
             </>
           )}
@@ -369,4 +554,7 @@ export default function Dashboard() {
 
 // Missing GraduationCap import
 import { GraduationCap } from "lucide-react";
-import { useDepartmentOverview, useUniversityStatistics } from "@/features/university/hooks/useUniversityStats";
+import {
+  useDepartmentOverview,
+  useUniversityStatistics,
+} from "@/features/university/hooks/useUniversityStats";

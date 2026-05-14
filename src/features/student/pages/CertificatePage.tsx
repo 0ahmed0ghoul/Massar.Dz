@@ -1,5 +1,5 @@
 // features/student/pages/CertificatePage.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Award, GraduationCap, Star, Trophy, Plus, Scan, ShieldCheck, XCircle, CheckCircle, Calendar, FileText, Eye, Building2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,24 +27,32 @@ export default function CertificatePage() {
   const [showScanner, setShowScanner] = useState(false);
 
   // Check university connection status only for studying students
-  useState(() => {
-    async function fetchConnection() {
-      if (!user || candidateType !== "studying") {
-        setConnectionLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("department_connections")
-        .select("status")
-        .eq("student_id", user.id)
-        .maybeSingle();
-      if (!error && data) setUniversityConnectionStatus(data.status);
+useEffect(() => {
+  async function fetchConnection() {
+    if (!user || candidateType !== "studying") {
       setConnectionLoading(false);
+      return;
     }
-    fetchConnection();
-  }, [user, candidateType]);
 
-  const isConnected = universityConnectionStatus === "accepted";
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("university_connection_status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      setUniversityConnectionStatus(
+        data.university_connection_status || "none"
+      );
+    }
+
+    setConnectionLoading(false);
+  }
+
+  fetchConnection();
+}, [user, candidateType]);
+
+  const isConnected = universityConnectionStatus === "connected";
   const isStudying = candidateType === "studying";
   const isGraduated = candidateType === "graduated";
   const isSelfTaught = candidateType === "self_taught";

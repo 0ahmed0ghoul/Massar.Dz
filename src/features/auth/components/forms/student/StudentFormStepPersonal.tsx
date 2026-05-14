@@ -52,7 +52,7 @@ export function StepPersonal({ register, errors }: { register: any; errors: any 
       <div>
         <FieldLabel required>Email address</FieldLabel>
         <div className="relative">
-          <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25" />
+          <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/80" />
           <Input
             type="email"
             {...register("email")}

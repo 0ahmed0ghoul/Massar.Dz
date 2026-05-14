@@ -117,7 +117,7 @@ export const universityProfileService = {
         university_connection_status,
         updated_at
       `)
-      .eq("university_connection_status", "accepted")
+      .eq("university_connection_status", "connected")
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data.map((s: any) => ({
@@ -126,76 +126,89 @@ export const universityProfileService = {
     }));
   },
 
-  // Get pending connection requests for this university
-  async getPendingRequests(universityId: string): Promise<PendingRequest[]> {
-    const { data, error } = await supabase
-      .from("department_connections")
-      .select(`
-        id,
-        student_id,
-        invited_by,
-        created_at,
-        profiles:student_id (
-          id,
-          first_name,
-          last_name,
-          email,
-          student_id,
-          speciality,
-          department,
-          degree_level,
-          academic_year,
-          wilaya,
-          avatar_url,
-          student_card_url,
-          resume_url
-        )
-      `)
-      .eq("university_id", universityId)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data || []).map((item: any) => ({
-      id: item.id,
-      student_id: item.student_id,
-      invited_by: item.invited_by,
-      created_at: item.created_at,
-      ...item.profiles,
-      student_id_number: item.profiles?.student_id,
-    }));
-  },
+// Get pending connection requests for this university
+async getPendingRequests(
+  universityName: string
+): Promise<PendingRequest[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(`
+      id,
+      first_name,
+      last_name,
+      email,
+      student_id,
+      speciality,
+      department,
+      degree_level,
+      academic_year,
+      wilaya,
+      avatar_url,
+      student_card_url,
+      resume_url,
+      created_at,
+      university_name,
+      university_connection_status
+    `)
+    .eq("role", "student")
+    .eq("university_name", universityName)
+    .eq("university_connection_status", "pending")
+    .order("created_at", { ascending: false });
 
-  // Accept a pending request (updates connection status and invitation)
-  async acceptRequest(requestId: string, studentId: string): Promise<void> {
-    // 1. Update invitation status
-    const { error: connError } = await supabase
-      .from("department_connections")
-      .update({ status: "accepted", updated_at: new Date().toISOString() })
-      .eq("id", requestId);
-    if (connError) throw new Error(connError.message);
+  if (error) {
+    throw new Error(error.message);
+  }
 
-    // 2. Update student's profile connection status
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ university_connection_status: "accepted" })
-      .eq("id", studentId);
-    if (profileError) throw new Error(profileError.message);
-  },
+  return (data || []).map((student: any) => ({
+    id: student.id,
+    student_id: student.id,
+    invited_by: null,
+    created_at: student.created_at,
 
-  // Reject a pending request
-  async rejectRequest(requestId: string, studentId: string): Promise<void> {
-    // 1. Update invitation status
-    const { error: connError } = await supabase
-      .from("department_connections")
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
-      .eq("id", requestId);
-    if (connError) throw new Error(connError.message);
+    first_name: student.first_name,
+    last_name: student.last_name,
+    email: student.email,
 
-    // 2. Update student's profile connection status (optional: set to 'rejected')
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ university_connection_status: "rejected" })
-      .eq("id", studentId);
-    if (profileError) throw new Error(profileError.message);
-  },
+    speciality: student.speciality,
+    department: student.department,
+    degree_level: student.degree_level,
+    academic_year: student.academic_year,
+    wilaya: student.wilaya,
+
+    avatar_url: student.avatar_url,
+    student_card_url: student.student_card_url,
+    resume_url: student.resume_url,
+
+    student_id_number: student.student_id,
+  }));
+},
+
+// Accept a pending request
+async acceptRequest(studentId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      university_connection_status: "connected",
+    })
+    .eq("id", studentId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+},
+
+// Reject a pending request
+async rejectRequest(studentId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      university_connection_status: "rejected",
+    })
+    .eq("id", studentId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+},
+
 };

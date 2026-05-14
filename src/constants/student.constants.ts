@@ -6,81 +6,111 @@ export const STUDENT_STATUS_OPTIONS = [
   { id: "self_taught", label: "Self‑Taught", icon: "Sparkles" },
 ] as const;
 
-export const UNIVERSITY_DEPARTMENTS = [
-  "Computer Science",
-  "Software Engineering",
-  "Information Technology",
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "Biochemistry",
-  "Molecular Biology",
-  "Genetics",
-  "Microbiology",
-  "Biotechnology",
-  "Environmental Science",
-  "Earth Sciences",
-  "Geology",
-  "Geography",
-  "Civil Engineering",
-  "Mechanical Engineering",
-  "Electrical Engineering",
-  "Electronics",
-  "Telecommunications",
-  "Chemical Engineering",
-  "Industrial Engineering",
-  "Petroleum Engineering",
-  "Mining Engineering",
-  "Metallurgy",
-  "Aerospace Engineering",
-  "Architecture",
-  "Urban Planning",
-  "Economics",
-  "Management",
-  "Commerce",
-  "Accounting",
-  "Finance",
-  "Marketing",
-  "Business Administration",
-  "Public Administration",
-  "Political Science",
-  "International Relations",
-  "Law",
-  "Islamic Law (Charia'a)",
-  "Literature",
-  "Arabic Language & Literature",
-  "English Language & Literature",
-  "French Language & Literature",
-  "Spanish Language & Literature",
-  "German Language & Literature",
-  "Translation & Interpreting",
-  "History",
-  "Archaeology",
-  "Philosophy",
-  "Sociology",
-  "Psychology",
-  "Educational Sciences",
-  "Physical Education & Sports",
-  "Journalism & Mass Communication",
-  "Library & Information Science",
-  "Fine Arts",
-  "Music",
-  "Theatre & Cinema",
-  "Pharmacy",
-  "Medicine",
-  "Dentistry",
-  "Veterinary Medicine",
-  "Nursing",
-  "Public Health",
-  "Agriculture",
-  "Agronomy",
-  "Food Science & Technology",
-  "Forestry",
-  "Viticulture & Enology",
-  "Fisheries & Aquaculture",
-];
+export const UNIVERSITY_STRUCTURE: Record<string, string[]> = {
+  "Computer Science": [
+    "Computer Science",
+    "Software Engineering",
+    "Information Systems",
+    "Artificial Intelligence",
+    "Cyber Security",
+    "Data Science",
+    "Web Development",
+    "Mobile Development",
+    "Networks & Telecommunications",
+  ],
 
+  Mathematics: [
+    "Pure Mathematics",
+    "Applied Mathematics",
+    "Statistics",
+    "Operational Research",
+  ],
+
+  Physics: [
+    "Theoretical Physics",
+    "Nuclear Physics",
+    "Quantum Physics",
+    "Materials Physics",
+  ],
+
+  Chemistry: [
+    "Organic Chemistry",
+    "Analytical Chemistry",
+    "Industrial Chemistry",
+    "Biochemistry",
+  ],
+
+  Biology: [
+    "Microbiology",
+    "Genetics",
+    "Molecular Biology",
+    "Biotechnology",
+  ],
+
+  "Civil Engineering": [
+    "Structural Engineering",
+    "Construction Engineering",
+    "Hydraulics",
+    "Geotechnical Engineering",
+  ],
+
+  "Mechanical Engineering": [
+    "Industrial Mechanics",
+    "Energy Engineering",
+    "Manufacturing",
+    "Automotive Engineering",
+  ],
+
+  "Electrical Engineering": [
+    "Power Systems",
+    "Automation",
+    "Embedded Systems",
+    "Electronics",
+  ],
+
+  Economics: [
+    "International Economics",
+    "Banking",
+    "Financial Economics",
+  ],
+
+  Management: [
+    "Business Management",
+    "Human Resources",
+    "Project Management",
+  ],
+
+  Medicine: [
+    "General Medicine",
+    "Surgery",
+    "Cardiology",
+    "Neurology",
+  ],
+
+  Pharmacy: [
+    "Clinical Pharmacy",
+    "Pharmaceutical Industry",
+  ],
+
+  Law: [
+    "Private Law",
+    "Public Law",
+    "International Law",
+  ],
+
+  Literature: [
+    "Arabic Literature",
+    "English Literature",
+    "French Literature",
+  ],
+};
+
+export const UNIVERSITY_DEPARTMENTS =
+  Object.keys(UNIVERSITY_STRUCTURE);
+  
+
+
+  
 export const COMMON_SPECIALITIES = [
   "Computer Science",
   "Software Engineering",
@@ -110,18 +140,11 @@ export const EDUCATION_LEVELS = [
   { value: "bachelor", label: "Bachelor's" },
   { value: "Master", label: "Master" },
   { value: "Doctorate", label: "Doctorate" },
-  { value: "bootcamp", label: "Bootcamp" },
 ];
 
 export const REQUIRED_STUDENT_FIELDS: (keyof StudentProfile)[] = [
   "first_name",
   "last_name",
   "email",
-  "degree_level",
-  "university_name",
-  "speciality",
   "wilaya",
-  "academic_year",
-  "speciality_type",
-  "student_id"
 ];

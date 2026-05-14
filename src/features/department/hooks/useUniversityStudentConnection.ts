@@ -42,7 +42,7 @@ export function useUniversityStudentConnection(profile: any) {
         // fetch by university name + pending/connected status
         universityStudentsService.getRegisteredStudents(universityName),
       ]);
-
+      console.log("🚀 [fetchData] registered students:", registered);
       setOfficialStudents(official);
       setRegisteredStudents(registered);
 
@@ -126,7 +126,7 @@ const acceptStudent = async (student: PlatformStudent) => {
         s.id === student.id
           ? {
               ...s,
-              connection_status: "connected",
+              university_connection_status: "connected",
             }
           : s
       )
@@ -160,7 +160,7 @@ const acceptStudent = async (student: PlatformStudent) => {
         s.id === student.id
           ? {
               ...s,
-              connection_status: student.connection_status, // Revert to original
+              university_connection_status: student.university_connection_status, // Revert to original
             }
           : s
       )
@@ -194,7 +194,7 @@ const acceptStudent = async (student: PlatformStudent) => {
           s.id === student.id
             ? {
                 ...s,
-                connection_status: "rejected",
+                university_connection_status: "rejected",
                 rejection_reason: reason,
               }
             : s

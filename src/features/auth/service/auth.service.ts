@@ -71,6 +71,7 @@ class AuthService {
       skills: profileData.skills || null,
       univ_admin_type: profileData.univ_admin_type || null,
       student_id: profileData.student_id || null,
+      student_card_url: profileData.student_card_url || null,
     });
 
     if (profileError) {
@@ -141,11 +142,42 @@ class AuthService {
 
   // ───────────────────────── COMPLETE PROFILE ─────────────────────────
 
+  async uploadVerificationDocument(
+    userId: string, 
+    file: File, 
+    adminType: string
+  ): Promise<string> {
+    const fileExt = file.name.split(".").pop();
+    const folder = adminType === "rectorate" ? "rectorate-proofs" : "department-proofs";
+    const fileName = `${userId}/${folder}_${Date.now()}.${fileExt}`;
+    const filePath = `verification-documents/${fileName}`;
+  
+    const { error: uploadError } = await supabase.storage
+      .from("university-files")
+      .upload(filePath, file, {
+        upsert: true,
+      });
+  
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+  
+    const { data } = supabase.storage
+      .from("university-files")
+      .getPublicUrl(filePath);
+  
+    if (!data?.publicUrl) {
+      throw new Error("Failed to generate public URL");
+    }
+  
+    return data.publicUrl;
+  }
+  
   async markProfileCompleted(
     userId: string,
     additionalData: any,
     verificationDocs: any,
-    logoUrl?: string
+    avatarUrl?: string
   ) {
     const updates: any = {
       ...additionalData,
@@ -153,19 +185,47 @@ class AuthService {
       is_completed: true,
       completed_at: new Date().toISOString(),
     };
-
-    // IMPORTANT: avatar goes ONLY here
-    if (logoUrl) {
-      updates.avatar_url = logoUrl;
-
-      // remove duplicated logo inside docs
-      if (updates.verification_docs?.logo) {
-        delete updates.verification_docs.logo;
-      }
+  
+    // Set avatar_url if provided
+    if (avatarUrl) {
+      updates.avatar_url = avatarUrl;
     }
-
+  
+    // Clean up any nested logo fields
+    if (updates.verification_docs?.logo) {
+      delete updates.verification_docs.logo;
+    }
+  
+    console.log("Updating profile with:", updates);
+    
     return this.updateProfile(userId, updates);
   }
+  async uploadUniversityAvatar(userId: string, file: File): Promise<string> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/avatar_${Date.now()}.${fileExt}`;
+    const filePath = `university-avatars/${fileName}`;
+  
+    const { error: uploadError } = await supabase.storage
+      .from("university-files")
+      .upload(filePath, file, {
+        upsert: true,
+      });
+  
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+  
+    const { data } = supabase.storage
+      .from("university-files")
+      .getPublicUrl(filePath);
+  
+    if (!data?.publicUrl) {
+      throw new Error("Failed to generate public URL");
+    }
+  
+    return data.publicUrl;
+  }
+  
 
   // ───────────────────────── STORAGE ─────────────────────────
 
@@ -190,36 +250,6 @@ class AuthService {
     return data.publicUrl;
   }
 
-  async uploadUniversityLogo(userId: string, file: File): Promise<string> {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
-    const filePath = `university-logos/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("university-files")
-      .upload(filePath, file, {
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw new Error(uploadError.message);
-    }
-
-    const { data } = supabase.storage
-      .from("university-files")
-      .getPublicUrl(filePath);
-
-    if (!data?.publicUrl) {
-      throw new Error("Failed to generate public URL");
-    }
-
-    // IMPORTANT: save in avatar_url immediately
-    await this.updateProfile(userId, {
-      avatar_url: data.publicUrl,
-    });
-
-    return data.publicUrl;
-  }
 
   // ───────────────────────── ADMIN ─────────────────────────
 

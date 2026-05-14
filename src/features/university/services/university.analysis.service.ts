@@ -5,6 +5,36 @@ import { supabase } from "@/lib/supabaseClient";
 // ==========================================
 // TYPES
 // ==========================================
+export interface UniversityStats {
+  universityName: string;
+  totalGraduates: number;
+  totalStudying: number;  // ✅ Add this
+  totalStudents: number;   // ✅ Add this (totalGraduates + totalStudying)
+  totalRespondents: number;
+  overallResponseRate: number;
+  specialitiesCount: number;
+  specialities: SpecialitySummary[];
+  aggregatedStats: DepartmentStats;
+  aggregatedDetails: DetailedStats;
+}
+
+export interface SpecialitySummary {
+  speciality: string;
+  totalGraduates: number;
+  totalStudying: number;   // ✅ Add this
+  totalStudents: number;    // ✅ Add this
+  totalRespondents: number;
+  responseRate: number;
+  employedCount: number;
+  averageSalary: number;
+}
+
+export interface DepartmentOverview {
+  totalStudents: number;
+  totalConnected: number;   // ✅ Rename for clarity
+  totalGraduates: number;   // ✅ Add this
+  totalStudying: number;    // ✅ Add this
+}
 
 export interface DepartmentStats {
   situation: { answer: string; count: number }[];
@@ -23,31 +53,6 @@ export interface DetailedStats {
   studyingCount: number;
   jobSearchingCount: number;
   otherCount: number;
-}
-
-export interface UniversityStats {
-  universityName: string;
-  totalGraduates: number;
-  totalRespondents: number;
-  overallResponseRate: number;
-  specialitiesCount: number;
-  specialities: SpecialitySummary[];
-  aggregatedStats: DepartmentStats;
-  aggregatedDetails: DetailedStats;
-}
-
-export interface SpecialitySummary {
-  speciality: string;
-  totalGraduates: number;
-  totalRespondents: number;
-  responseRate: number;
-  employedCount: number;
-  averageSalary: number;
-}
-
-export interface DepartmentOverview {
-  totalStudents: number;
-  totalGraduates: number;
 }
 
 export interface DepartmentWithStats {
@@ -87,6 +92,12 @@ const QUESTION_TEXTS = {
   SALARY: "What is your total annual gross salary (including all bonuses and premiums)?"
 };
 
+const QUESTION_IDS = {
+  SITUATION: "q1_professional_status",
+  SECTOR: "q2_sector",
+  FUNCTION: "q3_function",
+  SALARY: "q5_salary"
+};
 // ==========================================
 // UNIVERSITY STATISTICS SERVICE
 // ==========================================
@@ -108,32 +119,49 @@ export const universityService = {
     return data.university_name;
   },
 
-  async getStudentIdsByUniversity(universityName: string): Promise<string[]> {
-    const { data: profiles, error } = await supabase
+  async getStudentIdsByUniversity(universityName: string, candidateType?: string): Promise<string[]> {
+    let query = supabase
       .from('profiles')
       .select('id')
       .eq('university_name', universityName)
-      .eq('candidate_type', 'graduated');
-
+      .eq('role', 'student');
+    
+    if (candidateType) {
+      query = query.eq('candidate_type', candidateType);
+    } else {
+      query = query.in('candidate_type', ['graduated', 'studying']);
+    }
+    
+    const { data: profiles, error } = await query;
+    
     if (error) throw error;
     return profiles?.map(p => p.id) || [];
   },
-
+  
   async getStudentIdsByUniversityAndSpeciality(
     universityName: string, 
-    speciality: string
+    speciality: string,
+    candidateType?: string
   ): Promise<string[]> {
-    const { data: profiles, error } = await supabase
+    let query = supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, candidate_type, speciality, university_name')
+      .select('id')
       .eq('university_name', universityName)
       .eq('speciality', speciality)
-      .eq('candidate_type', 'graduated');
-
+      .eq('role', 'student');
+    
+    if (candidateType) {
+      query = query.eq('candidate_type', candidateType);
+    } else {
+      query = query.in('candidate_type', ['graduated', 'studying']);
+    }
+    
+    const { data: profiles, error } = await query;
+    
     if (error) throw error;
     return profiles?.map(p => p.id) || [];
   },
-
+  
   async getStudentResponses(studentIds: string[]): Promise<{
     questionId: string;
     answer: string;
@@ -159,13 +187,18 @@ export const universityService = {
   // ==========================================
 
   async getTotalConnectedStudents(university_name: string): Promise<number> {
+    // Count all students with 'connected' status across all departments
     const { count, error } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("university_name", university_name)
-      .eq("university_connection_status", "accepted");
+      .eq("role", "student")
+      .eq("university_connection_status", "connected");
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error getting connected students:", error);
+      return 0;
+    }
     return count || 0;
   },
 
@@ -183,56 +216,105 @@ export const universityService = {
     return count || 0;
   },
 
-  async getAllDepartmentsWithStats(universityId: string): Promise<DepartmentWithStats[]> {
-    const universityName = await this.getUniversityName(universityId);
-    if (!universityName) return [];
+// features/university/services/university.service.ts
 
-    const { data: specialities, error: specError } = await supabase
+async getAllDepartmentsWithStats(universityId: string): Promise<DepartmentWithStats[]> {
+  const universityName = await this.getUniversityName(universityId);
+  if (!universityName) return [];
+
+  // ✅ Get departments from department head profiles (not from student specialities)
+  const { data: departmentHeads, error: deptError } = await supabase
+    .from("profiles")
+    .select("department")
+    .eq("role", "university_admin")
+    .eq("univ_admin_type", "head_of_department")
+    .eq("university_name", universityName)
+    .not("department", "is", null);
+
+  if (deptError) throw deptError;
+
+  // Get unique departments
+  const departments = [...new Set(departmentHeads?.map(d => d.department?.trim()).filter(Boolean) || [])];
+  
+  console.log("📋 Found departments from head_of_department profiles:", departments);
+
+  // For each department, get stats from students with matching speciality
+  const departmentsWithStats: DepartmentWithStats[] = [];
+  
+  for (const department of departments) {
+    // Count students in this department (by speciality field)
+    const { count: studentCount, error: countError } = await supabase
       .from("profiles")
-      .select("speciality")
+      .select("id", { count: "exact", head: true })
       .eq("university_name", universityName)
-      .eq("candidate_type", "graduated")
-      .not("speciality", "is", null);
+      .eq("speciality", department)  // Students use 'speciality' field
+      .eq("role", "student");
 
-    if (specError) throw specError;
+    if (countError) {
+      console.error(`Error counting students for ${department}:`, countError);
+    }
 
-    const { data: connectedDepts, error: connError } = await supabase
-      .from("profiles")
-      .select("department")
-      .eq("role", "university_admin")
-      .eq("univ_admin_type", "head_of_department")
-      .eq("university_name", universityName)
-      .not("department", "is", null);
-
-    if (connError) throw connError;
-
-    const connectedSet = new Set(
-      connectedDepts?.map(d => d.department?.trim()).filter(Boolean) || []
-    );
-
-    const counts: Record<string, number> = {};
-    specialities?.forEach(item => {
-      const spec = item.speciality?.trim();
-      if (spec) counts[spec] = (counts[spec] || 0) + 1;
-    });
-
+    // Get additional stats for this department
     const specialityStats = await this.getUniversitySpecialitiesStats(universityName);
-    const statsMap = new Map(specialityStats.map(s => [s.speciality, s]));
-
-    const departments = Object.entries(counts).map(([department, count]) => {
-      const stats = statsMap.get(department);
-      return {
-        department,
-        count,
-        hasConnection: connectedSet.has(department),
-        employedCount: stats?.employedCount || 0,
-        averageSalary: stats?.averageSalary || 0,
-        responseRate: stats?.responseRate || 0
-      };
+    const deptStats = specialityStats.find(s => s.speciality === department);
+    
+    departmentsWithStats.push({
+      department,
+      count: studentCount || 0,
+      hasConnection: true, // Has a department head assigned
+      employedCount: deptStats?.employedCount || 0,
+      averageSalary: deptStats?.averageSalary || 0,
+      responseRate: deptStats?.responseRate || 0
     });
+  }
 
-    return departments.sort((a, b) => b.count - a.count);
-  },
+  return departmentsWithStats.sort((a, b) => b.count - a.count);
+},
+
+async getDepartmentOverview(universityId: string, department: string): Promise<DepartmentOverview> {
+  const universityName = await this.getUniversityName(universityId);
+  if (!universityName) {
+    console.log("⚠️ No university name found for ID:", universityId);
+    return { totalStudents: 0, totalConnected: 0, totalGraduates: 0, totalStudying: 0 };
+  }
+
+  console.log("🔍 getDepartmentOverview:", { universityName, department });
+
+  // Get counts by candidate type
+  const graduatedIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, department, 'graduated');
+  const studyingIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, department, 'studying');
+  const totalStudents = graduatedIds.length + studyingIds.length;
+  
+  // Get connected students
+  const { count: totalConnected, error: studentError } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("university_name", universityName)
+    .eq("speciality", department)
+    .eq("role", "student")
+    .eq("university_connection_status", "connected");
+  
+  if (studentError) {
+    console.error("❌ Error fetching connected students:", studentError);
+  }
+  
+  console.log("  Department counts:", {
+    graduated: graduatedIds.length,
+    studying: studyingIds.length,
+    total: totalStudents,
+    connected: totalConnected || 0
+  });
+
+  return {
+    totalStudents: totalStudents,
+    totalConnected: totalConnected || 0,
+    totalGraduates: graduatedIds.length,
+    totalStudying: studyingIds.length
+  };
+},
+
+
+
 
   async getUniversityDashboardSummary(universityId: string): Promise<UniversityDashboardSummary> {
     const universityName = await this.getUniversityName(universityId);
@@ -278,77 +360,6 @@ export const universityService = {
   // DEPARTMENT HEAD - DEPARTMENT STATS
   // ==========================================
 
-  async getDepartmentOverview(universityId: string, department: string): Promise<DepartmentOverview> {
-    const universityName = await this.getUniversityName(universityId);
-    if (!universityName) {
-      console.log("⚠️ No university name found for ID:", universityId);
-      return { totalStudents: 0, totalGraduates: 0 };
-    }
-  
-    console.log("🔍 getDepartmentOverview:", { universityName, department });
-  
-    // Total graduated students in this department
-    const { count: totalGraduates, error: gradError } = await supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("university_name", universityName)
-      .eq("department", department)
-      .eq("candidate_type", "graduated");
-    
-    if (gradError) {
-      console.error("❌ Error fetching graduates:", gradError);
-      throw gradError;
-    }
-    console.log("  Graduates count:", totalGraduates);
-  
-    // Total connected students - try multiple statuses
-    const { count: totalStudents, error: studentError } = await supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("university_name", universityName)
-      .eq("department", department)
-      .eq("role", "student")
-      .in("university_connection_status", ["accepted", "connected"]);
-    
-    if (studentError) {
-      console.error("❌ Error fetching connected students:", studentError);
-    }
-    console.log("  Connected students count:", totalStudents);
-  
-    // If still 0, check what statuses exist for students in this department
-    if (!totalStudents || totalStudents === 0) {
-      console.log("🔍 Checking all students in department...");
-      const { data: allStudents } = await supabase
-        .from("profiles")
-        .select("id, university_connection_status, role, candidate_type")
-        .eq("university_name", universityName)
-        .eq("department", department)
-        .eq("role", "student")
-        .limit(5);
-      
-      console.log("  Sample students:", allStudents);
-      
-      // Count by status
-      const statusCounts: Record<string, number> = {};
-      const { data: allDeptStudents } = await supabase
-        .from("profiles")
-        .select("university_connection_status")
-        .eq("university_name", universityName)
-        .eq("department", department)
-        .eq("role", "student");
-      
-      allDeptStudents?.forEach(s => {
-        const status = s.university_connection_status || "null";
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-      });
-      console.log("  Status distribution:", statusCounts);
-    }
-  
-    return {
-      totalStudents: totalStudents || 0,
-      totalGraduates: totalGraduates || 0
-    };
-  },
 
   async getSpecialitiesByDepartment(universityId: string, department: string): Promise<{ speciality: string; count: number }[]> {
     const universityName = await this.getUniversityName(universityId);
@@ -381,10 +392,22 @@ export const universityService = {
 
   async getDepartmentCharts(universityName: string, speciality: string): Promise<DepartmentStats> {
     const studentIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, speciality);
+    console.log(`📊 getDepartmentCharts for ${speciality}: ${studentIds.length} students`);
+    
     if (!studentIds.length) {
       return { situation: [], sectors: [], functions: [], salaryDistribution: [] };
     }
+    
     const responses = await this.getStudentResponses(studentIds);
+    console.log(`📊 Got ${responses.length} responses for ${speciality}`);
+    
+    // Log response distribution by question
+    const responseCounts: Record<string, number> = {};
+    responses.forEach(r => {
+      responseCounts[r.questionId] = (responseCounts[r.questionId] || 0) + 1;
+    });
+    console.log("📊 Response counts by question:", responseCounts);
+    
     return this.calculateStats(responses);
   },
 
@@ -406,18 +429,59 @@ export const universityService = {
   // ==========================================
 
   async getUniversitySpecialitiesStats(universityName: string): Promise<SpecialitySummary[]> {
-    const specialities = await this.getUniversitySpecialities(universityName);
+    console.log("📊 getUniversitySpecialitiesStats for:", universityName);
+    
+    // Get departments from head_of_department profiles
+    const { data: departmentHeads, error: deptError } = await supabase
+      .from("profiles")
+      .select("department")
+      .eq("role", "university_admin")
+      .eq("univ_admin_type", "head_of_department")
+      .eq("university_name", universityName)
+      .not("department", "is", null);
+  
+    if (deptError) {
+      console.error("Error fetching department heads:", deptError);
+      return [];
+    }
+  
+    const departments = [...new Set(departmentHeads?.map(d => d.department?.trim()).filter(Boolean) || [])];
+    console.log("📊 Departments found:", departments);
+    
     const specialityStats = await Promise.all(
-      specialities.map(async (speciality) => {
-        const studentIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, speciality);
-        if (!studentIds.length) {
-          return { speciality, totalGraduates: 0, totalRespondents: 0, responseRate: 0, employedCount: 0, averageSalary: 0 };
+      departments.map(async (department) => {
+        // Get students for this department/speciality
+        const graduatedIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, department, 'graduated');
+        const studyingIds = await this.getStudentIdsByUniversityAndSpeciality(universityName, department, 'studying');
+        const allIds = [...graduatedIds, ...studyingIds];
+        
+        console.log(`📊 ${department}:`, {
+          graduated: graduatedIds.length,
+          studying: studyingIds.length,
+          total: allIds.length
+        });
+        
+        if (!allIds.length) {
+          return { 
+            speciality: department, 
+            totalGraduates: 0,
+            totalStudying: 0,
+            totalStudents: 0,
+            totalRespondents: 0, 
+            responseRate: 0, 
+            employedCount: 0, 
+            averageSalary: 0 
+          };
         }
-        const responses = await this.getStudentResponses(studentIds);
-        const detailedStats = this.calculateDetailedStats(responses, studentIds.length);
+        
+        const responses = await this.getStudentResponses(allIds);
+        const detailedStats = this.calculateDetailedStats(responses, allIds.length);
+        
         return {
-          speciality,
-          totalGraduates: studentIds.length,
+          speciality: department,
+          totalGraduates: graduatedIds.length,
+          totalStudying: studyingIds.length,
+          totalStudents: allIds.length,
           totalRespondents: detailedStats.totalRespondents,
           responseRate: detailedStats.responseRate,
           employedCount: detailedStats.employedCount,
@@ -425,15 +489,37 @@ export const universityService = {
         };
       })
     );
+    
     return specialityStats;
   },
+  
 
   async getUniversityStats(universityName: string): Promise<UniversityStats> {
-    const allStudentIds = await this.getStudentIdsByUniversity(universityName);
+    console.log("📊 getUniversityStats called for:", universityName);
+    
+    // Get graduated students
+    const graduatedIds = await this.getStudentIdsByUniversity(universityName, 'graduated');
+    // Get studying students
+    const studyingIds = await this.getStudentIdsByUniversity(universityName, 'studying');
+    // Get all students
+    const allStudentIds = [...graduatedIds, ...studyingIds];
+    
+    console.log("📊 Student counts:", {
+      graduated: graduatedIds.length,
+      studying: studyingIds.length,
+      total: allStudentIds.length
+    });
+    
     if (!allStudentIds.length) {
       return {
-        universityName, totalGraduates: 0, totalRespondents: 0,
-        overallResponseRate: 0, specialitiesCount: 0, specialities: [],
+        universityName, 
+        totalGraduates: 0,
+        totalStudying: 0,
+        totalStudents: 0,
+        totalRespondents: 0,
+        overallResponseRate: 0, 
+        specialitiesCount: 0, 
+        specialities: [],
         aggregatedStats: { situation: [], sectors: [], functions: [], salaryDistribution: [] },
         aggregatedDetails: {
           totalRespondents: 0, totalStudents: 0, responseRate: 0,
@@ -442,13 +528,17 @@ export const universityService = {
         }
       };
     }
+    
     const allResponses = await this.getStudentResponses(allStudentIds);
     const specialities = await this.getUniversitySpecialitiesStats(universityName);
     const aggregatedStats = this.calculateStats(allResponses);
     const aggregatedDetails = this.calculateDetailedStats(allResponses, allStudentIds.length);
+    
     return {
       universityName,
-      totalGraduates: allStudentIds.length,
+      totalGraduates: graduatedIds.length,
+      totalStudying: studyingIds.length,
+      totalStudents: allStudentIds.length,
       totalRespondents: aggregatedDetails.totalRespondents,
       overallResponseRate: aggregatedDetails.responseRate,
       specialitiesCount: specialities.length,
@@ -483,168 +573,149 @@ export const universityService = {
   // CALCULATION HELPERS
   // ==========================================
 
-  calculateStats(responses: { questionId: string; answer: string; studentId: string }[]): DepartmentStats {
-    console.log("🧮 calculateStats: Processing", responses.length, "responses");
+
+
+// Then update your calculateStats method:
+calculateStats(responses: { questionId: string; answer: string; studentId: string }[]): DepartmentStats {
+  console.log("🧮 calculateStats: Processing", responses.length, "responses");
+  
+  // Debug: Log all responses
+  responses.forEach(r => {
+    console.log(`  Response: ${r.questionId} = "${r.answer}"`);
+  });
+  
+  const getCountsByQuestionId = (questionId: string): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    const matching = responses.filter(r => r.questionId === questionId);
+    console.log(`  Question "${questionId}": ${matching.length} matching responses`);
     
-    // Debug: Show what question IDs are in responses vs what we expect
-    const responseQuestionIds = [...new Set(responses.map(r => r.questionId))];
-    console.log("📋 Response question_ids:", responseQuestionIds);
-    console.log("📋 Expected question IDs:", ADMIN_QUESTIONS.map(q => q.id));
-    
-    // Debug: Check if ADMIN_QUESTIONS find works
-    const sq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.SITUATION);
-    const secq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.SECTOR);
-    const fq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.FUNCTION);
-    const salq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.SALARY);
-    
-    console.log("🔍 Found questions:", {
-      situation: sq?.id || "NOT FOUND",
-      sector: secq?.id || "NOT FOUND", 
-      function: fq?.id || "NOT FOUND",
-      salary: salq?.id || "NOT FOUND"
+    matching.forEach(r => {
+      counts[r.answer] = (counts[r.answer] || 0) + 1;
     });
+    return counts;
+  };
   
-    const getCountsByQuestionId = (questionId: string | undefined): Record<string, number> => {
-      const counts: Record<string, number> = {};
-      if (!questionId) {
-        console.warn("  ⚠️ No questionId provided, returning empty");
-        return counts;
-      }
-      const matching = responses.filter(r => r.questionId === questionId);
-      console.log(`  Question "${questionId}": ${matching.length} matching responses`);
-      matching.forEach(r => {
-        counts[r.answer] = (counts[r.answer] || 0) + 1;
-      });
-      return counts;
+  // Professional Situation - using the correct ID
+  const situationCounts = getCountsByQuestionId(QUESTION_IDS.SITUATION);
+  const situation = Object.entries(situationCounts)
+    .map(([answer, count]) => ({ answer, count }))
+    .sort((a, b) => b.count - a.count);
+  
+  // Sectors - using the correct ID
+  const sectorCounts = getCountsByQuestionId(QUESTION_IDS.SECTOR);
+  const sectors = Object.entries(sectorCounts)
+    .map(([answer, count]) => ({ answer, count }))
+    .sort((a, b) => b.count - a.count);
+  
+  // Functions - using the correct ID
+  const functionCounts = getCountsByQuestionId(QUESTION_IDS.FUNCTION);
+  const functions = Object.entries(functionCounts)
+    .map(([answer, count]) => ({ answer, count }))
+    .sort((a, b) => b.count - a.count);
+  
+  // Salary Distribution - using the correct ID
+  const salaryRanges = [
+    { range: '0 - 20kDZ', min: 0, max: 20000 },
+    { range: '20k - 40kDZ', min: 20000, max: 40000 },
+    { range: '40k - 60kDZ', min: 40000, max: 60000 },
+    { range: '60k - 80kDZ', min: 60000, max: 80000 },
+    { range: '80k - 100kDZ', min: 80000, max: 100000 },
+    { range: '100kDZ+', min: 100000, max: Infinity }
+  ];
+  
+  const salaryDistribution = salaryRanges.map(range => {
+    const salariesInRange = responses
+      .filter(r => {
+        if (r.questionId !== QUESTION_IDS.SALARY) return false;
+        const salary = parseFloat(r.answer);
+        return !isNaN(salary) && salary >= range.min && salary < range.max;
+      })
+      .map(r => parseFloat(r.answer));
+    
+    return {
+      range: range.range,
+      count: salariesInRange.length,
+      avgSalary: salariesInRange.length > 0 
+        ? Math.round(salariesInRange.reduce((a, b) => a + b, 0) / salariesInRange.length)
+        : 0
     };
+  }).filter(range => range.count > 0);
   
-    // Professional Situation
-    const situationCounts = getCountsByQuestionId(sq?.id);
-    const situation = Object.entries(situationCounts)
-      .map(([answer, count]) => ({ answer, count }))
-      .sort((a, b) => b.count - a.count);
+  console.log("✅ Final stats:", {
+    situation: situation.length,
+    sectors: sectors.length,
+    functions: functions.length,
+    salaryDistribution: salaryDistribution.length
+  });
   
-    // Sectors
-    const sectorCounts = getCountsByQuestionId(secq?.id);
-    const sectors = Object.entries(sectorCounts)
-      .map(([answer, count]) => ({ answer, count }))
-      .sort((a, b) => b.count - a.count);
+  return { situation, sectors, functions, salaryDistribution };
+},
   
-    // Functions
-    const functionCounts = getCountsByQuestionId(fq?.id);
-    const functions = Object.entries(functionCounts)
-      .map(([answer, count]) => ({ answer, count }))
-      .sort((a, b) => b.count - a.count);
+calculateDetailedStats(
+  responses: { questionId: string; answer: string; studentId: string }[], 
+  totalStudents: number
+): DetailedStats {
+  console.log("🧮 calculateDetailedStats: Processing", responses.length, "responses for", totalStudents, "students");
   
-    // Salary Distribution
-    const salaryRanges = [
-      { range: '0 - 20kDZ', min: 0, max: 20000 },
-      { range: '20k - 40kDZ', min: 20000, max: 40000 },
-      { range: '40k - 60kDZ', min: 40000, max: 60000 },
-      { range: '60k - 80kDZ', min: 60000, max: 80000 },
-      { range: '80k - 100kDZ', min: 80000, max: 100000 },
-      { range: '100kDZ+', min: 100000, max: Infinity }
-    ];
+  // Count unique respondents
+  const uniqueRespondents = new Set(responses.map(r => r.studentId)).size;
+  console.log("  Unique respondents:", uniqueRespondents);
   
-    const salaryDistribution = salaryRanges.map(range => {
-      const salariesInRange = responses
-        .filter(r => {
-          if (r.questionId !== salq?.id) return false;
-          const salary = parseFloat(r.answer);
-          return !isNaN(salary) && salary >= range.min && salary < range.max;
-        })
-        .map(r => parseFloat(r.answer));
+  // Filter responses for the situation question
+  const situationResponses = responses.filter(r => r.questionId === QUESTION_IDS.SITUATION);
+  console.log("  Situation responses:", situationResponses.length);
   
-      return {
-        range: range.range,
-        count: salariesInRange.length,
-        avgSalary: salariesInRange.length > 0 
-          ? Math.round(salariesInRange.reduce((a, b) => a + b, 0) / salariesInRange.length)
-          : 0
-      };
-    }).filter(range => range.count > 0);
+  const employedCount = situationResponses.filter(r => 
+    r.answer.includes("In professional activity")
+  ).length;
   
-    console.log("✅ Final stats:", {
-      situation: situation.length > 0 ? situation : "EMPTY",
-      sectors: sectors.length > 0 ? sectors : "EMPTY",
-      functions: functions.length > 0 ? functions : "EMPTY", 
-      salaryDistribution: salaryDistribution.length > 0 ? salaryDistribution : "EMPTY"
-    });
+  const studyingCount = situationResponses.filter(r => 
+    r.answer.includes("Continuing studies")
+  ).length;
   
-    return { situation, sectors, functions, salaryDistribution };
-  },
+  const jobSearchingCount = situationResponses.filter(r => 
+    r.answer.includes("Actively looking")
+  ).length;
   
-  calculateDetailedStats(
-    responses: { questionId: string; answer: string; studentId: string }[], 
-    totalStudents: number
-  ): DetailedStats {
-    console.log("🧮 calculateDetailedStats: Processing", responses.length, "responses for", totalStudents, "students");
-    
-    // Count unique respondents (students who answered at least one question)
-    const uniqueRespondents = new Set(responses.map(r => r.studentId)).size;
-    console.log("  Unique respondents:", uniqueRespondents);
+  const otherCount = situationResponses.filter(r => 
+    r.answer.includes("Other")
+  ).length;
   
-    // Find situation question ID
-    const sq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.SITUATION);
-    
-    // Filter responses for the situation question
-    const situationResponses = sq 
-      ? responses.filter(r => r.questionId === sq.id)
-      : [];
-    
-    console.log("  Situation responses:", situationResponses.length, situationResponses.map(r => r.answer));
+  console.log("  Counts:", { employedCount, studyingCount, jobSearchingCount, otherCount });
   
-    const employedCount = situationResponses.filter(r => 
-      r.answer.includes("In professional activity")
-    ).length;
-    
-    const studyingCount = situationResponses.filter(r => 
-      r.answer.includes("Continuing studies")
-    ).length;
-    
-    const jobSearchingCount = situationResponses.filter(r => 
-      r.answer.includes("Actively looking")
-    ).length;
+  // Salary calculations
+  const salaryValues = responses
+    .filter(r => r.questionId === QUESTION_IDS.SALARY)
+    .map(r => parseFloat(r.answer))
+    .filter(s => !isNaN(s) && s > 0)
+    .sort((a, b) => a - b);
   
-    const otherCount = situationResponses.filter(r => 
-      r.answer.includes("Other")
-    ).length;
+  console.log("  Salary values:", salaryValues);
   
-    console.log("  Counts:", { employedCount, studyingCount, jobSearchingCount, otherCount });
+  const averageSalary = salaryValues.length > 0
+    ? Math.round(salaryValues.reduce((sum, s) => sum + s, 0) / salaryValues.length)
+    : 0;
   
-    // Salary calculations
-    const salq = ADMIN_QUESTIONS.find(q => q.text === QUESTION_TEXTS.SALARY);
-    const salaryValues = responses
-      .filter(r => r.questionId === salq?.id)
-      .map(r => parseFloat(r.answer))
-      .filter(s => !isNaN(s) && s > 0)
-      .sort((a, b) => a - b);
+  const medianSalary = salaryValues.length > 0
+    ? salaryValues.length % 2 === 0
+      ? Math.round((salaryValues[salaryValues.length / 2 - 1] + salaryValues[salaryValues.length / 2]) / 2)
+      : salaryValues[Math.floor(salaryValues.length / 2)]
+    : 0;
   
-    console.log("  Salary values:", salaryValues);
+  const result = {
+    totalRespondents: uniqueRespondents,
+    totalStudents,
+    responseRate: totalStudents > 0 ? (uniqueRespondents / totalStudents) * 100 : 0,
+    averageSalary,
+    medianSalary,
+    employedCount,
+    studyingCount,
+    jobSearchingCount,
+    otherCount
+  };
   
-    const averageSalary = salaryValues.length > 0
-      ? Math.round(salaryValues.reduce((sum, s) => sum + s, 0) / salaryValues.length)
-      : 0;
-  
-    const medianSalary = salaryValues.length > 0
-      ? salaryValues.length % 2 === 0
-        ? Math.round((salaryValues[salaryValues.length / 2 - 1] + salaryValues[salaryValues.length / 2]) / 2)
-        : salaryValues[Math.floor(salaryValues.length / 2)]
-      : 0;
-  
-    const result = {
-      totalRespondents: uniqueRespondents,
-      totalStudents,
-      responseRate: totalStudents > 0 ? (uniqueRespondents / totalStudents) * 100 : 0,
-      averageSalary,
-      medianSalary,
-      employedCount,
-      studyingCount,
-      jobSearchingCount,
-      otherCount
-    };
-  
-    console.log("✅ DetailedStats:", result);
-    return result;
-  },
+  console.log("✅ DetailedStats:", result);
+  return result;
+}
+
 };

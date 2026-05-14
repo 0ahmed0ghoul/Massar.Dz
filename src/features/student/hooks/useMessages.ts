@@ -4,6 +4,7 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { chatService, Message } from "@/features/university/services/chat.service";
 import { studentChatService } from "@/features/student/services/studentChat.service";
 import { Conversation } from "@/types/message";
+import { supabase } from "@/lib/supabaseClient";
 
 export const useMessaging = () => {
   const { user, profile } = useAuth();
@@ -20,74 +21,85 @@ export const useMessaging = () => {
   // ─────────────────────────────────────────────
   // LOAD CONVERSATIONS
   // ─────────────────────────────────────────────
-  const loadConversations = useCallback(async () => {
-    if (!user) return;
+const loadConversations = useCallback(async () => {
+  if (!user) return;
 
-    setLoadingConversations(true);
-    try {
-      let convs: Conversation[] = [];
+  setLoadingConversations(true);
+  try {
+    let convs: Conversation[] = [];
 
-      if (profile?.role === "student") {
-        const [university, companies] = await Promise.all([
-          studentChatService.getConnectedUniversity(user.id),
-          studentChatService.getCompanyConversations(user.id),
-        ]);
+    if (profile?.role === "student") {
+      const [university, companies] = await Promise.all([
+        studentChatService.getConnectedUniversity(user.id),
+        studentChatService.getCompanyConversations(user.id),
+      ]);
 
-        // University (SAFE)
-        if (university?.id) {
-          convs.push({
-            id: university.id,
-            otherPartyId: university.id,
-            otherPartyAvatar: university.universityAvatar || null,
-            otherPartyName: university.universityName || "University",
-            otherPartyRole: "university",
-            lastMessage: university.lastMessage || null,
-            lastMessageAt: university.lastMessageAt || null,
-            unreadCount: university.unreadCount || 0,
-          });
-        }
-
-        // Companies (SAFE)
-        companies.forEach((comp) => {
-          if (!comp?.id) return;
-
-          convs.push({
-            id: comp.id,
-            otherPartyId: comp.id,
-            otherPartyAvatar: comp.universityAvatar || null,
-            otherPartyName: comp.universityName || "Company",
-            otherPartyRole: "company",
-            lastMessage: comp.lastMessage || null,
-            lastMessageAt: comp.lastMessageAt || null,
-            unreadCount: comp.unreadCount || 0,
-          });
+      // University - only add if connection is approved
+      if (university?.id) {
+        convs.push({
+          id: university.id,
+          otherPartyId: university.id,
+          otherPartyAvatar: university.universityAvatar || null,
+          otherPartyName: university.universityName || "University",
+          otherPartyRole: "university",
+          lastMessage: university.lastMessage || null,
+          lastMessageAt: university.lastMessageAt || null,
+          unreadCount: university.unreadCount || 0,
         });
+      } else {
+        console.log("No approved university connection found");
       }
 
-      if (profile?.role === "university_admin") {
-        const participants = await chatService.getConnectedStudents(user.id);
+      // Companies (SAFE)
+      companies.forEach((comp) => {
+        if (!comp?.id) return;
 
-        convs = participants
-          .filter((p) => p?.id)
-          .map((p) => ({
-            id: p.id,
-            otherPartyId: p.id,
-            otherPartyAvatar: p.avatar_url || null,
-            otherPartyName: p.full_name || "Student",
-            otherPartyRole: "student",
-            lastMessage: p.last_message || null,
-            lastMessageAt: p.last_message_time || null,
-            unreadCount: p.unread_count || 0,
-          }));
-      }
-
-      setConversations(convs);
-    } catch (error) {
-      console.error("Failed to load conversations", error);
-    } finally {
-      setLoadingConversations(false);
+        convs.push({
+          id: comp.id,
+          otherPartyId: comp.id,
+          otherPartyAvatar: comp.universityAvatar || null,
+          otherPartyName: comp.universityName || "Company",
+          otherPartyRole: "company",
+          lastMessage: comp.lastMessage || null,
+          lastMessageAt: comp.lastMessageAt || null,
+          unreadCount: comp.unreadCount || 0,
+        });
+      });
     }
-  }, [user, profile]);
+
+    // Sort conversations: put university at the top
+    if (profile?.role === "student") {
+      convs.sort((a, b) => {
+        if (a.otherPartyRole === "university") return -1;
+        if (b.otherPartyRole === "university") return 1;
+        return 0;
+      });
+    }
+
+    if (profile?.role === "university_admin") {
+      const participants = await chatService.getConnectedStudents(user.id);
+
+      convs = participants
+        .filter((p) => p?.id)
+        .map((p) => ({
+          id: p.id,
+          otherPartyId: p.id,
+          otherPartyAvatar: p.avatar_url || null,
+          otherPartyName: p.full_name || "Student",
+          otherPartyRole: "student",
+          lastMessage: p.last_message || null,
+          lastMessageAt: p.last_message_time || null,
+          unreadCount: p.unread_count || 0,
+        }));
+    }
+
+    setConversations(convs);
+  } catch (error) {
+    console.error("Failed to load conversations", error);
+  } finally {
+    setLoadingConversations(false);
+  }
+}, [user, profile]);
 
   // ─────────────────────────────────────────────
   // LOAD MESSAGES
@@ -225,51 +237,35 @@ export const useMessaging = () => {
   // ─────────────────────────────────────────────
   // REALTIME
   // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!user) return;
 
-    const handleNewMessage = (message: Message) => {
-      const otherId =
-        message.sender_id === user.id
-          ? message.receiver_id
-          : message.sender_id;
+useEffect(() => {
+  if (!user || profile?.role !== "student") return;
 
-      if (!otherId) return;
-
-      if (selectedConversationId === otherId) {
-        setMessages((prev) => [...prev, message]);
-      } else {
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === otherId
-              ? {
-                  ...c,
-                  unreadCount: (c.unreadCount || 0) + 1,
-                  lastMessage: message.content,
-                  lastMessageAt: message.created_at,
-                }
-              : c
-          )
-        );
+  // Subscribe to profile changes to detect when university connection status changes
+  const profileChannel = supabase
+    .channel(`profile-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        // If university_connection_status changed to "connected", reload conversations
+        if (payload.new.university_connection_status === "connected") {
+          console.log("University connection approved! Reloading conversations...");
+          loadConversations();
+        }
       }
-    };
+    )
+    .subscribe();
 
-    let channel: any;
-
-    if (profile?.role === "student") {
-      channel = studentChatService.subscribeToMessages(user.id, handleNewMessage);
-    } else {
-      channel = chatService.subscribeToMessages(user.id, handleNewMessage);
-    }
-
-    return () => {
-      if (profile?.role === "student") {
-        studentChatService.unsubscribe();
-      } else {
-        chatService.unsubscribe();
-      }
-    };
-  }, [user, profile, selectedConversationId]);
+  return () => {
+    profileChannel.unsubscribe();
+  };
+}, [user, profile?.role, loadConversations]);
 
   // ─────────────────────────────────────────────
   // INIT

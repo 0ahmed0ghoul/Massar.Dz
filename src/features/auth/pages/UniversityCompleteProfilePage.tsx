@@ -1,6 +1,6 @@
 // pages/university/complete-profile.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   X,
   Globe,
+  Eye,
+  Download,
 } from "lucide-react";
 
 import { useUniversityCompleteProfile } from "@/features/auth/hooks/useUniversityCompleteProfile";
@@ -64,6 +66,7 @@ export default function UniversityCompleteProfilePage() {
     loading,
     form,
     docs,
+    previewUrls,
     updateForm,
     handleFileChange,
     removeFile,
@@ -71,6 +74,9 @@ export default function UniversityCompleteProfilePage() {
   } = useUniversityCompleteProfile(user, profile);
 
   const [universityOpen, setUniversityOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<"image" | "pdf" | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>("");
 
   const adminType = profile?.univ_admin_type || form.univ_admin_type;
 
@@ -82,6 +88,35 @@ export default function UniversityCompleteProfilePage() {
 
   const labelCls =
     "text-[11px] font-medium uppercase tracking-wider text-white/45";
+
+  // Preview document/logo
+  const handlePreview = (file: File, title: string) => {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setPreviewType(file.type.startsWith("image/") ? "image" : "pdf");
+    setPreviewTitle(title);
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewType(null);
+    setPreviewTitle("");
+  };
+
+  // Cleanup preview on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const proofDocKey = isRectorate ? "rectorateProof" : "headOfDeptProof";
+  const proofDoc = docs[proofDocKey as keyof typeof docs];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -164,24 +199,22 @@ export default function UniversityCompleteProfilePage() {
                     <h3 className="text-base font-semibold text-white/85">
                       {isRectorate
                         ? "Rectorate Verification Document"
-                        : "Department Head Verification"}
+                        : "Department Head Verification Document"}
                     </h3>
 
                     <p className="mt-1 text-sm leading-relaxed text-white/35">
                       {isRectorate
-                        ? "Upload an official rectorate appointment or authorization document."
-                        : "Upload an official department head appointment document."}
+                        ? "Upload an official rectorate appointment or authorization document signed by the rector."
+                        : "Upload an official department head appointment document signed by the rector or dean."}
                     </p>
 
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <input
                         type="file"
-                        accept=".pdf,image/*"
+                        accept=".pdf,image/jpeg,image/png"
                         onChange={(e) =>
                           handleFileChange(
-                            isRectorate
-                              ? "rectorateProof"
-                              : "headOfDeptProof",
+                            proofDocKey as "rectorateProof" | "headOfDeptProof",
                             e.target.files?.[0] || null
                           )
                         }
@@ -198,7 +231,7 @@ export default function UniversityCompleteProfilePage() {
                                    hover:bg-[#639922]/25 hover:border-[#639922]/50"
                       >
                         <Upload className="mr-2 h-4 w-4" />
-                        Upload Proof
+                        Upload Document
                       </Button>
 
                       <span className="text-[11px] text-white/25">
@@ -206,11 +239,7 @@ export default function UniversityCompleteProfilePage() {
                       </span>
                     </div>
 
-                    {docs[
-                      isRectorate
-                        ? "rectorateProof"
-                        : "headOfDeptProof"
-                    ] && (
+                    {proofDoc && (
                       <div
                         className="mt-5 flex items-center gap-3 rounded-xl
                                    border border-white/[0.08] bg-white/[0.03]
@@ -220,30 +249,41 @@ export default function UniversityCompleteProfilePage() {
 
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-white/75">
-                            {
-                              docs[
-                                isRectorate
-                                  ? "rectorateProof"
-                                  : "headOfDeptProof"
-                              ]?.name
-                            }
+                            {proofDoc.name}
+                          </p>
+                          <p className="text-[10px] text-white/30">
+                            {(proofDoc.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeFile(
-                              isRectorate
-                                ? "rectorateProof"
-                                : "headOfDeptProof"
-                            )
-                          }
-                          className="flex h-8 w-8 items-center justify-center rounded-lg
-                                     text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => 
+                              handlePreview(
+                                proofDoc,
+                                isRectorate
+                                  ? "Rectorate Verification Document"
+                                  : "Department Head Verification Document"
+                              )
+                            }
+                            className="flex h-8 w-8 items-center justify-center rounded-lg
+                                       text-[#639922] transition-all hover:bg-[#639922]/10"
+                            title="Preview"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => removeFile(proofDocKey as "rectorateProof" | "headOfDeptProof")}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg
+                                       text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+                            title="Remove"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -251,12 +291,12 @@ export default function UniversityCompleteProfilePage() {
               </div>
 
               {/* ===================================================== */}
-              {/* LOGO - ONLY RECTORATE */}
+              {/* LOGO/AVATAR - ONLY RECTORATE */}
               {/* ===================================================== */}
 
               {isRectorate && (
                 <div>
-                  <Label className={labelCls}>University Logo</Label>
+                  <Label className={labelCls}>University Logo / Avatar</Label>
 
                   <div
                     className="mt-2 flex items-center gap-4 rounded-2xl
@@ -265,10 +305,10 @@ export default function UniversityCompleteProfilePage() {
                   >
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       onChange={(e) =>
                         handleFileChange(
-                          "logo",
+                          "avatar_url",
                           e.target.files?.[0] || null
                         )
                       }
@@ -278,9 +318,24 @@ export default function UniversityCompleteProfilePage() {
 
                     <div
                       className="flex h-14 w-14 items-center justify-center rounded-xl
-                                 border border-white/[0.08] bg-white/[0.04]"
+                                 border border-white/[0.08] bg-white/[0.04] overflow-hidden"
                     >
-                      <Building2 className="h-6 w-6 text-white/30" />
+                      {previewUrls.avatar_url ? (
+                        <img
+                          src={previewUrls.avatar_url}
+                          alt="Logo preview"
+                          className="h-full w-full rounded-xl object-cover"
+                        />
+                      ) : docs.avatar_url ? (
+                        <img
+                          src={URL.createObjectURL(docs.avatar_url)}
+                          alt="Logo preview"
+                          className="h-full w-full rounded-xl object-cover"
+                          onLoad={(e) => URL.revokeObjectURL((e.target as HTMLImageElement).src)}
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6 text-white/30" />
+                      )}
                     </div>
 
                     <div className="flex-1">
@@ -289,20 +344,43 @@ export default function UniversityCompleteProfilePage() {
                       </p>
 
                       <p className="mt-1 text-[11px] text-white/25">
-                        Recommended: PNG with transparent background
+                        Recommended: PNG with transparent background, 200x200px minimum
                       </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        document.getElementById("logo-upload")?.click()
-                      }
-                      className="border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
-                    >
-                      Upload
-                    </Button>
+                    {docs.avatar_url ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => docs.avatar_url && handlePreview(docs.avatar_url, "University Logo")}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg
+                                     text-[#639922] transition-all hover:bg-[#639922]/10"
+                          title="Preview"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeFile("avatar_url")}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg
+                                     text-red-400 transition-all hover:bg-red-500/10"
+                          title="Remove"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById("logo-upload")?.click()
+                        }
+                        className="border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+                      >
+                        Upload
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
@@ -539,19 +617,84 @@ export default function UniversityCompleteProfilePage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Submitting for Review...
                   </>
                 ) : (
                   <>
-                    Submit for Approval
+                    Submit for Verification
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
+
+              <p className="text-center text-[10px] text-white/20">
+                By submitting, you confirm that all information and documents are accurate and official.
+              </p>
             </form>
           </CardContent>
         </Card>
       </div>
+
+      {/* Document/Logo Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={closePreview}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[90vw] rounded-xl border border-white/[0.1] bg-[#0f1115] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between border-b border-white/[0.1] pb-3">
+              <h3 className="text-lg font-semibold text-white/85">{previewTitle}</h3>
+              <button
+                onClick={closePreview}
+                className="flex h-8 w-8 items-center justify-center rounded-lg
+                           text-white/40 transition-all hover:bg-white/[0.08] hover:text-white/80"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex items-center justify-center">
+              {previewType === "image" ? (
+                <img
+                  src={previewUrl}
+                  alt={previewTitle}
+                  className="max-h-[70vh] max-w-[80vw] rounded-lg object-contain"
+                />
+              ) : (
+                <iframe
+                  src={previewUrl}
+                  className="h-[70vh] w-[80vw] rounded-lg"
+                  title={previewTitle}
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-4 flex justify-end gap-3 pt-3 border-t border-white/[0.1]">
+              <a
+                href={previewUrl}
+                download
+                className="rounded-lg border border-[#639922]/30 bg-[#639922]/15 px-4 py-2 text-[13px] text-[#639922] transition-all hover:bg-[#639922]/25"
+              >
+                <Download className="mr-2 inline h-4 w-4" />
+                Download
+              </a>
+              <Button
+                onClick={closePreview}
+                variant="outline"
+                className="border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.06]"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

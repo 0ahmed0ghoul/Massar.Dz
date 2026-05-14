@@ -26,20 +26,31 @@ export interface CertificateRequest {
 
 class UniversityCertificateService {
   // Fetch pending certificate requests for a given university admin
-  async getPendingRequests(universityId: string): Promise<CertificateRequest[]> {
-    // Get all accepted student connections
-    const { data: connections, error: connError } = await supabase
-      .from('department_connections')
-      .select('student_id')
-      .eq('university_id', universityId)
-      .eq('status', 'accepted');
-    if (connError) throw new Error(connError.message);
-    if (!connections.length) return [];
-
-    const studentIds = connections.map(c => c.student_id);
-    // Fetch pending requests for those students
+  async getPendingRequests(
+    universityName: string
+  ): Promise<CertificateRequest[]> {
+  
+    // Get accepted students directly from profiles
+    const { data: students, error: studentsError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "student")
+      .eq("university_name", universityName)
+      .eq("university_connection_status", "connected");
+  
+    if (studentsError) {
+      throw new Error(studentsError.message);
+    }
+  
+    if (!students || students.length === 0) {
+      return [];
+    }
+  
+    const studentIds = students.map((s) => s.id);
+  
+    // Fetch pending certificate requests
     const { data, error } = await supabase
-      .from('certificate_requests')
+      .from("certificate_requests")
       .select(`
         *,
         student:profiles!certificate_requests_student_id_fkey (
@@ -50,10 +61,14 @@ class UniversityCertificateService {
           student_id
         )
       `)
-      .in('student_id', studentIds)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
+      .in("student_id", studentIds)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+  
+    if (error) {
+      throw new Error(error.message);
+    }
+  
     return data || [];
   }
 

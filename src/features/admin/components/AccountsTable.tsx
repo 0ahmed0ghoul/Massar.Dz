@@ -22,7 +22,7 @@ interface AccountsTableProps {
 }
 
 type StatusValue = "active" | "pending" | "rejected";
-type ConnectionStatus = "null" | "pending" | "accepted" | "rejected";
+type ConnectionStatus = "null" | "pending" | "connected" | "rejected";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -74,7 +74,7 @@ const STATUS_CONFIG: Record<StatusValue, { icon: React.ElementType; classes: str
 const CONNECTION_CONFIG: Record<ConnectionStatus, { label: string; classes: string; icon: React.ElementType }> = {
   null: { label: "Not Connected", classes: "text-white/30", icon: WifiOff },
   pending: { label: "Invite Sent", classes: "text-amber-400", icon: Clock },
-  accepted: { label: "Connected", classes: "text-emerald-400", icon: Wifi },
+  connected: { label: "Connected", classes: "text-emerald-400", icon: Wifi },
   rejected: { label: "Rejected", classes: "text-red-400", icon: WifiOff },
 };
 

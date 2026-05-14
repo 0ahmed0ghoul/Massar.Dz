@@ -393,10 +393,10 @@ export default function StudentsPage() {
   );
 
   const connectedCount = registeredStudents.filter(
-    (s) => s.connection_status === "connected"
+    (s) => s.university_connection_status === "connected"
   ).length;
   const pendingCount = registeredStudents.filter(
-    (s) => s.connection_status === "none"
+    (s) => s.university_connection_status === "none"
   ).length;
   const matchedCount = [...matchResults.values()].filter(
     (m) => m?.matched
@@ -628,7 +628,7 @@ export default function StudentsPage() {
                             </td>
                             <td className="px-5 py-3.5">
                               <ConnectionBadge
-                                status={student.connection_status}
+                                status={student.university_connection_status}
                               />
                             </td>
                             {/* Actions */}
@@ -636,7 +636,7 @@ export default function StudentsPage() {
                               <div className="flex items-center gap-2">
                                 {match?.matched &&
                                   ["none", "pending"].includes(
-                                    student.connection_status
+                                    student.university_connection_status
                                   ) && (
                                     <button
                                       onClick={() => handleAccept(student)}
@@ -645,7 +645,7 @@ export default function StudentsPage() {
                  hover:bg-[#639922]/20 hover:border-[#639922]/50 transition-all"
                                     >
                                       <CheckCircle2 className="h-3 w-3" />
-                                      {student.connection_status === "pending"
+                                      {student.university_connection_status === "pending"
                                         ? "Approve"
                                         : "Accept"}
                                     </button>
@@ -653,7 +653,7 @@ export default function StudentsPage() {
 
                                 {!match?.matched &&
                                   ["none", "pending"].includes(
-                                    student.connection_status
+                                    student.university_connection_status
                                   ) && (
                                     <button
                                       onClick={() => openRejectDialog(student)}
@@ -665,7 +665,7 @@ export default function StudentsPage() {
                                       Reject
                                     </button>
                                   )}
-                                {student.connection_status === "rejected" &&
+                                {student.university_connection_status === "rejected" &&
                                   student.rejection_reason && (
                                     <span
                                       className="text-[11px] text-white/25 italic max-w-[160px] truncate"

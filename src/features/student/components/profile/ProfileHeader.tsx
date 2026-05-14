@@ -178,7 +178,7 @@ const needsAdminVerification = isStudying || isGraduated || isSelfTaught;
       description: "University link",
       icon: <LinkIcon className="h-4 w-4" />,
       status: allPreviousComplete
-        ? profile.university_connection_status === "accepted"
+        ? profile.university_connection_status === "connected"
           ? "completed"
           : "current"
         : "locked",
@@ -191,7 +191,7 @@ if (profile.role === "student" || profile.role === "graduate") {
 
   if (isStudying) {
     readyCompleted =
-      profile.university_connection_status === "accepted";
+      profile.university_connection_status === "connected";
   } else if (isGraduated || isSelfTaught) {
     readyCompleted = profile.is_verified === true;
   }
@@ -265,13 +265,13 @@ if (profile.role === "student" || profile.role === "graduate") {
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
-                        profile.university_connection_status === "accepted"
+                        profile.university_connection_status === "connected"
                           ? "border-[#639922]/30 bg-[#639922]/10 text-[#639922]"
                           : "border-white/10 bg-white/5 text-foreground/40"
                       )}
                     >
                       <Building2 className="h-3 w-3" />
-                      {profile.university_connection_status === "accepted" ? "Connected" : "Not Connected"}
+                      {profile.university_connection_status === "connected" ? "Connected" : "Not Connected"}
                     </span>
                   )}
                 </div>

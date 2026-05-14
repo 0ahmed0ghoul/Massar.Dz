@@ -38,6 +38,7 @@ import {
   COMMON_SPECIALITIES,
   EDUCATION_LEVELS,
   UNIVERSITY_DEPARTMENTS,
+  UNIVERSITY_STRUCTURE,
 } from "@/constants/student.constants";
 import { useState } from "react";
 import { authService } from "@/features/auth/service/auth.service";
@@ -160,6 +161,10 @@ export function StepAcademic({
   const watchedDept = watch("department");
   const [wilayaSearchOpen, setWilayaSearchOpen] = useState(false);
 
+  const watchedDepartment = watch("department");
+
+  const departmentSpecialities = UNIVERSITY_STRUCTURE[watchedDepartment] || [];
+
   // Self‑taught: no academic fields
   if (status === "self_taught") {
     return (
@@ -280,6 +285,7 @@ export function StepAcademic({
                           className="text-[13px] text-white/65 data-[selected=true]:bg-[#639922]/10 data-[selected=true]:text-[#639922] rounded-lg mx-1 px-3 py-2 cursor-pointer"
                           onSelect={() => {
                             field.onChange(dept);
+                            setValue("speciality", "");
                             setDeptSearchOpen(false);
                           }}
                         >
@@ -315,6 +321,63 @@ export function StepAcademic({
             )}
           </p>
         )}
+      </div>
+      {/* Speciality / Major  */}
+      <div>
+        <FieldLabel required>Speciality / Major</FieldLabel>
+        <Controller
+          name="speciality"
+          control={control}
+          render={({ field }) => (
+            <ComboField
+              value={field.value}
+              placeholder={
+                watchedDepartment
+                  ? "Search or select your speciality…"
+                  : "Select department first..."
+              }
+              disabled={!watchedDepartment}
+              open={specialityOpen}
+              onOpenChange={setSpecialityOpen}
+              error={!!errors.speciality}
+            >
+              <Command className={commandCls}>
+                <div className="border-b border-white/[0.07]">
+                  <CommandInput
+                    placeholder="Search speciality…"
+                    className="border-0 bg-transparent text-[13px] text-white/70 placeholder:text-white/25 h-10"
+                  />
+                </div>
+                <CommandList className="max-h-52 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
+                  <CommandEmpty>
+                    <p className="text-[12px] text-white/30 text-center py-3">
+                      No speciality found
+                    </p>
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {departmentSpecialities.map((spec) => (
+                      <CommandItem
+                        key={spec}
+                        value={spec}
+                        className="text-[13px] text-white/65 data-[selected=true]:bg-[#639922]/10 data-[selected=true]:text-[#639922] rounded-lg mx-1 px-3 py-2 cursor-pointer"
+                        onSelect={() => {
+                          field.onChange(spec);
+                          setSpecialityOpen(false);
+                        }}
+                      >
+                        <span className="flex-1">{spec}</span>
+                        {field.value === spec && (
+                          <Check className="h-3.5 w-3.5 text-[#639922] shrink-0" />
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </ComboField>
+          )}
+        />
+        <FieldError message={errors.speciality?.message} />
       </div>
 
       {/* Studying-specific fields */}
@@ -389,6 +452,7 @@ export function StepAcademic({
               <FieldError message={errors.degreeLevel?.message} />
             </div>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <FieldLabel>Expected Graduation Year</FieldLabel>
@@ -454,7 +518,7 @@ export function StepAcademic({
         </>
       )}
 
-      {/* Graduated-specific fields – unchanged */}
+      {/* Graduated-specific fields  */}
       {status === "graduated" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -499,59 +563,6 @@ export function StepAcademic({
           </div>
         </div>
       )}
-
-      {/* Speciality / Major – unchanged */}
-      <div>
-        <FieldLabel required>Speciality / Major</FieldLabel>
-        <Controller
-          name="speciality"
-          control={control}
-          render={({ field }) => (
-            <ComboField
-              value={field.value}
-              placeholder="Search or select your speciality…"
-              open={specialityOpen}
-              onOpenChange={setSpecialityOpen}
-              error={!!errors.speciality}
-            >
-              <Command className={commandCls}>
-                <div className="border-b border-white/[0.07]">
-                  <CommandInput
-                    placeholder="Search speciality…"
-                    className="border-0 bg-transparent text-[13px] text-white/70 placeholder:text-white/25 h-10"
-                  />
-                </div>
-                <CommandList className="max-h-52 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
-                  <CommandEmpty>
-                    <p className="text-[12px] text-white/30 text-center py-3">
-                      No speciality found
-                    </p>
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {COMMON_SPECIALITIES.map((spec) => (
-                      <CommandItem
-                        key={spec}
-                        value={spec}
-                        className="text-[13px] text-white/65 data-[selected=true]:bg-[#639922]/10 data-[selected=true]:text-[#639922] rounded-lg mx-1 px-3 py-2 cursor-pointer"
-                        onSelect={() => {
-                          field.onChange(spec);
-                          setSpecialityOpen(false);
-                        }}
-                      >
-                        <span className="flex-1">{spec}</span>
-                        {field.value === spec && (
-                          <Check className="h-3.5 w-3.5 text-[#639922] shrink-0" />
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </ComboField>
-          )}
-        />
-        <FieldError message={errors.speciality?.message} />
-      </div>
     </div>
   );
 }

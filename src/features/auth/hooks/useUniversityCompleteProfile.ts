@@ -1,4 +1,5 @@
 // hooks/useUniversityCompleteProfile.ts (fixed)
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,11 +16,13 @@ interface UniversityFormData {
   website: string;
   department: string;
   email: string;
+  univ_admin_type: string;
 }
 
 interface DocsState {
-  logoFile: File | null;
-  certBase64: string | null;
+  avatar_url: File | null;  // Changed from logoFile
+  rectorateProof: File | null;  // Changed from certBase64
+  headOfDeptProof: File | null;  // Changed from certBase64
   taxId: string;
 }
 
@@ -40,17 +43,20 @@ export function useUniversityCompleteProfile(
     website: profile?.website || "",
     department: profile?.department || "",
     email: profile?.email || "",
+    univ_admin_type: profile?.univ_admin_type || "",
   });
 
   const [docs, setDocs] = useState<DocsState>({
-    logoFile: null,
-    certBase64: null,
+    avatar_url: null,
+    rectorateProof: null,
+    headOfDeptProof: null,
     taxId: "",
   });
 
   const [previewUrls, setPreviewUrls] = useState({
-    logo: "",
-    certificate: "",
+    avatar_url: "",
+    rectorateProof: "",
+    headOfDeptProof: "",
   });
 
   const fileToBase64 = (file: File): Promise<string> =>
@@ -63,7 +69,7 @@ export function useUniversityCompleteProfile(
 
   // ---------------- FILE HANDLER ----------------
   const handleFileChange = async (
-    field: "logo" | "certificate",
+    field: "avatar_url" | "rectorateProof" | "headOfDeptProof",
     file: File | null
   ) => {
     if (!file) return;
@@ -71,7 +77,7 @@ export function useUniversityCompleteProfile(
     const isImage = file.type.startsWith("image/");
     const isPDF = file.type === "application/pdf";
 
-    if (field === "logo" && !isImage) {
+    if (field === "avatar_url" && !isImage) {
       toast({
         title: "Invalid file",
         description: "Logo must be an image (JPG, PNG).",
@@ -80,10 +86,10 @@ export function useUniversityCompleteProfile(
       return;
     }
 
-    if (field === "certificate" && !isImage && !isPDF) {
+    if ((field === "rectorateProof" || field === "headOfDeptProof") && !isImage && !isPDF) {
       toast({
         title: "Invalid file",
-        description: "Certificate must be an image or PDF.",
+        description: "Verification document must be an image or PDF.",
         variant: "destructive",
       });
       return;
@@ -98,39 +104,21 @@ export function useUniversityCompleteProfile(
       return;
     }
 
-    // ---------------- LOGO ----------------
-    if (field === "logo") {
-      setDocs((prev) => ({ ...prev, logoFile: file }));
-      setPreviewUrls((prev) => ({
-        ...prev,
-        logo: URL.createObjectURL(file),
-      }));
-      return;
-    }
-
-    // ---------------- CERTIFICATE ----------------
-    const base64 = await fileToBase64(file);
-
-    setDocs((prev) => ({
-      ...prev,
-      certBase64: base64,
-    }));
-
+    // Store file for later upload
+    setDocs((prev) => ({ ...prev, [field]: file }));
     setPreviewUrls((prev) => ({
       ...prev,
-      certificate: URL.createObjectURL(file),
+      [field]: URL.createObjectURL(file),
     }));
   };
 
   // ---------------- REMOVE FILE ----------------
-  const removeFile = (field: "logo" | "certificate") => {
-    if (field === "logo") {
-      setDocs((prev) => ({ ...prev, logoFile: null }));
-      setPreviewUrls((prev) => ({ ...prev, logo: "" }));
-    } else {
-      setDocs((prev) => ({ ...prev, certBase64: null }));
-      setPreviewUrls((prev) => ({ ...prev, certificate: "" }));
+  const removeFile = (field: "avatar_url" | "rectorateProof" | "headOfDeptProof") => {
+    if (previewUrls[field]) {
+      URL.revokeObjectURL(previewUrls[field]);
     }
+    setDocs((prev) => ({ ...prev, [field]: null }));
+    setPreviewUrls((prev) => ({ ...prev, [field]: "" }));
   };
 
   const updateForm = (key: keyof UniversityFormData, value: string) => {
@@ -160,31 +148,40 @@ export function useUniversityCompleteProfile(
         email: form.email,
       };
 
+      // Upload avatar/logo if exists
+      let avatarUrl: string | undefined;
+      if (docs.avatar_url) {
+        avatarUrl = await authService.uploadUniversityAvatar(
+          user.id,
+          docs.avatar_url
+        );
+      }
+
+      // Upload verification document if exists
+      const proofDoc = form.univ_admin_type === "rectorate" ? docs.rectorateProof : docs.headOfDeptProof;
+      let verificationDocUrl: string | undefined;
+      if (proofDoc) {
+        verificationDocUrl = await authService.uploadVerificationDocument(
+          user.id,
+          proofDoc,
+          form.univ_admin_type
+        );
+      }
+
+      // Prepare verification docs object
       const verificationDocs: any = {
         tax_id: docs.taxId,
       };
 
-      if (docs.certBase64) {
-        verificationDocs.registration_certificate = docs.certBase64;
+      if (verificationDocUrl) {
+        verificationDocs.registration_certificate = verificationDocUrl;
       }
-
-      // ---------------- UPLOAD LOGO ----------------
-      let logoUrl: string | undefined;
-
-      if (docs.logoFile) {
-        logoUrl = await authService.uploadUniversityLogo(
-          user.id,
-          docs.logoFile
-        );
-      }
-
-      console.log("Final verificationDocs keys:", Object.keys(verificationDocs));
 
       await authService.markProfileCompleted(
         user.id,
         additionalData,
         verificationDocs,
-        logoUrl
+        avatarUrl
       );
 
       toast({

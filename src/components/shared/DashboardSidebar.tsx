@@ -70,11 +70,10 @@ const studentBaseItems = [
     url: "/student/dashboard/notifications",
     icon: Bell,
   },
+  { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
+
 ];
 
-const studyingOnlyItems = [
-  { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
-];
 
 const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
@@ -147,7 +146,7 @@ export function DashboardSidebar({
   if (role === "student") {
     items = [...studentBaseItems];
     if (candidateType === "studying") {
-      items = [...studentBaseItems, ...studyingOnlyItems];
+      items = [...studentBaseItems];
     }
   } else if (role === "company_admin") {
     items = companyItems;
