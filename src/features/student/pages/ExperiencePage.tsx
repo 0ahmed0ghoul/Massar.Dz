@@ -578,28 +578,6 @@ export default function ExperiencePage() {
                               </div>
                             </div>
 
-                            {/* AI Match Score */}
-                            {app.ai_match_score && (
-                              <div className="pt-2">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                                    <Zap className="h-3 w-3 text-amber-400" /> AI
-                                    Match
-                                  </span>
-                                  <span className="text-sm font-bold text-amber-400">
-                                    {Math.round(app.ai_match_score)}%
-                                  </span>
-                                </div>
-                                <div className="h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
-                                    style={{
-                                      width: `${app.ai_match_score}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
 
                             {/* Interview Details */}
                             {hasInterview && interview && (
