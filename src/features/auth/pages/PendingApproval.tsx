@@ -62,7 +62,7 @@ const PendingApproval = () => {
             Under Review
           </h1>
           <p className="text-foreground/40 text-sm leading-relaxed mb-8">
-            Your university account is being reviewed by our team. This usually
+            Your account is being reviewed by our team. This usually
             takes <span className="text-foreground/60">1–2 business days</span>.
             You'll receive an email once it's approved.
           </p>

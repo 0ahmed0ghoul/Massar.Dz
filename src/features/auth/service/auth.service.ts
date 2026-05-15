@@ -2,6 +2,8 @@ import { Profile } from "@/types/profile.types";
 import { supabase } from "@/lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import { RegisterRole } from "@/types/auth";
+import emailjs from '@emailjs/browser';
+import { EMAILJS_CONFIG } from "@/config/emailjs.config";
 
 class AuthService {
   // ───────────────────────── AUTH ─────────────────────────
@@ -354,11 +356,65 @@ class AuthService {
   }
 
   async sendVerificationEmail(email: string, code: string): Promise<boolean> {
-    console.log("📧 MOCK EMAIL SENT");
-    console.log("To:", email);
-    console.log("Code:", code);
-    await new Promise((r) => setTimeout(r, 800));
-    return true;
+    // Force real email for testing
+    const forceRealEmail = true;
+    
+    if (!forceRealEmail && import.meta.env.DEV) {
+      // Development mode - log to console
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📧 [DEV MODE] Verification Email Mock');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`  To: ${email}`);
+      console.log(`  Code: ${code}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return true;
+    }
+  
+    // Production mode - send real email via EmailJS
+    try {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📧 [PRODUCTION MODE] Sending real verification email');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`  To: ${email}`);
+      console.log(`  Code: ${code}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+      // IMPORTANT: Use variable names that match your EmailJS template
+      const templateParams = {
+        email: email,                    // Matches {{email}} in template
+        verif: code,                     // Matches {{verif}} in template (not verification_code)
+        year: new Date().getFullYear(),
+        support_url: 'https://massar.com/support',
+        terms_url: 'https://massar.com/terms',
+        privacy_url: 'https://massar.com/privacy',
+        help_url: 'https://massar.com/help',
+      };
+  
+      const serviceId = 'service_p5ioqge';
+      const templateId = EMAILJS_CONFIG.TEMPLATE_ID;
+      const publicKey = EMAILJS_CONFIG.PUBLIC_KEY;
+  
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams,
+        publicKey
+      );
+      
+      if (response.status === 200) {
+        console.log(`✅ Verification email sent successfully to ${email}`);
+        return true;
+      } else {
+        console.error(`❌ Email sending failed with status: ${response.status}`);
+        return false;
+      }
+    } catch (error: any) {
+      console.error('❌ Email sending failed:', error);
+      console.error('   Error details:', error.text || error.message);
+      return false;
+    }
   }
 
   async getVerifiedUniversities(): Promise<{ id: string; name: string }[]> {
