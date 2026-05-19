@@ -66,16 +66,23 @@ export const professionalSchema = z.object({
 
 export type ProfessionalFields = z.infer<typeof professionalSchema>;
 
+
 // ─────────────────────────────────────────────────────────────
-// Company
+// Company Schema (UPDATED - Monthly only)
 // ─────────────────────────────────────────────────────────────
 export const companySchema = z.object({
   ...baseFields,
   companyName: z.string().min(1, "Company name required"),
-  companyType: z.enum(["startup", "private", "government"]),
+  companyType: z.enum(["startup", "private", "government"]).optional(),
   industry: z.string().min(1, "Industry required"),
+  customIndustry: z.string().optional(),
   registrationNumber: z.string().optional(),
-  location: z.string().min(1, "Location required"),
+  location: z.string().optional(),
+  wilaya: z.string().optional(),
+  companyDescription: z.string().optional(),
+  
+  // Plan selection - monthly only
+  selectedPlan: z.enum(["basic", "premium"]).default("premium"),
 });
 
 export type CompanyFields = z.infer<typeof companySchema>;

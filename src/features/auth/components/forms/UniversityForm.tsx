@@ -292,7 +292,7 @@ export function UniversityForm({
                     <Label className={labelCls}>First name</Label>
 
                     <Input
-                      placeholder="Ahmed"
+                      placeholder="Zinedine"
                       {...register("firstName")}
                       className={`${inputCls} ${
                         errors.firstName ? errorInputCls : ""
@@ -306,7 +306,7 @@ export function UniversityForm({
                     <Label className={labelCls}>Last name</Label>
 
                     <Input
-                      placeholder="Ghoul"
+                      placeholder="Kouahla"
                       {...register("lastName")}
                       className={`${inputCls} ${
                         errors.lastName ? errorInputCls : ""

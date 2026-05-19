@@ -48,6 +48,7 @@ import QuestionAnswerPage from "@/features/admin/pages/QuestionAnswerPage";
 import StudentQAPage from "@/features/student/pages/StudentQAPage";
 import UnifiedAnalyticsPage from "@/features/university/pages/UnifiedAnalyticsPage";
 import UniversityChatPage from "@/features/department/pages/Chat";
+import { AdminPlansPage } from "@/features/admin/pages/AdminPlansPage";
 
 function CompleteProfileRouter() {
   const { profile, isLoading } = useAuth();
@@ -190,6 +191,8 @@ const AppRoutes = () => {
             element={<AdminPaymentsPage />}
           />
           <Route path="dashboard/admin/feedbacks" element={<FeedbacksPage />} />
+          <Route path="dashboard/admin/plans-management" element={<AdminPlansPage />} />
+
           <Route
             path="/dashboard/admin/questionanswer"
             element={<QuestionAnswerPage />}

@@ -10,38 +10,48 @@ export const CCP_ACCOUNT = {
 
 export const STUDENT_PLANS: Plan[] = [
   {
-    id: 'student_yearly',
-    name: 'Student Yearly',
-    price: 9999,
-    period: 'year',
-    for: 'student',
+    id: "student_premium",
+    name: "Student Premium",
+    price: 2000,
+    period: "month",
+    for: "student",
     features: [
-      'Unlimited job applies',
-      'AI Resume auto‑extract skills & experience',
-      'Smart Ranking – AI match scoring',
-      'Priority support',
-    ],  },
+      "Unlimited job applies",
+      "AI Resume parsing",
+      "Smart ranking",
+      "Priority support",
+    ],
+  },
 ];
 
 export const COMPANY_PLANS: Plan[] = [
   {
-    id: 'company_yearly',
-    name: 'Company Growth',
-    price: 49999,
-    period: 'year',
-    for: 'company',
+    id: "company_basic",
+    name: "Company Basic",
+    price: 3000,
+    period: "month",
+    for: "company",
     features: [
-      'Unlimited job postings',
-      'AI Resume Parser – auto‑extract skills & experience',
-      'Smart Ranking – AI match scoring',
-      'Bulk Messaging to candidates',
-      'Advanced analytics & funnel metrics',
-      'Priority support',
+      "Job postings (limited)",
+      "Candidate browsing",
     ],
+  },
+  {
+    id: "company_premium",
+    name: "Company Premium",
+    price: 5000,
+    period: "month",
+    for: "company",
     recommended: true,
+    features: [
+      "Unlimited job postings",
+      "AI Resume Parser",
+      "Smart ranking",
+      "Analytics",
+      "Bulk messaging",
+    ],
   },
 ];
-
 export const getStudentPromotion = (hasStars: boolean, hasMajor: boolean) => {
   if (hasStars && hasMajor) {
     return {

@@ -304,6 +304,7 @@ class AuthService {
       profileData.company_name = params.profile.companyName;
       profileData.company_type = params.profile.companyType;
       profileData.industry = params.profile.industry;
+      profileData.selected_plan = params.profile.selectedPlan
       profileData.wilaya = params.profile.location;
     } else if (params.role === "university_admin") {
       profileData.university_name = params.profile.universityName;

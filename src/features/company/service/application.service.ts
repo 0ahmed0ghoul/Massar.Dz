@@ -151,46 +151,132 @@ function calculateMatchScore(student: any, job: any): number {
 // SERVICE
 // ============================================================================
 class ApplicationService {
-  async applyToJob(
-    studentId: string,
-    jobId: string,
-    coverLetter?: string,
-    cvFile?: File
-  ): Promise<void> {
-    let cvUrl: string | undefined;
-    if (cvFile) {
-      const fileExt = cvFile.name.split(".").pop();
-      const fileName = `${studentId}/cv_${Date.now()}.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-      const { error: uploadError } = await supabase.storage
-        .from("student-files")
-        .upload(filePath, cvFile);
-      if (uploadError) throw new Error(uploadError.message);
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("student-files").getPublicUrl(filePath);
-      cvUrl = publicUrl;
-    }
 
-    const [jobRes, studentRes] = await Promise.all([
-      supabase.from("jobs").select("*").eq("id", jobId).single(),
-      supabase.from("profiles").select("*").eq("id", studentId).single(),
-    ]);
-    if (jobRes.error) throw new Error(jobRes.error.message);
-    if (studentRes.error) throw new Error(studentRes.error.message);
+async applyToJob(
+  studentId: string,
+  jobId: string,
+  coverLetter?: string,
+  cvFile?: File
+): Promise<void> {
 
-    const matchScore = calculateMatchScore(studentRes.data, jobRes.data);
+  // =========================================================
+  // CHECK PREMIUM + MONTHLY LIMIT
+  // =========================================================
 
-    const { error } = await supabase.from("applications").insert({
-      student_id: studentId,
-      job_id: jobId,
-      cover_letter: coverLetter,
-      cv_url: cvUrl,
-      status: "pending",
-      ai_match_score: matchScore,
-    });
-    if (error) throw new Error(error.message);
+  const { data: studentProfile, error: profileError } = await supabase
+    .from("profiles")
+    .select("is_premium")
+    .eq("id", studentId)
+    .single();
+
+  if (profileError) {
+    throw new Error(profileError.message);
   }
+
+  const isPremium = studentProfile?.is_premium === true;
+
+  // Only check limit for non premium users
+  if (!isPremium) {
+    const monthlyApplications =
+      await this.getMonthlyApplicationsCount(studentId);
+
+    if (monthlyApplications >= 3) {
+      throw new Error(
+        "FREE_PLAN_LIMIT_REACHED"
+      );
+    }
+  }
+
+  // =========================================================
+  // CHECK IF ALREADY APPLIED
+  // =========================================================
+
+  const { data: existingApplication } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("student_id", studentId)
+    .eq("job_id", jobId)
+    .maybeSingle();
+
+  if (existingApplication) {
+    throw new Error("You already applied to this job.");
+  }
+
+  // =========================================================
+  // CV UPLOAD
+  // =========================================================
+
+  let cvUrl: string | undefined;
+
+  if (cvFile) {
+    const fileExt = cvFile.name.split(".").pop();
+    const fileName = `${studentId}/cv_${Date.now()}.${fileExt}`;
+    const filePath = `applications/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("student-files")
+      .upload(filePath, cvFile);
+
+    if (uploadError) throw new Error(uploadError.message);
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage
+      .from("student-files")
+      .getPublicUrl(filePath);
+
+    cvUrl = publicUrl;
+  }
+
+  // =========================================================
+  // LOAD JOB + STUDENT
+  // =========================================================
+
+  const [jobRes, studentRes] = await Promise.all([
+    supabase.from("jobs").select("*").eq("id", jobId).single(),
+    supabase.from("profiles").select("*").eq("id", studentId).single(),
+  ]);
+
+  if (jobRes.error) throw new Error(jobRes.error.message);
+  if (studentRes.error) throw new Error(studentRes.error.message);
+
+  const matchScore = calculateMatchScore(
+    studentRes.data,
+    jobRes.data
+  );
+
+  // =========================================================
+  // INSERT APPLICATION
+  // =========================================================
+
+  const { error } = await supabase.from("applications").insert({
+    student_id: studentId,
+    job_id: jobId,
+    cover_letter: coverLetter,
+    cv_url: cvUrl,
+    status: "pending",
+    ai_match_score: matchScore,
+  });
+
+  if (error) throw new Error(error.message);
+}
+async getStudentSkills(studentId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("student_skills")
+    .select(`
+      skills (
+        name
+      )
+    `)
+    .eq("student_id", studentId);
+
+  if (error) throw new Error(error.message);
+
+  return (data || [])
+    .map((row: any) => row.skills?.name)
+    .filter(Boolean)
+    .map((name: string) => name.toLowerCase().trim());
+}
 
   async getStudentCV(studentId: string): Promise<string | null> {
     const { data, error } = await supabase
@@ -520,6 +606,23 @@ class ApplicationService {
       await this.updateApplicationStatus(applicationId, "interview_scheduled");
     }
   }
+
+async  getMonthlyApplicationsCount(studentId: string) {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const { count, error } = await supabase
+    .from("applications")
+    .select("*", { count: "exact", head: true })
+    .eq("student_id", studentId)
+    .gte("created_at", startOfMonth.toISOString());
+
+  if (error) throw error;
+
+  return count || 0;
+}
+
 }
 
 export const applicationService = new ApplicationService();

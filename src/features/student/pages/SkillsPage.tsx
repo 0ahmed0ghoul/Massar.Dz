@@ -372,25 +372,6 @@ export default function SkillsPage() {
                   </div>
                 </div>
 
-                {/* Years of experience */}
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/25">Years of Experience</p>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      max="50"
-                      value={formData.years_of_experience}
-                      onChange={e => setFormData(p => ({ ...p, years_of_experience: parseFloat(e.target.value) || 0 }))}
-                      className="w-28 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5
-                                 text-[13px] text-white/80 text-center font-mono
-                                 focus:border-[#639922]/40 focus:outline-none focus:ring-2 focus:ring-[#639922]/10
-                                 transition-all"
-                    />
-                    <span className="text-[12px] text-white/30">years</span>
-                  </div>
-                </div>
 
                 {/* Actions */}
                 <div className="flex justify-end gap-2 pt-1 border-t border-white/[0.06]">

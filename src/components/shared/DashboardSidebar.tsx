@@ -29,6 +29,8 @@ import {
   MessageCircleMoreIcon,
   BarChart3,
   FanIcon,
+  DatabaseZapIcon,
+  BadgeDollarSign,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -110,7 +112,8 @@ const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
-  { title: "Payments", url: "/dashboard/admin/Payments", icon: Wallet },
+  { title: "Payments Requests", url: "/dashboard/admin/payments", icon: Wallet },
+  { title: "Plans Management", url: "/dashboard/admin/plans-management", icon: BadgeDollarSign },
   {
     title: "Feedbacks",
     url: "/dashboard/admin/feedbacks",

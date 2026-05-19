@@ -59,6 +59,8 @@ const Register = () => {
     handleFormSubmit,
     handleVerify,
     handleResendCode,
+    handlePlanSelect,
+    selectedPlan,
   } = useRegister();
 
   const meta = role ? META[role] : null;
@@ -146,6 +148,8 @@ const Register = () => {
                 <CompanyForm
                   isLoading={isLoading}
                   onSubmit={handleFormSubmit}
+                  onPlanSelect={handlePlanSelect}
+                  selectedPlan={selectedPlan}
                 />
               )}
 

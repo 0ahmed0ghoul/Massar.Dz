@@ -150,31 +150,8 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Tab selector */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
-            {(["student", "company", "all"] as TabType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  activeTab === tab
-                    ? "bg-[#639922] text-black shadow-md"
-                    : "text-foreground/60 hover:text-foreground"
-                }`}
-              >
-                {tab === "student"
-                  ? "Student"
-                  : tab === "company"
-                  ? "Company"
-                  : "All Plans"}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Promotion banner for students */}
-        {profile?.role === "student" &&
+        {profile?.role === "student" && 
           promotion.eligible &&
           promotion.message &&
           (activeTab === "student" || activeTab === "all") && (

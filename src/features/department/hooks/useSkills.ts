@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { studentSkillsService, StudentSkill, Skill } from '../../university/services/studentSkills.service';
+import { studentSkillsService, StudentSkill, Skill } from '../../student/services/studentSkills.service';
 
 export function useStudentSkills() {
   const { user } = useAuth();

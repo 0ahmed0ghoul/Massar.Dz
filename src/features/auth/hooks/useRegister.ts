@@ -1,3 +1,5 @@
+// hooks/useRegister.ts
+
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,14 +14,12 @@ export interface RegisterFormData {
   password: string;
   firstName?: string;
   lastName?: string;
-
-  // ADD THIS
   univ_admin_type?: "rectorate" | "head_of_department";
-
   degreeLevel?: string;
   companyName?: string;
   companyType?: CompanyType;
   industry?: string;
+  customIndustry?: string;
   universityName?: string;
   wilaya?: string;
   department?: string;
@@ -37,7 +37,9 @@ export interface RegisterFormData {
   candidateType?: string;
   studentId?: string;
   student_card_url?: string;
+  selectedPlan?: "basic" | "premium";
 }
+
 type BaseFormData = Partial<RegisterFormData>;
 
 function normalizeError(err: unknown): string {
@@ -63,7 +65,6 @@ export const useRegister = () => {
   const [roleType, setRoleType] = useState<CompanyType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-
   const pendingFormDataRef = useRef<RegisterFormData | null>(null);
   const isSubmittingRef = useRef(false);
 
@@ -79,6 +80,7 @@ export const useRegister = () => {
     setRoleType(type);
   };
 
+  // This is called from CompanyForm when user clicks "Create Account" on step 3
   const handleFormSubmit = async (data: BaseFormData) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
@@ -89,11 +91,19 @@ export const useRegister = () => {
       formDataWithType.companyType = roleType;
     }
 
-    // Save pending profile (optional, but keep for recovery)
+    if (role === "company_admin") {
+      formDataWithType.selectedPlan = data.selectedPlan;
+    }
+    
+    if (role === "company_admin" && !data.selectedPlan) {
+      throw new Error("Please select a plan.");
+    }
+    // Save pending profile
     const pendingProfile = {
       email: data.email,
       role: role,
       roleType: roleType,
+      selectedPlan: data.selectedPlan,
       profileData: formDataWithType,
       timestamp: Date.now(),
     };
@@ -123,14 +133,9 @@ export const useRegister = () => {
           if (!studentId) {
             throw new Error("Student ID is required for studying students.");
           }
-          const studentIdExists = await authService.checkStudentIdExists(
-            studentId
-          );
-
+          const studentIdExists = await authService.checkStudentIdExists(studentId);
           if (studentIdExists) {
-            throw new Error(
-              "This student ID already exists. Please use another one."
-            );
+            throw new Error("This student ID already exists. Please use another one.");
           }
         }
       }
@@ -139,9 +144,15 @@ export const useRegister = () => {
         ...formDataWithType,
         email: data.email!,
         password: data.password!,
-      };
+        selectedPlan:
+        role === "company_admin"
+          ? data.selectedPlan as "basic" | "premium"
+          : undefined,      
+        };
 
       pendingFormDataRef.current = strictData;
+      
+      // Send verification code
       await sendVerificationCode(data.email);
 
       setVerificationCode("");
@@ -190,6 +201,7 @@ export const useRegister = () => {
 
       localStorage.removeItem("pending_profile");
 
+      // Redirect based on role
       if (role === "student") {
         navigate("/student/dashboard");
       } else if (role === "company_admin" || role === "university_admin") {

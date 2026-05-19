@@ -5,6 +5,14 @@ import { Experience, ExperienceInput } from "@/types/experience";
 
 
 class ExperienceService {
+  async getAllExperiences(): Promise<Experience[]> {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .order('created_at', { ascending: false, nullsFirst: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  }
   async getExperiences(studentId: string): Promise<Experience[]> {
     const { data, error } = await supabase
       .from('experiences')

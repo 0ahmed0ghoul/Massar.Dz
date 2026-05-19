@@ -37,6 +37,8 @@ import {
   Star,
   LinkIcon,
   MessageSquare,
+  Crown,
+  Brain,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -45,6 +47,7 @@ import {
   EXPERIENCE_TYPES,
   statusConfig,
 } from "@/constants/experience.constants";
+import { Link } from "react-router-dom";
 
 export default function ExperiencePage() {
   const {
@@ -53,10 +56,13 @@ export default function ExperiencePage() {
     loading,
     adding,
     updating,
+    recommendedJobs,
     deleting,
     addExperience,
     updateExperience,
     deleteExperience,
+    isPremium,
+    monthlyApplicationsCount,
   } = useStudentExperiences();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -187,8 +193,7 @@ export default function ExperiencePage() {
     total: applications.length,
     shortlisted: applications.filter((a) => a.status === "shortlisted").length,
     interviewing: applications.filter(
-      (a) =>
-        a.status === "interview_scheduled" || a.status === "interview"
+      (a) => a.status === "interview_scheduled" || a.status === "interview"
     ).length,
     accepted: applications.filter((a) => a.status === "accepted").length,
   };
@@ -206,8 +211,6 @@ export default function ExperiencePage() {
 
   return (
     <div className="relative min-h-screen ">
-
-
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10">
@@ -261,11 +264,15 @@ export default function ExperiencePage() {
                             <p className="text-sm text-slate-400 mb-2">
                               {stat.label}
                             </p>
-                            <p className={`text-3xl font-bold ${stat.textColor}`}>
+                            <p
+                              className={`text-3xl font-bold ${stat.textColor}`}
+                            >
                               {stat.value}
                             </p>
                           </div>
-                          <Icon className={`h-8 w-8 ${stat.textColor} opacity-60 group-hover:opacity-100 transition-opacity`} />
+                          <Icon
+                            className={`h-8 w-8 ${stat.textColor} opacity-60 group-hover:opacity-100 transition-opacity`}
+                          />
                         </div>
                       </CardContent>
                     </Card>
@@ -369,12 +376,16 @@ export default function ExperiencePage() {
                                   <CalendarDays className="h-4 w-4 text-[#639922] flex-shrink-0" />
                                   <span>
                                     {formatDate(exp.start_date)} –{" "}
-                                    {exp.current ? "Present" : formatDate(exp.end_date)}
+                                    {exp.current
+                                      ? "Present"
+                                      : formatDate(exp.end_date)}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-slate-300">
                                   <Clock className="h-4 w-4 text-[#639922] flex-shrink-0" />
-                                  <span className="font-medium">{durationText}</span>
+                                  <span className="font-medium">
+                                    {durationText}
+                                  </span>
                                 </div>
                               </div>
 
@@ -405,7 +416,9 @@ export default function ExperiencePage() {
                                 className="text-slate-400 hover:text-[#639922] hover:bg-[#639922]/10"
                               >
                                 <Pencil className="h-4 w-4" />
-                                <span className="hidden md:inline ml-2">Edit</span>
+                                <span className="hidden md:inline ml-2">
+                                  Edit
+                                </span>
                               </Button>
                               <Button
                                 variant="ghost"
@@ -418,7 +431,9 @@ export default function ExperiencePage() {
                                 ) : (
                                   <Trash2 className="h-4 w-4" />
                                 )}
-                                <span className="hidden md:inline ml-2">Delete</span>
+                                <span className="hidden md:inline ml-2">
+                                  Delete
+                                </span>
                               </Button>
                             </div>
                           </div>
@@ -434,6 +449,25 @@ export default function ExperiencePage() {
           {/* APPLICATIONS TAB */}
           <TabsContent value="applications" className="space-y-8">
             {/* Application Stats */}
+            {!isPremium && (
+            <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-yellow-400 font-semibold">Free Plan</h3>
+
+                  <p className="text-sm text-slate-400">
+                    {monthlyApplicationsCount}/3 applications used this month
+                  </p>
+                </div>
+
+                <Button className="bg-gradient-to-r from-[#639922] to-emerald-500 text-black">
+                  <Link to="/pricing">
+                  Upgrade to Premium
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
             {applications.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
@@ -545,7 +579,9 @@ export default function ExperiencePage() {
                       key={app.id}
                       className="border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm hover:border-blue-500/30 hover:shadow-xl transition-all duration-300 overflow-hidden group"
                       style={{
-                        animation: `fadeInUp 0.5s ease-out ${index * 100}ms both`,
+                        animation: `fadeInUp 0.5s ease-out ${
+                          index * 100
+                        }ms both`,
                       }}
                     >
                       <CardContent className="p-6">
@@ -577,7 +613,6 @@ export default function ExperiencePage() {
                                 Applied {formatDate(app.created_at)}
                               </div>
                             </div>
-
 
                             {/* Interview Details */}
                             {hasInterview && interview && (
@@ -668,6 +703,80 @@ export default function ExperiencePage() {
                 })}
               </div>
             )}
+
+            <Card className="relative overflow-hidden border-slate-700/50 bg-slate-800/40">
+              {!isPremium && (
+                <>
+                  <div className="absolute inset-0 z-20 backdrop-blur-md bg-black/40 flex flex-col items-center justify-center">
+                    <Crown className="h-10 w-10 text-yellow-400 mb-3" />
+
+                    <h3 className="text-lg font-bold text-white">
+                      Premium Feature
+                    </h3>
+
+                    <p className="text-sm text-slate-300 mb-4">
+                      Unlock AI Job Matching
+                    </p>
+
+                    <Button className="bg-gradient-to-r from-[#639922] to-emerald-500 text-black">
+                      Upgrade Now
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Brain className="h-6 w-6 text-[#639922]" />
+
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      AI Skill Matching
+                    </h3>
+
+                    <p className="text-sm text-slate-400">
+                      Jobs matching your profile skills
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                {recommendedJobs.map((job) => (
+  <div
+    key={job.id}
+    className="p-4 rounded-lg bg-slate-700/30 border border-slate-600"
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="font-medium text-white">
+          {job.title}
+        </p>
+
+        <p className="text-sm text-slate-400">
+          {job.company?.company_name || "Company"}
+        </p>
+      </div>
+      <div>
+        {job.skills.map((skill: string) => (
+          <Badge
+            key={skill}
+            className="bg-[#639922]/20 text-white text-xs mr-1 mb-1"
+          >
+            {skill}
+          </Badge>
+
+        ))}
+      </div>
+
+      <Badge className="bg-[#639922]/20 text-[#639922]">
+        {job.matchScore}% Match
+      </Badge>
+    </div>
+  </div>
+))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
@@ -753,9 +862,7 @@ export default function ExperiencePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Date */}
               <div className="space-y-2">
-                <Label className="text-slate-300 font-medium">
-                  Start Date
-                </Label>
+                <Label className="text-slate-300 font-medium">Start Date</Label>
                 <Input
                   type="date"
                   value={form.start_date}
@@ -812,9 +919,7 @@ export default function ExperiencePage() {
               <Label className="text-slate-300 font-medium">Location</Label>
               <Input
                 value={form.location}
-                onChange={(e) =>
-                  setForm({ ...form, location: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
                 placeholder="e.g., San Francisco, CA or Remote"
                 className="bg-slate-700/30 border-slate-600 focus:border-[#639922] focus:ring-[#639922]/20 text-white placeholder:text-slate-500"
               />
@@ -823,7 +928,8 @@ export default function ExperiencePage() {
             {/* Description */}
             <div className="space-y-2">
               <Label className="text-slate-300 font-medium">
-                Description <span className="text-xs text-slate-500">(optional)</span>
+                Description{" "}
+                <span className="text-xs text-slate-500">(optional)</span>
               </Label>
               <Textarea
                 value={form.description}

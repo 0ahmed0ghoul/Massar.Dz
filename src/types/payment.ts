@@ -1,10 +1,7 @@
 export type PlanType =
-  | "student_monthly"
-  | "student_yearly"
   | "student_premium"
-  | "company_monthly"
-  | "company_yearly"
-  | "company_enterprise";
+  | "company_basic"
+  | "company_premium";
   
 export interface PaymentRequest {
     id: string;

@@ -76,7 +76,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
 
   const filled = requiredFields.filter((f) => f && String(f).trim() !== "").length;
   const completeness = Math.round((filled / requiredFields.length) * 100);
-
+  const isPremium = profile.is_premium === true;
   // ----- Build steps dynamically -----
   let steps: Step[] = [];
 
@@ -274,6 +274,12 @@ if (profile.role === "student" || profile.role === "graduate") {
                       {profile.university_connection_status === "connected" ? "Connected" : "Not Connected"}
                     </span>
                   )}
+                  {isPremium && (
+  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs text-amber-400">
+    <Award className="h-3 w-3" />
+    Premium
+  </span>
+)}
                 </div>
               </div>
             </div>

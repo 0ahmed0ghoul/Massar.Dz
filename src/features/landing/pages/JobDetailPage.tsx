@@ -26,7 +26,12 @@ const JobDetailPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { jobs, loading } = useJobs();
-  const { apply, loading: applying } = useApplyToJob();
+  const {
+    apply,
+    loading: applying,
+    premiumModalOpen,
+    setPremiumModalOpen,
+  } = useApplyToJob();
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   // Logic placeholders
   const isStudent = profile?.role === "student";
@@ -304,6 +309,65 @@ const JobDetailPage = () => {
         onSubmit={(coverLetter, cvFile) => apply(job.id, coverLetter, cvFile)}
         loading={applying}
       />
+
+      {premiumModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-yellow-500/20 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500/10">
+                <Star className="h-6 w-6 text-yellow-400" />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Upgrade to Premium
+                </h2>
+
+                <p className="text-sm text-slate-400">
+                  Unlimited job applications
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-sm text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                Unlimited applications
+              </div>
+
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                AI skill matching
+              </div>
+
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                Premium visibility
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setPremiumModalOpen(false)}
+              >
+                Later
+              </Button>
+
+              <Button
+                className="flex-1 bg-yellow-500 text-black hover:bg-yellow-600"
+                onClick={() => {
+                  setPremiumModalOpen(false);
+                  navigate("/pricing");
+                }}
+              >
+                Upgrade
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
