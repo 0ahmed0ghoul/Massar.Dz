@@ -67,7 +67,7 @@ const StatCard = ({ icon: Icon, label, value, color, subtitle }: any) => (
 const PaymentRequestCard = ({ req, onApprove, onReject, isLoading, onViewReceipt }: any) => {
   const isCompany = req.profiles.role === "company_admin";
   const amount = isCompany 
-    ? (req.plan_type === "company_premium" ? "5000 DZD" : "2000 DZD")
+    ? (req.plan_type === "company_premium" ? "5000 DZD" : "3000 DZD")
     : "5000 DZD";
 
   return (

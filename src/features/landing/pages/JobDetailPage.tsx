@@ -261,34 +261,6 @@ const JobDetailPage = () => {
                     style={{ width: `${matchScore}%` }}
                   />
                 </div>
-
-                <div className="mt-5 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Skills Match</span>
-                    <span className="font-semibold text-foreground">
-                      Excellent
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Profile Strength
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      Strong
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Recommendation
-                    </span>
-                    <span className="font-semibold text-primary">
-                      Highly Recommended
-                    </span>
-                  </div>
-                </div>
-
                 <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
                   Your profile matches approximately{" "}
                   <span className="font-bold text-foreground">

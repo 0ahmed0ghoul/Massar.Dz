@@ -35,7 +35,6 @@ import UniversityCompleteProfilePage from "@/features/auth/pages/UniversityCompl
 import CompanyCompleteProfilePage from "@/features/auth/pages/CompanyCompleteProfilePage";
 import PricingPage from "@/features/landing/pages/PricingPage";
 import PaymentPage from "@/features/landing/pages/PaymentPage";
-import AdminPaymentsPage from "@/features/admin/pages/AdminPaymentsPage";
 import NotFound from "@/pages/NotFound";
 import CertificateRequestsPage from "@/features/department/pages/CertificateRequests";
 import SkillsPage from "@/features/student/pages/SkillsPage";

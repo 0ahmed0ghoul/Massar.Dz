@@ -109,12 +109,6 @@ const Login = () => {
                   >
                     Password
                   </Label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-foreground/40 hover:text-foreground transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
                 </div>
                 <div className="relative">
                   <Input

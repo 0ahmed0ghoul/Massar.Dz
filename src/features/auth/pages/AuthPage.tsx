@@ -171,9 +171,6 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
             <Label htmlFor="auth-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Password
             </Label>
-            <Link to="/forgot-password" className="text-xs text-foreground/40 hover:text-foreground transition-colors">
-              Forgot password?
-            </Link>
           </div>
           <div className="relative">
             <Input

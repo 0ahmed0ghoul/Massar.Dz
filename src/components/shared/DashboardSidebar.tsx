@@ -31,6 +31,7 @@ import {
   FanIcon,
   DatabaseZapIcon,
   BadgeDollarSign,
+  AlertCircle,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -44,6 +45,9 @@ interface DashboardSidebarProps {
   candidateType?: "studying" | "graduated" | "self_taught" | null;
   unreadMessagesCount?: number;
   univAdminType?: "head_of_department" | "rectorate"; // Add this
+  plan_type?: "basic" | "premium" | "free";
+  plan_status?: "active" | "pending" | "rejected" | "expired" | null; // Add this
+  profile?: any; // Add profile to access plan info for company admins
 }
 
 type UserRole =
@@ -73,9 +77,7 @@ const studentBaseItems = [
     icon: Bell,
   },
   { title: "Experience", url: "/student/dashboard/experience", icon: Workflow },
-
 ];
-
 
 const companyItems = [
   { title: "Dashboard", url: "/dashboard/company", icon: LayoutDashboard },
@@ -112,7 +114,11 @@ const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
-  { title: "Plans Management", url: "/dashboard/admin/plans-management", icon: Wallet },
+  {
+    title: "Plans Management",
+    url: "/dashboard/admin/plans-management",
+    icon: Wallet,
+  },
   {
     title: "Feedbacks",
     url: "/dashboard/admin/feedbacks",
@@ -142,6 +148,7 @@ export function DashboardSidebar({
   candidateType,
   unreadMessagesCount = 0,
   univAdminType,
+  profile,
 }: DashboardSidebarProps) {
   let items: { title: string; url: string; icon: any }[] = [];
 
@@ -166,6 +173,12 @@ export function DashboardSidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isCompanyAdmin = role === "company_admin"; // sidebar only
+
+  const isExpiredCompanyPlan =
+  role === "company_admin" &&
+  (profile?.plan_type === "basic" || profile?.plan_type === "premium") &&
+  ["expired", "rejected"].includes(profile?.plan_status || "");
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -242,10 +255,13 @@ flex-shrink-0
               return (
                 <Link
                   key={item.title}
-                  to={item.url}
+                  to={isExpiredCompanyPlan ? "#" : item.url}
                   onClick={() => onClose()}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                    active
+                    isExpiredCompanyPlan
+                      ? "pointer-events-none opacity-40 blur-[1px]"
+                      : ""
+                  } ${                    active
                       ? "bg-white/10 text-foreground"
                       : "text-foreground/50 hover:text-foreground"
                   } ${isCollapsed ? "justify-center" : ""}`}
@@ -276,7 +292,28 @@ flex-shrink-0
               );
             })}
           </div>
+          {isExpiredCompanyPlan && !isCollapsed && (
+  <div className="mx-3 mb-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3">
+    <div className="flex items-start gap-2">
+      <AlertCircle className="mt-0.5 h-4 w-4 text-red-400" />
+      <div>
+        <p className="text-xs font-semibold text-red-400">
+          Plan Expired
+        </p>
+        <p className="mt-1 text-[11px] text-foreground/60">
+          Renew your subscription to access dashboard features.
+        </p>
 
+        <button
+          onClick={() => navigate("/pricing")}
+          className="mt-3 w-full rounded-lg bg-[#639922] px-3 py-2 text-xs font-semibold text-black transition hover:bg-[#4f7a1a]"
+        >
+          Renew Plan
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           <div
             className={`p-3 border-t border-white/10 ${
               isCollapsed ? "text-center" : ""

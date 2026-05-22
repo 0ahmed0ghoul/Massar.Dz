@@ -210,6 +210,7 @@ const DashboardLayout = ({ role }: Props) => {
         candidateType={candidateType}
         unreadMessagesCount={unreadMessagesCount}
         univAdminType={univAdminType} // Pass this to sidebar
+        profile={profile}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
