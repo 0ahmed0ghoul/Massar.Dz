@@ -66,7 +66,7 @@ export interface BaseProfile {
   id: string;
   email: string;
   role: UserRole;
-
+  plan_type?: "free" | "basic" | "premium";
   first_name: string | null;
   last_name: string | null;
   full_name?: string;
@@ -81,8 +81,6 @@ export interface BaseProfile {
 
   phone: string | null;
 
-  is_premium: boolean;
-  stripe_customer_id?: string;
 
   is_completed?: boolean;
   is_verified?: boolean;

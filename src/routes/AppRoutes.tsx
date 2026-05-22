@@ -186,10 +186,6 @@ const AppRoutes = () => {
             path="/dashboard/admin/accounts"
             element={<AdminAccountsPage />}
           />
-          <Route
-            path="/dashboard/admin/payments"
-            element={<AdminPaymentsPage />}
-          />
           <Route path="dashboard/admin/feedbacks" element={<FeedbacksPage />} />
           <Route path="dashboard/admin/plans-management" element={<AdminPlansPage />} />
 

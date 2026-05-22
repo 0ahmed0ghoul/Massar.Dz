@@ -1,4 +1,5 @@
 // pages/company/CompanyDashboard.tsx
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,23 +20,100 @@ import {
   Mail,
   BarChart,
   CheckCircle2,
+  Crown,
+  Shield,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
 import { useCompanyApplicationsSummary } from "@/features/company/hooks/useCompanyApplicationsSummary";
 import { formatDistanceToNow } from "date-fns";
-function FeatureCard({ icon: Icon, title, description, isPremium, onUpgrade }: any) {
+
+// Helper to get plan display info
+const getPlanDisplay = (planType: string, planStatus: string) => {
+  const isActive = planStatus === "active";
+  
+  if (planStatus === "pending") {
+    return {
+      label: "Pending Approval",
+      color: "text-amber-400",
+      bg: "bg-amber-400/10",
+      border: "border-amber-400/30",
+      icon: Clock,
+      message: "Your payment is being reviewed. Features will be activated once approved."
+    };
+  }
+  
+  if (planStatus === "rejected") {
+    return {
+      label: "Payment Rejected",
+      color: "text-red-400",
+      bg: "bg-red-400/10",
+      border: "border-red-400/30",
+      icon: AlertCircle,
+      message: "Your payment was rejected. Please submit a new payment request."
+    };
+  }
+  
+  if (!isActive) {
+    return {
+      label: "No Active Plan",
+      color: "text-gray-400",
+      bg: "bg-gray-400/10",
+      border: "border-gray-400/30",
+      icon: Shield,
+      message: "You need an active plan to use premium features."
+    };
+  }
+  
+  if (planType === "premium") {
+    return {
+      label: "Premium",
+      color: "text-[#639922]",
+      bg: "bg-[#639922]/10",
+      border: "border-[#639922]/30",
+      icon: Crown,
+      message: "All premium features are available."
+    };
+  }
+  
+  return {
+    label: "Basic",
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+    border: "border-blue-400/30",
+    icon: Shield,
+    message: "Basic features available. Upgrade to Premium for more."
+  };
+};
+
+function FeatureCard({ icon: Icon, title, description, isAvailable, isLocked, onUpgrade, planStatus }: any) {
   return (
-    <div className="group rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-[#639922]/30 hover:bg-white/[0.04]">
+    <div className={`group rounded-xl border p-4 transition ${
+      isAvailable 
+        ? "border-[#639922]/30 bg-[#639922]/5 hover:bg-[#639922]/10" 
+        : "border-white/[0.08] bg-white/[0.02] opacity-60 hover:border-white/[0.12]"
+    }`}>
       <div className="flex items-start gap-3">
-        <div className="rounded-lg bg-[#639922]/10 p-2">
-          <Icon className="h-5 w-5 text-[#639922]" />
+        <div className={`rounded-lg p-2 ${isAvailable ? "bg-[#639922]/20" : "bg-white/5"}`}>
+          <Icon className={`h-5 w-5 ${isAvailable ? "text-[#639922]" : "text-white/40"}`} />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-foreground">{title}</h3>
           <p className="mt-1 text-xs text-foreground/50">{description}</p>
-          {!isPremium && (
+          {!isAvailable && planStatus === "pending" && (
+            <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-amber-400/10 px-3 py-1 text-xs text-amber-400">
+              <Clock className="h-3 w-3" /> Pending Approval
+            </div>
+          )}
+          {!isAvailable && planStatus === "rejected" && (
+            <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-red-400/10 px-3 py-1 text-xs text-red-400">
+              <AlertCircle className="h-3 w-3" /> Payment Rejected
+            </div>
+          )}
+          {!isAvailable && planStatus === "inactive" && (
             <button
               onClick={onUpgrade}
               className="mt-3 rounded-md border border-[#639922]/30 bg-[#639922]/10 px-3 py-1 text-xs font-medium text-[#639922] transition hover:bg-[#639922]/20"
@@ -43,7 +121,7 @@ function FeatureCard({ icon: Icon, title, description, isPremium, onUpgrade }: a
               Upgrade
             </button>
           )}
-          {isPremium && (
+          {isAvailable && (
             <div className="mt-3 inline-flex items-center gap-1 rounded-md bg-white/5 px-3 py-1 text-xs text-white/50">
               <CheckCircle2 className="h-3 w-3 text-[#639922]" /> Active
             </div>
@@ -62,9 +140,24 @@ export default function CompanyDashboard() {
     loading: appsLoading,
   } = useCompanyApplicationsSummary(5);
   const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  // Get plan information
+  const planType = profile?.plan_type || "free";
+  const planStatus = profile?.plan_status || "inactive";
+  const isActive = planStatus === "active";
+  const isPremium = planType === "premium" && isActive;
+  const isBasic = planType === "basic" && isActive;
+  const isPending = planStatus === "pending";
+  const isRejected = planStatus === "rejected";
+  const hasActivePlan = isActive && (isPremium || isBasic);
+
+  const planDisplay = getPlanDisplay(planType, planStatus);
+  const PlanIcon = planDisplay.icon;
+
   const activeJobs = jobs.filter((j) => j.status === "active").length;
   const totalJobs = jobs.length;
-const navigate = useNavigate();
+
   const stats = [
     {
       icon: Briefcase,
@@ -149,6 +242,49 @@ const navigate = useNavigate();
           </Link>
         </div>
 
+        {/* Plan Status Banner */}
+        <div className={`mb-8 rounded-2xl border ${planDisplay.border} ${planDisplay.bg} p-4 backdrop-blur-sm`}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${planDisplay.bg}`}>
+                <PlanIcon className={`h-5 w-5 ${planDisplay.color}`} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className={`text-sm font-semibold ${planDisplay.color}`}>
+                    {planDisplay.label} Plan
+                  </p>
+                  {isPremium && (
+                    <Badge className="bg-[#639922]/20 text-[#639922] border-[#639922]/30">
+                      <Crown className="h-3 w-3 mr-1" /> Full Access
+                    </Badge>
+                  )}
+                  {isBasic && (
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                      <Shield className="h-3 w-3 mr-1" /> Limited Access
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-foreground/60 mt-0.5">{planDisplay.message}</p>
+              </div>
+            </div>
+            {!hasActivePlan && planStatus !== "pending" && planStatus !== "rejected" && (
+              <button
+                onClick={() => navigate("/pricing")}
+                className="rounded-lg bg-[#639922] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#4f7a1a]"
+              >
+                Choose a Plan
+              </button>
+            )}
+            {isPending && (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-400/20 px-4 py-2">
+                <Clock className="h-4 w-4 text-amber-400" />
+                <span className="text-sm text-amber-400">Awaiting approval</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((s) => (
@@ -182,47 +318,60 @@ const navigate = useNavigate();
             <h2 className="text-lg font-semibold text-foreground">
               Smart Features
             </h2>
-            {!profile?.is_premium && (
+            {!hasActivePlan && !isPending && !isRejected && (
               <span className="ml-auto text-[10px] font-medium text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full">
                 Premium
+              </span>
+            )}
+            {isPending && (
+              <span className="ml-auto text-[10px] font-medium text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                Pending Approval
+              </span>
+            )}
+            {isBasic && (
+              <span className="ml-auto text-[10px] font-medium text-blue-400/80 bg-blue-400/10 px-2 py-0.5 rounded-full">
+                Basic Plan
+              </span>
+            )}
+            {isPremium && (
+              <span className="ml-auto text-[10px] font-medium text-[#639922]/80 bg-[#639922]/10 px-2 py-0.5 rounded-full">
+                Premium Active
               </span>
             )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {/* AI Resume Parser */}
-            <FeatureCard
-              icon={FileText}
-              title="AI Resume Parser"
-              description="Automatically extract skills, experience, and education from uploaded CVs."
-              isPremium={profile?.is_premium}
-              onUpgrade={() => navigate("/pricing")}
-            />
-
-            {/* Smart Ranking */}
+            {}
+            {/* Smart Ranking - Available only for active plans */}
             <FeatureCard
               icon={TrendingUp}
               title="Smart Ranking"
               description="Rank applicants by AI‑calculated match score based on job requirements."
-              isPremium={profile?.is_premium}
+              isAvailable={isPremium}
+              isLocked={!isPremium}
+              planStatus={planStatus}
               onUpgrade={() => navigate("/pricing")}
             />
 
-            {/* Bulk Messaging */}
+            {/* Bulk Messaging - Premium only */}
             <FeatureCard
               icon={Mail}
               title="Bulk Messaging"
               description="Send interview invites or updates to multiple candidates at once."
-              isPremium={profile?.is_premium}
+              isAvailable={isPremium}
+              isLocked={!isPremium}
+              planStatus={planStatus}
               onUpgrade={() => navigate("/pricing")}
             />
 
-            {/* Advanced Analytics */}
+            {/* Advanced Analytics - Premium only */}
             <FeatureCard
               icon={BarChart}
               title="Advanced Analytics"
               description="Get insights on funnel metrics, time‑to‑hire, and source effectiveness."
-              isPremium={profile?.is_premium}
+              isAvailable={isPremium}
+              isLocked={!isPremium}
+              planStatus={planStatus}
               onUpgrade={() => navigate("/pricing")}
             />
           </div>

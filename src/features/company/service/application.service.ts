@@ -1,4 +1,5 @@
 // features/company/services/application.service.ts
+
 import { supabase } from "@/lib/supabaseClient";
 import { Application } from "@/types/application";
 
@@ -45,6 +46,19 @@ export interface InterviewData {
   notes: string;
 }
 
+// Plan limits configuration
+const PLAN_LIMITS = {
+  free: {
+    maxApplicationsPerMonth: 5,
+  },
+  basic: {
+    maxApplicationsPerMonth: 10,
+  },
+  premium: {
+    maxApplicationsPerMonth: Infinity,
+  },
+};
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -73,8 +87,7 @@ function normalizeSkills(skills: any): string[] {
   return [];
 }
 
-function calculateMatchScore(student: any, job: any): number {
-  let totalScore = 0;
+export function calculateMatchScore(student: any, job: any): number {  let totalScore = 0;
   let maxScore = 0;
 
   const studentSkills = normalizeSkills(student.skills);
@@ -152,131 +165,226 @@ function calculateMatchScore(student: any, job: any): number {
 // ============================================================================
 class ApplicationService {
 
-async applyToJob(
-  studentId: string,
-  jobId: string,
-  coverLetter?: string,
-  cvFile?: File
-): Promise<void> {
-
-  // =========================================================
-  // CHECK PREMIUM + MONTHLY LIMIT
-  // =========================================================
-
-  const { data: studentProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select("is_premium")
-    .eq("id", studentId)
-    .single();
-
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
-
-  const isPremium = studentProfile?.is_premium === true;
-
-  // Only check limit for non premium users
-  if (!isPremium) {
-    const monthlyApplications =
-      await this.getMonthlyApplicationsCount(studentId);
-
-    if (monthlyApplications >= 3) {
-      throw new Error(
-        "FREE_PLAN_LIMIT_REACHED"
-      );
+  async getUserPlanInfo(
+    userId: string
+  ): Promise<{
+    plan_type: string;
+    plan_status: string | null;
+    isActive: boolean;
+  }> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("plan_type, plan_status")
+      .eq("id", userId)
+      .single();
+  
+    if (error) {
+      console.error("Error fetching plan info:", error);
+  
+      return {
+        plan_type: "free",
+        plan_status: null,
+        isActive: true,
+      };
     }
+  
+    const planType = data?.plan_type || "free";
+    const planStatus = data?.plan_status || null;
+  
+    // FREE PLAN IS ALWAYS ACTIVE
+    const isActive =
+      planType === "free" || planStatus === "active";
+  
+    return {
+      plan_type: planType,
+      plan_status: planStatus,
+      isActive,
+    };
   }
 
-  // =========================================================
-  // CHECK IF ALREADY APPLIED
-  // =========================================================
-
-  const { data: existingApplication } = await supabase
-    .from("applications")
-    .select("id")
-    .eq("student_id", studentId)
-    .eq("job_id", jobId)
-    .maybeSingle();
-
-  if (existingApplication) {
-    throw new Error("You already applied to this job.");
+  async canApplyToJob(
+    studentId: string
+  ): Promise<{
+    allowed: boolean;
+    reason?: string;
+    limit?: number;
+    current?: number;
+  }> {
+    const { plan_type, plan_status, isActive } =
+      await this.getUserPlanInfo(studentId);
+  
+    // FREE USERS ARE ACTIVE
+    // ONLY PAID PLANS REQUIRE VALIDATION
+  
+    if (plan_type !== "free" && !isActive) {
+      if (plan_status === "pending") {
+        return {
+          allowed: false,
+          reason: "PENDING_APPROVAL",
+        };
+      }
+  
+      if (plan_status === "rejected") {
+        return {
+          allowed: false,
+          reason: "PAYMENT_REJECTED",
+        };
+      }
+  
+      return {
+        allowed: false,
+        reason: "NO_ACTIVE_PLAN",
+      };
+    }
+  
+    const limits =
+      PLAN_LIMITS[
+        plan_type as keyof typeof PLAN_LIMITS
+      ] || PLAN_LIMITS.free;
+  
+    // MONTHLY LIMIT
+    if (limits.maxApplicationsPerMonth !== Infinity) {
+      const monthlyCount =
+        await this.getMonthlyApplicationsCount(studentId);
+  
+      if (monthlyCount >= limits.maxApplicationsPerMonth) {
+        return {
+          allowed: false,
+          reason: "MONTHLY_LIMIT_REACHED",
+          limit: limits.maxApplicationsPerMonth,
+          current: monthlyCount,
+        };
+      }
+    }
+  
+    return { allowed: true };
   }
 
-  // =========================================================
-  // CV UPLOAD
-  // =========================================================
+  async applyToJob(
+    studentId: string,
+    jobId: string,
+    coverLetter?: string,
+    cvFile?: File
+  ): Promise<void> {
+    // =========================================================
+    // GET JOB TYPE FIRST
+    // =========================================================
+    const { data: jobData, error: jobError } = await supabase
+      .from("jobs")
+      .select("job_type")
+      .eq("id", jobId)
+      .single();
 
-  let cvUrl: string | undefined;
+    if (jobError) throw new Error(jobError.message);
 
-  if (cvFile) {
-    const fileExt = cvFile.name.split(".").pop();
-    const fileName = `${studentId}/cv_${Date.now()}.${fileExt}`;
-    const filePath = `applications/${fileName}`;
+    // =========================================================
+    // CHECK PLAN LIMITS
+    // =========================================================
+    const canApply = await this.canApplyToJob(studentId);
 
-    const { error: uploadError } = await supabase.storage
-      .from("student-files")
-      .upload(filePath, cvFile);
+    if (!canApply.allowed) {
+      if (canApply.reason === "PENDING_APPROVAL") {
+        throw new Error("PENDING_APPROVAL");
+      }
+      if (canApply.reason === "PAYMENT_REJECTED") {
+        throw new Error("PAYMENT_REJECTED");
+      }
+      if (canApply.reason === "NO_ACTIVE_PLAN") {
+        throw new Error("NO_ACTIVE_PLAN");
+      }
+      if (canApply.reason === "MONTHLY_LIMIT_REACHED") {
+        throw new Error(`MONTHLY_LIMIT_REACHED:${canApply.limit}`);
+      }
+      throw new Error("APPLICATION_NOT_ALLOWED");
+    }
 
-    if (uploadError) throw new Error(uploadError.message);
+    // =========================================================
+    // CHECK IF ALREADY APPLIED
+    // =========================================================
+    const { data: existingApplication } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("student_id", studentId)
+      .eq("job_id", jobId)
+      .maybeSingle();
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage
-      .from("student-files")
-      .getPublicUrl(filePath);
+    if (existingApplication) {
+      throw new Error("You already applied to this job.");
+    }
 
-    cvUrl = publicUrl;
+    // =========================================================
+    // CV UPLOAD
+    // =========================================================
+    let cvUrl: string | undefined;
+
+    if (cvFile) {
+      const fileExt = cvFile.name.split(".").pop();
+      const fileName = `${studentId}/cv_${Date.now()}.${fileExt}`;
+      const filePath = `applications/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("student-files")
+        .upload(filePath, cvFile);
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage
+        .from("student-files")
+        .getPublicUrl(filePath);
+
+      cvUrl = publicUrl;
+    }
+
+    // =========================================================
+    // LOAD JOB + STUDENT
+    // =========================================================
+    const [jobRes, studentRes] = await Promise.all([
+      supabase.from("jobs").select("*").eq("id", jobId).single(),
+      supabase.from("profiles").select("*").eq("id", studentId).single(),
+    ]);
+
+    if (jobRes.error) throw new Error(jobRes.error.message);
+    if (studentRes.error) throw new Error(studentRes.error.message);
+
+    const matchScore = calculateMatchScore(
+      studentRes.data,
+      jobRes.data
+    );
+
+    // =========================================================
+    // INSERT APPLICATION
+    // =========================================================
+    const { error } = await supabase.from("applications").insert({
+      student_id: studentId,
+      job_id: jobId,
+      cover_letter: coverLetter,
+      cv_url: cvUrl,
+      status: "pending",
+      ai_match_score: matchScore,
+    });
+
+    if (error) throw new Error(error.message);
   }
 
-  // =========================================================
-  // LOAD JOB + STUDENT
-  // =========================================================
+  async getStudentSkills(studentId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from("student_skills")
+      .select(`
+        skills (
+          name
+        )
+      `)
+      .eq("student_id", studentId);
 
-  const [jobRes, studentRes] = await Promise.all([
-    supabase.from("jobs").select("*").eq("id", jobId).single(),
-    supabase.from("profiles").select("*").eq("id", studentId).single(),
-  ]);
+    if (error) throw new Error(error.message);
 
-  if (jobRes.error) throw new Error(jobRes.error.message);
-  if (studentRes.error) throw new Error(studentRes.error.message);
-
-  const matchScore = calculateMatchScore(
-    studentRes.data,
-    jobRes.data
-  );
-
-  // =========================================================
-  // INSERT APPLICATION
-  // =========================================================
-
-  const { error } = await supabase.from("applications").insert({
-    student_id: studentId,
-    job_id: jobId,
-    cover_letter: coverLetter,
-    cv_url: cvUrl,
-    status: "pending",
-    ai_match_score: matchScore,
-  });
-
-  if (error) throw new Error(error.message);
-}
-async getStudentSkills(studentId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("student_skills")
-    .select(`
-      skills (
-        name
-      )
-    `)
-    .eq("student_id", studentId);
-
-  if (error) throw new Error(error.message);
-
-  return (data || [])
-    .map((row: any) => row.skills?.name)
-    .filter(Boolean)
-    .map((name: string) => name.toLowerCase().trim());
-}
+    return (data || [])
+      .map((row: any) => row.skills?.name)
+      .filter(Boolean)
+      .map((name: string) => name.toLowerCase().trim());
+  }
 
   async getStudentCV(studentId: string): Promise<string | null> {
     const { data, error } = await supabase
@@ -301,7 +409,9 @@ async getStudentSkills(studentId: string): Promise<string[]> {
           email,
           avatar_url,
           university_name,
-          skills
+          skills,
+          plan_type,
+          plan_status
         )
       `
       )
@@ -359,7 +469,9 @@ async getStudentSkills(studentId: string): Promise<string[]> {
           email,
           avatar_url,
           university_name,
-          skills
+          skills,
+          plan_type,
+          plan_status
         ),
         job:jobs!job_id (
           id,
@@ -471,7 +583,9 @@ async getStudentSkills(studentId: string): Promise<string[]> {
           degree_level,
           university_name,
           graduation_year,
-          skills
+          skills,
+          plan_type,
+          plan_status
         )
       `
       )
@@ -505,6 +619,7 @@ async getStudentSkills(studentId: string): Promise<string[]> {
       candidate: data.profiles,
     };
   }
+
   async getStudentApplicationsWithInterviews(studentId: string): Promise<(Application & { interview?: any })[]> {
     const { data, error } = await supabase
       .from("applications")
@@ -545,7 +660,6 @@ async getStudentSkills(studentId: string): Promise<string[]> {
     // Convert date to ISO string (Supabase timestamptz expects full ISO)
     let isoDate: string;
     try {
-      // data.interview_date is "YYYY-MM-DDThh:mm"
       const dateObj = new Date(data.interview_date);
       if (isNaN(dateObj.getTime())) {
         throw new Error("Invalid date");
@@ -555,8 +669,6 @@ async getStudentSkills(studentId: string): Promise<string[]> {
       throw new Error(`Invalid interview date format: ${data.interview_date}`);
     }
   
-    // Prepare record – use exact column names from your table.
-    // If unsure, log the error and adjust.
     const interviewRecord = {
       application_id: applicationId,
       interview_date: isoDate,
@@ -572,18 +684,15 @@ async getStudentSkills(studentId: string): Promise<string[]> {
       .eq("application_id", applicationId);
     if (deleteError) {
       console.error("Delete interview error:", deleteError);
-      // Continue anyway, might be no existing record
     }
   
     // Insert new interview
-    const { error: insertError, data: insertedData } = await supabase
+    const { error: insertError } = await supabase
       .from("interviews")
-      .insert(interviewRecord)
-      .select();
+      .insert(interviewRecord);
   
     if (insertError) {
       console.error("Full Supabase insert error:", JSON.stringify(insertError, null, 2));
-      // Provide actionable message
       if (insertError.code === '42P01') {
         throw new Error("Table 'interviews' does not exist. Please create it.");
       } else if (insertError.code === '23503') {
@@ -594,7 +703,6 @@ async getStudentSkills(studentId: string): Promise<string[]> {
         throw new Error(`Database error: ${insertError.message}`);
       }
     }
-
 
     // Update application status if appropriate
     const { data: currentApp } = await supabase
@@ -607,22 +715,59 @@ async getStudentSkills(studentId: string): Promise<string[]> {
     }
   }
 
-async  getMonthlyApplicationsCount(studentId: string) {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  async getMonthlyApplicationsCount(studentId: string): Promise<number> {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-  const { count, error } = await supabase
-    .from("applications")
-    .select("*", { count: "exact", head: true })
-    .eq("student_id", studentId)
-    .gte("created_at", startOfMonth.toISOString());
+    const { count, error } = await supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("student_id", studentId)
+      .gte("created_at", startOfMonth.toISOString());
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return count || 0;
-}
+    return count || 0;
+  }
 
+  async getRemainingApplicationsForMonth(
+    studentId: string
+  ): Promise<{
+    remaining: number;
+    limit: number;
+    planType: string;
+  }> {
+    const { plan_type } =
+      await this.getUserPlanInfo(studentId);
+  
+    const limits =
+      PLAN_LIMITS[
+        plan_type as keyof typeof PLAN_LIMITS
+      ] || PLAN_LIMITS.free;
+  
+    if (limits.maxApplicationsPerMonth === Infinity) {
+      return {
+        remaining: Infinity,
+        limit: Infinity,
+        planType: plan_type,
+      };
+    }
+  
+    const monthlyCount =
+      await this.getMonthlyApplicationsCount(studentId);
+  
+    const remaining = Math.max(
+      0,
+      limits.maxApplicationsPerMonth - monthlyCount
+    );
+  
+    return {
+      remaining,
+      limit: limits.maxApplicationsPerMonth,
+      planType: plan_type,
+    };
+  }
 }
 
 export const applicationService = new ApplicationService();

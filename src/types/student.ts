@@ -19,7 +19,10 @@ export interface Student {
   lastName: string;
   studentId: string; 
   email: string;
+  plan_type: 'free' | 'basic' | 'premium';
+  plan_status: 'active' | 'inactive' | 'pending' | 'rejected' | 'expired';
   speciality: string;       
+  avatar_url?: string;
   wilaya?: string;
   specialityType?: 'ENG' | 'PRO' | 'LMD';
   academicYears?: string;

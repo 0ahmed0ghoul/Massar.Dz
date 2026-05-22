@@ -20,7 +20,10 @@ import { useApplyToJob } from "@/features/jobs/hooks/useApplyToJob";
 import { ApplyModal } from "@/features/jobs/components/ApplyModal";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { toast } from "sonner"; // Assuming you use sonner for toasts
-
+import {
+  applicationService,
+  calculateMatchScore,
+} from "@/features/company/service/application.service";
 const JobDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -50,7 +53,11 @@ const JobDetailPage = () => {
       "Wait until the Massar team verifies your account so you can apply for jobs.";
   }
 
-  const isPremium = false; // Toggle this to test the blur effect
+  const planType = profile?.plan_type || "free";
+  const planStatus = profile?.plan_status || "inactive";
+
+  const isPremium =
+    (planType === "basic" || planType === "premium") && planStatus === "active";
 
   const job = jobs.find((j) => j.id === id);
 
@@ -86,9 +93,11 @@ const JobDetailPage = () => {
 
   const company = job.company;
   const companyName = company?.company_name || "Company";
-  const matchScore = 94;
-
-  return (
+  const matchScore =
+  profile && isStudent
+    ? calculateMatchScore(profile, job)
+    : 0;
+        return (
     <div className="relative min-h-screen bg-background transition-colors overflow-hidden">
       {/* Background Patterns */}
       <div
@@ -199,49 +208,94 @@ const JobDetailPage = () => {
 
           {/* RIGHT: Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            {/* ── Match Score Card with Premium Blur ── */}
+            {/* Match Score Card */}
             <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card/60 p-6 backdrop-blur-md shadow-lg shadow-primary/10 animate-float">
               {!isPremium && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/40 backdrop-blur-md transition-all">
-                  <Lock className="mb-2 h-6 w-6 text-primary" />
-                  <p className="text-sm font-bold text-foreground">
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/70 backdrop-blur-md">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+                    <Lock className="h-7 w-7 text-primary" />
+                  </div>
+
+                  <h3 className="text-lg font-bold text-foreground">
                     Premium Feature
+                  </h3>
+
+                  <p className="mt-2 max-w-[220px] text-center text-sm text-muted-foreground">
+                    Unlock AI-powered job compatibility scoring and better job
+                    recommendations.
                   </p>
-                  <Link
-                    to="/pricing"
-                    className="h-auto p-0 text-xs text-primary"
+
+                  <Button
+                    asChild
+                    className="mt-5 rounded-xl bg-primary px-6 text-primary-foreground hover:bg-primary/90"
                   >
-                    Upgrade to see match
-                  </Link>
+                    <Link to="/pricing">Upgrade Now</Link>
+                  </Button>
                 </div>
               )}
 
-              <div className={!isPremium ? "blur-sm select-none" : ""}>
+              <div
+                className={
+                  !isPremium ? "blur-md select-none pointer-events-none" : ""
+                }
+              >
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
-                    <Trophy className="h-5 w-5 text-primary" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
+                    <Trophy className="h-6 w-6 text-primary" />
                   </div>
+
                   <div className="text-right">
                     <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
                       Match Rate
                     </p>
-                    <p className="text-2xl font-black text-primary">
+
+                    <p className="text-3xl font-black text-primary">
                       {matchScore}%
                     </p>
                   </div>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full bg-primary"
+                    className="h-full rounded-full bg-primary transition-all duration-700"
                     style={{ width: `${matchScore}%` }}
                   />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground leading-snug">
-                  Your profile matches{" "}
+
+                <div className="mt-5 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Skills Match</span>
+                    <span className="font-semibold text-foreground">
+                      Excellent
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Profile Strength
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      Strong
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Recommendation
+                    </span>
+                    <span className="font-semibold text-primary">
+                      Highly Recommended
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+                  Your profile matches approximately{" "}
                   <span className="font-bold text-foreground">
                     {matchScore}%
                   </span>{" "}
-                  of the requirements.
+                  of this job requirements based on skills, education, and
+                  experience.
                 </p>
               </div>
             </div>

@@ -187,6 +187,7 @@ export const studentService = {
     // Fields that are enums (should never be an empty string)
     const enumFields = [
       "speciality",
+      "speciality_type",
       "degree_level",
       "candidate_type",
       "looking_for",
@@ -229,6 +230,7 @@ export const studentService = {
         cleanedPayload[field] = null;
       }
     });
+    console.log("Cleaned payload for update:", cleanedPayload);
 
     const { error } = await supabase
       .from("profiles")
@@ -254,7 +256,7 @@ export const studentService = {
     const profile = await this.getProfile(studentId);
     if (!profile) return false;
 
-    const candidateType = profile.candidate_type;
+    const candidateType = profile?.candidate_type;
     const isStudying = candidateType === "studying";
     const isGraduated = candidateType === "graduated";
     const isSelfTaught = candidateType === "self_taught";

@@ -39,6 +39,7 @@ import {
   MessageSquare,
   Crown,
   Brain,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -456,7 +457,7 @@ export default function ExperiencePage() {
                   <h3 className="text-yellow-400 font-semibold">Free Plan</h3>
 
                   <p className="text-sm text-slate-400">
-                    {monthlyApplicationsCount}/3 applications used this month
+                    {monthlyApplicationsCount}/5 applications used this month
                   </p>
                 </div>
 
@@ -740,48 +741,94 @@ export default function ExperiencePage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                {recommendedJobs.map((job) => (
-  <div
-    key={job.id}
-    className="p-4 rounded-lg bg-slate-700/30 border border-slate-600"
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="font-medium text-white">
-          {job.title}
-        </p>
+                <div className="space-y-4">
+  {recommendedJobs.map((job) => (
+    <Link
+      key={job.id}
+      to={`/experience/${job.id}`}
+      className="block group"
+    >
+      <div className="relative overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-900 p-5 transition-all duration-300 hover:border-[#639922] hover:shadow-lg hover:shadow-[#639922]/10 hover:-translate-y-1">
+        
+        {/* Glow Effect */}
+        <div className="absolute inset-0 bg-[#639922]/0 group-hover:bg-[#639922]/5 transition-all duration-300" />
 
-        <p className="text-sm text-slate-400">
-          {job.company?.company_name || "Company"}
-        </p>
+        <div className="relative z-10">
+          
+          {/* Top Section */}
+          <div className="flex items-start justify-between gap-4">
+            
+            <div className="flex-1">
+              <h4 className="text-lg font-semibold text-white group-hover:text-[#8bc34a] transition-colors">
+                {job.title}
+              </h4>
+
+              <p className="text-sm text-slate-400 mt-1">
+                {job.company?.company_name || "Company"}
+              </p>
+
+              <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                <span>{job.location || "Remote"}</span>
+
+                {job.job_type && (
+                  <>
+                    <span>•</span>
+                    <span className="capitalize">
+                      {job.job_type}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Match Badge */}
+            <div className="flex flex-col items-end">
+              <Badge className="bg-[#639922]/20 text-[#8bc34a] border border-[#639922]/30 px-3 py-1 text-sm font-semibold">
+                {job.matchScore}% Match
+              </Badge>
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {job.skills?.slice(0, 5).map((skill: string) => (
+              <Badge
+                key={skill}
+                className="bg-slate-700/60 text-slate-200 border border-slate-600 hover:bg-[#639922]/20 transition-colors"
+              >
+                {skill}
+              </Badge>
+            ))}
+
+            {job.skills?.length > 5 && (
+              <Badge className="bg-slate-700/40 text-slate-400 border border-slate-600">
+                +{job.skills.length - 5}
+              </Badge>
+            )}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-700/60">
+            <span className="text-sm text-slate-400">
+              AI recommended for you
+            </span>
+
+            <div className="flex items-center gap-2 text-[#8bc34a] text-sm font-medium group-hover:translate-x-1 transition-transform">
+              View Details
+              <ArrowRight className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        {job.skills.map((skill: string) => (
-          <Badge
-            key={skill}
-            className="bg-[#639922]/20 text-white text-xs mr-1 mb-1"
-          >
-            {skill}
-          </Badge>
-
-        ))}
-      </div>
-
-      <Badge className="bg-[#639922]/20 text-[#639922]">
-        {job.matchScore}% Match
-      </Badge>
-    </div>
-  </div>
-))}
-                </div>
+    </Link>
+  ))}
+</div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Enhanced Modal */}
       <Dialog
         open={modalOpen}
         onOpenChange={(v) => {

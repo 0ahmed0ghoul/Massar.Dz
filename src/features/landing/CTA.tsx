@@ -100,7 +100,7 @@ const CTA = () => {
               variant="ghost"
               className="text-muted-foreground hover:text-foreground hover:bg-card/30"
             >
-              <Link to="/jobs">
+              <Link to="/experience">
                 Browse jobs as guest
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

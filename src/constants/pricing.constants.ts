@@ -45,7 +45,6 @@ export const COMPANY_PLANS: Plan[] = [
     recommended: true,
     features: [
       "Unlimited job postings",
-      "AI Resume Parser",
       "Smart ranking",
       "Analytics",
       "Bulk messaging",

@@ -45,7 +45,7 @@ export default function CompanyCompleteProfilePage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const pending = JSON.parse(localStorage.getItem("pending_profile") || "{}");
-
+  console.log(pending);
   const {
     loading,
     form,
@@ -60,11 +60,11 @@ export default function CompanyCompleteProfilePage() {
     removeFile,
     handleSubmit: submitProfile,
   } = useCompanyCompleteProfile(user, profile, pending.selectedPlan);
-
+console.log(pending.selectedPlan);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<"image" | "pdf" | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium">("basic");
+  const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium">(pending.selectedPlan);
 
   const isFilled = (value: string) => value && value.trim().length > 0;
   const handlePreview = (file: File, title: string) => {

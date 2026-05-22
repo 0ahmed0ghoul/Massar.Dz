@@ -129,7 +129,7 @@ const Hero = () => {
               asChild
               className="border-border text-foreground hover:bg-muted"
             >
-              <Link to="/jobs">Browse jobs</Link>
+              <Link to="/experience">Browse jobs</Link>
             </Button>
           </div>
 

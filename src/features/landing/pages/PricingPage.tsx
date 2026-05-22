@@ -1,4 +1,5 @@
 // pages/PricingPage.tsx
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,9 @@ import {
   Loader2,
   Sparkles,
   Zap,
+  Crown,
+  Shield,
+  Clock,
 } from "lucide-react";
 import { usePayment } from "../service/usePayment";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +50,14 @@ export default function PricingPage() {
     message: string | null;
     freePlanId: string | null;
   }>({ eligible: false, discount: 0, message: null, freePlanId: null });
+
+  // Get user's current plan status
+  const currentPlanType = profile?.plan_type || "free";
+  const currentPlanStatus = profile?.plan_status || "inactive";
+  const isActive = currentPlanStatus === "active";
+  const isPending = currentPlanStatus === "pending";
+  const isRejected = currentPlanStatus === "rejected";
+  const hasActivePlan = isActive && (currentPlanType === "basic" || currentPlanType === "premium");
 
   // Check student certificates to apply promotion
   useEffect(() => {
@@ -109,19 +121,74 @@ export default function PricingPage() {
   else if (activeTab === "company") displayedPlans = COMPANY_PLANS;
   else displayedPlans = [...STUDENT_PLANS, ...COMPANY_PLANS];
 
-  // Helper to check if a plan is currently active for the user
+  // Check if a plan is currently active for the user
   const isPlanActive = (planId: string): boolean => {
     if (!profile) return false;
-    // If user has current_plan_id field (set after payment approval)
-    if ((profile as any).current_plan_id === planId) return true;
-    // For companies, if they are premium and plan is company plan, we consider active (but better check exact id)
-    if (profile.role === "company_admin" && profile.is_premium && planId.startsWith("company_")) {
-      // If no specific current_plan_id, assume the yearly growth plan is active (example fallback)
-      // In real scenario, store current_plan_id in profile after approval.
-      return (profile as any).current_plan_id === planId;
-    }
-    return false;
+    
+    // Map plan IDs to plan types
+    const planTypeMap: Record<string, string> = {
+      "student_monthly": "basic",
+      "student_yearly": "premium",
+      "company_basic": "basic",
+      "company_premium": "premium",
+    };
+    
+    const planType = planTypeMap[planId];
+    return isActive && currentPlanType === planType;
   };
+
+  // Get current plan display info
+  const getCurrentPlanDisplay = () => {
+    if (!hasActivePlan && !isPending && !isRejected) return null;
+    
+    if (isPending) {
+      return {
+        badge: "Pending Approval",
+        color: "text-amber-400",
+        bg: "bg-amber-400/10",
+        border: "border-amber-400/30",
+        icon: Clock,
+        message: "Your payment is being reviewed. Features will be activated once approved."
+      };
+    }
+    
+    if (isRejected) {
+      return {
+        badge: "Payment Rejected",
+        color: "text-red-400",
+        bg: "bg-red-400/10",
+        border: "border-red-400/30",
+        icon: Shield,
+        message: "Your payment was rejected. Please submit a new payment request."
+      };
+    }
+    
+    if (currentPlanType === "premium") {
+      return {
+        badge: "Premium Active",
+        color: "text-[#639922]",
+        bg: "bg-[#639922]/10",
+        border: "border-[#639922]/30",
+        icon: Crown,
+        message: "You have full access to all premium features."
+      };
+    }
+    
+    if (currentPlanType === "basic") {
+      return {
+        badge: "Basic Active",
+        color: "text-blue-400",
+        bg: "bg-blue-400/10",
+        border: "border-blue-400/30",
+        icon: Shield,
+        message: "You have access to basic features."
+      };
+    }
+    
+    return null;
+  };
+
+  const currentPlanDisplay = getCurrentPlanDisplay();
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
@@ -148,6 +215,55 @@ export default function PricingPage() {
           <p className="text-foreground/40 mt-2 max-w-lg mx-auto">
             Unlock advanced features with the plan that suits you best.
           </p>
+        </div>
+
+        {/* Current Plan Status Banner */}
+        {currentPlanDisplay && (
+          <div className={`mb-8 rounded-2xl border ${currentPlanDisplay.border} ${currentPlanDisplay.bg} p-4 text-center backdrop-blur-sm`}>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <currentPlanDisplay.icon className={`h-5 w-5 ${currentPlanDisplay.color}`} />
+              <Badge className={`${currentPlanDisplay.bg} ${currentPlanDisplay.color} border ${currentPlanDisplay.border}`}>
+                {currentPlanDisplay.badge}
+              </Badge>
+            </div>
+            <p className="text-sm text-foreground/70">{currentPlanDisplay.message}</p>
+          </div>
+        )}
+
+        {/* Tab Selector */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex rounded-xl bg-white/5 border border-white/10 p-1">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === "all"
+                  ? "bg-[#639922] text-black"
+                  : "text-foreground/60 hover:text-foreground/80"
+              }`}
+            >
+              All Plans
+            </button>
+            <button
+              onClick={() => setActiveTab("student")}
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === "student"
+                  ? "bg-[#639922] text-black"
+                  : "text-foreground/60 hover:text-foreground/80"
+              }`}
+            >
+              Student Plans
+            </button>
+            <button
+              onClick={() => setActiveTab("company")}
+              className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === "company"
+                  ? "bg-[#639922] text-black"
+                  : "text-foreground/60 hover:text-foreground/80"
+              }`}
+            >
+              Company Plans
+            </button>
+          </div>
         </div>
 
         {/* Promotion banner for students */}
@@ -196,6 +312,7 @@ export default function PricingPage() {
             }
 
             const isActive = isPlanActive(plan.id);
+            const isDisabledDueToPending = isPending && !isActive;
 
             return (
               <Card
@@ -204,7 +321,7 @@ export default function PricingPage() {
                   plan.recommended
                     ? "border-[#639922]/40 ring-1 ring-[#639922]/30"
                     : ""
-                }`}
+                } ${isDisabledDueToPending ? "opacity-60" : ""}`}
               >
                 {plan.recommended && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -248,6 +365,11 @@ export default function PricingPage() {
                   {isActive ? (
                     <Button disabled className="w-full bg-white/10 text-white/50 cursor-not-allowed">
                       Current Plan
+                    </Button>
+                  ) : isDisabledDueToPending ? (
+                    <Button disabled className="w-full bg-amber-400/10 text-amber-400 cursor-not-allowed flex items-center justify-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Pending Approval
                     </Button>
                   ) : (
                     <Button

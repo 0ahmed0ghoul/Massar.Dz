@@ -1,15 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export const subscriptionService = {
-  async getPlans() {
-    const { data, error } = await supabase
-      .from("subscription_plans")
-      .select("*")
-      .eq("is_active", true)
-      .order("price", { ascending: true });
-    if (error) throw error;
-    return data;
-  },
+
 
   async createPaymentRequest(userId: string, planName: string, amount: number) {
     const { data, error } = await supabase
@@ -57,14 +49,27 @@ export const subscriptionService = {
     if (error) throw error;
   },
 
-  async approvePayment(paymentId: string, userId: string) {
-    // 1. Update payment request status to 'verified'
-    await this.updatePaymentRequest(paymentId, { status: "verified" });
-    // 2. Update user's profile to set is_premium = true
+  async approvePayment(
+    paymentId: string,
+    userId: string,
+    planType: "basic" | "premium"
+  ) {
+    // Update payment request status
+    await this.updatePaymentRequest(paymentId, {
+      status: "verified",
+    });
+  
+    // Update user subscription
     const { error } = await supabase
       .from("profiles")
-      .update({ is_premium: true })
+      .update({
+        plan_type: planType,
+        // Companies become active after approval
+        status: "active",
+        is_verified: true,
+      })
       .eq("id", userId);
+  
     if (error) throw error;
   },
 };

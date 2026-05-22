@@ -78,37 +78,34 @@ export function useCompanyCompleteProfile(
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!user) return;
-  
+
     setLoading(true);
-  
+
     try {
       // =========================
       // VALIDATE RECEIPT
       // =========================
-  
+
       if (!receiptFile) {
         throw new Error("Payment receipt is required");
       }
-  
+
       // =========================
       // 1. UPLOAD COMPANY LOGO
       // =========================
-  
+
       let logoUrl: string | undefined;
-  
+
       if (docs.logo) {
-        logoUrl = await authService.uploadCompanyLogo(
-          user.id,
-          docs.logo
-        );
+        logoUrl = await authService.uploadCompanyLogo(user.id, docs.logo);
       }
-  
+
       // =========================
       // 2. PREPARE PROFILE DATA
       // =========================
-  
+
       const additionalData = {
         first_name: form.firstName,
         last_name: form.lastName,
@@ -117,55 +114,49 @@ export function useCompanyCompleteProfile(
         company_description: form.companyDescription,
         wilaya: form.wilaya,
       };
-  
+
       // =========================
       // 3. PREPARE VERIFICATION DOCS
       // =========================
-  
+
       const verificationDocs: any = {
         tax_id: docs.taxId,
       };
-  
+
       if (docs.registrationCertificate) {
-        verificationDocs.registration_certificate =
-          await fileToBase64(
-            docs.registrationCertificate
-          );
+        verificationDocs.registration_certificate = await fileToBase64(
+          docs.registrationCertificate
+        );
       }
-  
+
       // =========================
       // 4. COMPLETE PROFILE
       // =========================
-  
+
       await authService.markProfileCompleted(
         user.id,
         additionalData,
         verificationDocs,
         logoUrl
       );
-  
+
       // =========================
       // 5. GET SELECTED PLAN
       // =========================
-  
+
       const selectedPlan: "basic" | "premium" =
-      selectedPlanFromRegister ?? "basic";
+        selectedPlanFromRegister ?? "basic";
       // =========================
       // 6. CREATE PAYMENT REQUEST
       // =========================
-  
+
       setUploadingPayment(true);
-  
-      const amount =
-        selectedPlan === "premium"
-          ? 5000
-          : 2500;
-  
+
+      const amount = selectedPlan === "premium" ? 5000 : 2000;
+
       const planType =
-        selectedPlan === "premium"
-          ? "company_premium"
-          : "company_basic";
-  
+        selectedPlan === "premium" ? "company_premium" : "company_basic";
+
       await paymentService.createPaymentRequest(
         user.id,
         planType,
@@ -173,37 +164,33 @@ export function useCompanyCompleteProfile(
         receiptFile,
         `${selectedPlan} company subscription`
       );
-  
+
       // =========================
       // 7. SUCCESS
       // =========================
-  
       toast({
         title: "Profile submitted",
         description:
           "Your profile and payment receipt were submitted successfully.",
       });
-  
+
+      // Clear temporary register cache
+      localStorage.removeItem("pending_profile");
+
       navigate("/pending-approval");
-  
     } catch (error: any) {
       console.error(error);
-  
+
       toast({
         title: "Error",
-        description:
-          error.message ||
-          "Failed to submit profile.",
+        description: error.message || "Failed to submit profile.",
         variant: "destructive",
       });
-  
     } finally {
       setLoading(false);
       setUploadingPayment(false);
     }
   };
-
-
 
   return {
     loading,

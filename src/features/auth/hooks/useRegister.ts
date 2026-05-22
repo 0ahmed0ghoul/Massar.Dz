@@ -199,7 +199,6 @@ export const useRegister = () => {
         description: "Account created successfully.",
       });
 
-      localStorage.removeItem("pending_profile");
 
       // Redirect based on role
       if (role === "student") {

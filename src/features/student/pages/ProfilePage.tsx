@@ -21,6 +21,7 @@ const ProfilePage = () => {
     deleteStudentCard,
     requestUniversityConnection,
   } = useProfilePage();
+  console.log("profile", profile);
   const { type: studentType, loading: typeLoading } = useStudentType();
 
   if (loading) {

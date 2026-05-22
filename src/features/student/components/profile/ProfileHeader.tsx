@@ -8,6 +8,9 @@ import {
   GraduationCap,
   FileText,
   Link as LinkIcon,
+  Crown,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileCompletionJourney } from "../ProfileCompletionJourney";
@@ -20,6 +23,31 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   const isStudying = candidateType === "studying";
   const isGraduated = candidateType === "graduated";
   const isSelfTaught = candidateType === "self_taught";
+
+  // Plan status helpers
+  const planType = profile.plan_type || "free";
+  const planStatus = profile.plan_status || "inactive";
+  const isActive = planStatus === "active";
+  const isPremium = planType === "premium" && isActive;
+  const isBasic = planType === "basic" && isActive;
+  const isPending = planStatus === "pending";
+  const isRejected = planStatus === "rejected";
+  const hasActivePlan = isActive && (isPremium || isBasic);
+
+  // Get plan display info
+  const getPlanDisplay = () => {
+    if (!isActive) {
+      if (isPending) return { label: "Pending Approval", color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/30", icon: Clock };
+      if (isRejected) return { label: "Payment Rejected", color: "text-red-400", bg: "bg-red-400/10", border: "border-red-400/30", icon: AlertCircle };
+      return { label: "Free", color: "text-gray-400", bg: "bg-gray-400/10", border: "border-gray-400/30", icon: Award };
+    }
+    if (isPremium) return { label: "Premium", color: "text-[#639922]", bg: "bg-[#639922]/10", border: "border-[#639922]/30", icon: Crown };
+    if (isBasic) return { label: "Basic", color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/30", icon: Shield };
+    return { label: "Free", color: "text-gray-400", bg: "bg-gray-400/10", border: "border-gray-400/30", icon: Award };
+  };
+
+  const planDisplay = getPlanDisplay();
+  const PlanIcon = planDisplay.icon;
 
   // ----- Required fields for completeness calculation -----
   let requiredFields: (string | null | undefined)[] = [
@@ -76,7 +104,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
 
   const filled = requiredFields.filter((f) => f && String(f).trim() !== "").length;
   const completeness = Math.round((filled / requiredFields.length) * 100);
-  const isPremium = profile.is_premium === true;
+  
   // ----- Build steps dynamically -----
   let steps: Step[] = [];
 
@@ -152,8 +180,8 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
       : "locked",
   });
 
-// Step 3: Admin Verification – for all students
-const needsAdminVerification = isStudying || isGraduated || isSelfTaught;
+  // Step 3: Admin Verification – for all students
+  const needsAdminVerification = isStudying || isGraduated || isSelfTaught;
   if (needsAdminVerification) {
     const allPreviousComplete = basicInfoComplete && academicComplete && relevantDocsComplete;
     steps.push({
@@ -185,25 +213,25 @@ const needsAdminVerification = isStudying || isGraduated || isSelfTaught;
     });
   }
 
-// Step 5: Ready (for all students and graduates)
-if (profile.role === "student" || profile.role === "graduate") {
-  let readyCompleted = false;
+  // Step 5: Ready (for all students and graduates)
+  if (profile.role === "student" || profile.role === "graduate") {
+    let readyCompleted = false;
 
-  if (isStudying) {
-    readyCompleted =
-      profile.university_connection_status === "connected";
-  } else if (isGraduated || isSelfTaught) {
-    readyCompleted = profile.is_verified === true;
-  }
+    if (isStudying) {
+      readyCompleted =
+        profile.university_connection_status === "connected";
+    } else if (isGraduated || isSelfTaught) {
+      readyCompleted = profile.is_verified === true;
+    }
 
-  steps.push({
-    id: "certificate",
-    title: "Ready",
-    description: "Certificates",
-    icon: <Award className="h-4 w-4" />,
-    status: readyCompleted ? "completed" : "locked",
-  });
-} else if (profile.role === "company_admin" || profile.role === "university_admin") {
+    steps.push({
+      id: "certificate",
+      title: "Ready",
+      description: "Certificates",
+      icon: <Award className="h-4 w-4" />,
+      status: readyCompleted ? "completed" : "locked",
+    });
+  } else if (profile.role === "company_admin" || profile.role === "university_admin") {
     // For company/university, add final step when approved
     const readyCompleted = profile.is_verified === true;
     steps.push({
@@ -261,6 +289,18 @@ if (profile.role === "student" || profile.role === "graduate") {
                     <Shield className="h-3 w-3" />
                     {profile.is_verified ? "Verified" : "Unverified"}
                   </span>
+                  
+                  {/* Plan Badge - Updated to use new plan_type and plan_status */}
+                  <span className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
+                    planDisplay.border,
+                    planDisplay.bg,
+                    planDisplay.color
+                  )}>
+                    <PlanIcon className="h-3 w-3" />
+                    {planDisplay.label}
+                  </span>
+
                   {isStudying && (
                     <span
                       className={cn(
@@ -274,13 +314,46 @@ if (profile.role === "student" || profile.role === "graduate") {
                       {profile.university_connection_status === "connected" ? "Connected" : "Not Connected"}
                     </span>
                   )}
-                  {isPremium && (
-  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs text-amber-400">
-    <Award className="h-3 w-3" />
-    Premium
-  </span>
-)}
                 </div>
+
+                {/* Plan Status Message for pending/rejected */}
+                {isPending && (
+                  <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-2 text-center sm:text-left">
+                    <p className="text-xs text-amber-400 flex items-center justify-center sm:justify-start gap-2">
+                      <Clock className="h-3 w-3" />
+                      Your payment is being reviewed. Premium features will be activated once approved.
+                    </p>
+                  </div>
+                )}
+
+                {isRejected && (
+                  <div className="mt-3 rounded-lg border border-red-400/30 bg-red-400/10 p-2 text-center sm:text-left">
+                    <p className="text-xs text-red-400 flex items-center justify-center sm:justify-start gap-2">
+                      <AlertCircle className="h-3 w-3" />
+                      Your payment was rejected. Please contact support or submit a new payment request.
+                    </p>
+                  </div>
+                )}
+
+                {/* Plan Features Info */}
+                {isActive && (
+                  <div className="mt-3 text-center sm:text-left">
+                    <p className="text-xs text-foreground/50">
+                      {isPremium && (
+                        <span className="inline-flex items-center gap-1">
+                          <Crown className="h-3 w-3 text-[#639922]" />
+                          Unlimited applications • AI matching • Priority support
+                        </span>
+                      )}
+                      {isBasic && (
+                        <span className="inline-flex items-center gap-1">
+                          <Shield className="h-3 w-3 text-blue-400" />
+                          Up to 10 applications/month • Basic matching
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -51,6 +51,7 @@ class AuthService {
       id: authData.user.id,
       email: cleanEmail,
       role: profileData.role,
+      plan_type: profileData.plan_type || "free",
       candidate_type: profileData.candidate_type || null,
       university_connection_status: "none",
       status: "pending",
@@ -287,6 +288,7 @@ class AuthService {
       profileData.student_id = params.profile.studentId || null;
       profileData.skills = params.profile.skills;
       profileData.wilaya = params.profile.wilaya || null;
+      profileData.plan_type = "free";
     } else if (params.role === "graduate") {
       profileData.candidate_type = params.profile.candidateType;
       profileData.graduation_year = params.profile.graduationYear;
@@ -304,7 +306,7 @@ class AuthService {
       profileData.company_name = params.profile.companyName;
       profileData.company_type = params.profile.companyType;
       profileData.industry = params.profile.industry;
-      profileData.selected_plan = params.profile.selectedPlan
+      profileData.plan_type = params.profile.selectedPlan;
       profileData.wilaya = params.profile.location;
     } else if (params.role === "university_admin") {
       profileData.university_name = params.profile.universityName;

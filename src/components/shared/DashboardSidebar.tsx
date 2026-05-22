@@ -86,7 +86,7 @@ const companyItems = [
     url: "/company/dashboard/applications",
     icon: FileText,
   },
-  { title: "Talent", url: "/dashboard/company/talent", icon: Star },
+  // { title: "Talent", url: "/dashboard/company/talent", icon: Star },
 ];
 
 const departmentHeadItems = [
@@ -112,8 +112,7 @@ const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Pending", url: "/dashboard/admin/pending", icon: Clock },
   { title: "All Accounts", url: "/dashboard/admin/accounts", icon: Users },
-  { title: "Payments Requests", url: "/dashboard/admin/payments", icon: Wallet },
-  { title: "Plans Management", url: "/dashboard/admin/plans-management", icon: BadgeDollarSign },
+  { title: "Plans Management", url: "/dashboard/admin/plans-management", icon: Wallet },
   {
     title: "Feedbacks",
     url: "/dashboard/admin/feedbacks",

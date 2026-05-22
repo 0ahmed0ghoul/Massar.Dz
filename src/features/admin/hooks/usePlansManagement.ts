@@ -1,17 +1,23 @@
 // features/admin/hooks/usePlansManagement.ts
+
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 
+export type PlanType = 'free' | 'basic' | 'premium';
+export type PlanStatus = 'inactive' | 'pending' | 'active' | 'rejected' | 'expired';
+export type PaymentRequestStatus = 'pending' | 'approved' | 'rejected';
+export type PaymentPlanType = 'student_premium' | 'company_basic' | 'company_premium';
+
 export interface PaymentRequest {
   id: string;
   user_id: string;
-  plan_type: 'student_premium' | 'company_basic' | 'company_premium';
+  plan_type: PaymentPlanType;
   amount: number;
   receipt_url: string | null;
   notes: string | null;
-  status: 'pending' | 'approved' | 'rejected';
+  status: PaymentRequestStatus;
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
@@ -24,14 +30,28 @@ export interface PremiumAccount {
   last_name: string;
   email: string;
   role: string;
-  is_premium: boolean;
+  plan_type: PlanType;
+  plan_status: PlanStatus;
   company_name?: string;
   university_name?: string;
   created_at: string;
   updated_at: string;
   payment_requests: PaymentRequest[];
   days_active?: number;
-  plan_status?: 'active' | 'expiring_soon' | 'expired';
+  plan_display_status?: 'active' | 'expiring_soon' | 'expired';
+}
+
+interface PaymentStats {
+  totalActiveUsers: number;
+  totalPremiumUsers: number;
+  totalBasicUsers: number;
+  totalRevenue: number;
+  pendingPayments: number;
+  approvedPayments: number;
+  rejectedPayments: number;
+  activePlans: number;
+  expiringSoon: number;
+  expiredPlans: number;
 }
 
 export function usePlansManagement() {
@@ -42,10 +62,13 @@ export function usePlansManagement() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [planTypeFilter, setPlanTypeFilter] = useState<string>("all");
+  const [planStatusFilter, setPlanStatusFilter] = useState<string>("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<PaymentStats>({
+    totalActiveUsers: 0,
     totalPremiumUsers: 0,
+    totalBasicUsers: 0,
     totalRevenue: 0,
     pendingPayments: 0,
     approvedPayments: 0,
@@ -79,8 +102,7 @@ export function usePlansManagement() {
   const loadPremiumAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch ALL users who have payment requests OR is_premium = true
-      // This ensures rejected accounts still appear in the table
+      // Fetch ALL users who have payment requests OR have active plans (basic/premium)
       const { data: paymentUsers, error: paymentUsersError } = await supabase
         .from('payment_requests')
         .select('user_id')
@@ -91,16 +113,17 @@ export function usePlansManagement() {
       // Get unique user IDs from payment requests
       const userIdsFromPayments = [...new Set(paymentUsers?.map(p => p.user_id) || [])];
 
-      // Also get users who are premium but might not have payment requests
-      const { data: premiumUsers, error: premiumUsersError } = await supabase
+      // Also get users who have active plans (basic or premium) but might not have payment requests
+      const { data: activePlanUsers, error: activePlanUsersError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('is_premium', true);
+        .eq('plan_status', 'active')
+        .in('plan_type', ['basic', 'premium']);
 
-      if (premiumUsersError) throw premiumUsersError;
+      if (activePlanUsersError) throw activePlanUsersError;
 
       // Combine unique user IDs
-      const allUserIds = [...new Set([...userIdsFromPayments, ...(premiumUsers?.map(p => p.id) || [])])];
+      const allUserIds = [...new Set([...userIdsFromPayments, ...(activePlanUsers?.map(p => p.id) || [])])];
 
       if (allUserIds.length === 0) {
         setAccounts([]);
@@ -118,7 +141,8 @@ export function usePlansManagement() {
           last_name,
           email,
           role,
-          is_premium,
+          plan_type,
+          plan_status,
           company_name,
           university_name,
           created_at,
@@ -152,13 +176,23 @@ export function usePlansManagement() {
         const userPayments = paymentsByUser.get(profile.id) || [];
         // Find the latest approved payment to calculate days active
         const latestApprovedPayment = userPayments.find(p => p.status === 'approved');
-        const { days, status: planStatus } = calculateDaysActive(latestApprovedPayment?.approved_at || null);
+        const { days, status: planDisplayStatus } = calculateDaysActive(latestApprovedPayment?.approved_at || null);
         
         return {
-          ...profile,
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: profile.email,
+          role: profile.role,
+          plan_type: profile.plan_type || 'free',
+          plan_status: profile.plan_status || 'inactive',
+          company_name: profile.company_name,
+          university_name: profile.university_name,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at,
           payment_requests: userPayments,
           days_active: days,
-          plan_status: planStatus,
+          plan_display_status: planDisplayStatus,
         };
       });
 
@@ -171,12 +205,18 @@ export function usePlansManagement() {
       const approvedPayments = payments?.filter(p => p.status === 'approved').length || 0;
       const rejectedPayments = payments?.filter(p => p.status === 'rejected').length || 0;
       
-      const activePlans = premiumAccounts.filter(a => a.plan_status === 'active').length;
-      const expiringSoon = premiumAccounts.filter(a => a.plan_status === 'expiring_soon').length;
-      const expiredPlans = premiumAccounts.filter(a => a.plan_status === 'expired').length;
+      const totalActiveUsers = premiumAccounts.filter(a => a.plan_status === 'active').length;
+      const totalPremiumUsers = premiumAccounts.filter(a => a.plan_type === 'premium' && a.plan_status === 'active').length;
+      const totalBasicUsers = premiumAccounts.filter(a => a.plan_type === 'basic' && a.plan_status === 'active').length;
+      
+      const activePlans = premiumAccounts.filter(a => a.plan_display_status === 'active').length;
+      const expiringSoon = premiumAccounts.filter(a => a.plan_display_status === 'expiring_soon').length;
+      const expiredPlans = premiumAccounts.filter(a => a.plan_display_status === 'expired').length;
 
       setStats({
-        totalPremiumUsers: premiumAccounts.length,
+        totalActiveUsers,
+        totalPremiumUsers,
+        totalBasicUsers,
         totalRevenue,
         pendingPayments,
         approvedPayments,
@@ -218,9 +258,14 @@ export function usePlansManagement() {
       filtered = filtered.filter(account => account.role === roleFilter);
     }
     
-    // Apply plan status filter (active/expiring/expired)
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(account => account.plan_status === statusFilter);
+    // Apply plan type filter (basic/premium)
+    if (planTypeFilter !== "all") {
+      filtered = filtered.filter(account => account.plan_type === planTypeFilter);
+    }
+    
+    // Apply plan status filter (active/pending/rejected/expired)
+    if (planStatusFilter !== "all") {
+      filtered = filtered.filter(account => account.plan_status === planStatusFilter);
     }
     
     // Apply payment status filter
@@ -235,11 +280,21 @@ export function usePlansManagement() {
     }
     
     setFilteredAccounts(filtered);
-  }, [search, roleFilter, statusFilter, paymentStatusFilter, accounts]);
+  }, [search, roleFilter, planTypeFilter, planStatusFilter, paymentStatusFilter, accounts]);
 
   const updatePaymentStatus = async (paymentId: string, newStatus: 'approved' | 'rejected', userId: string, userName: string) => {
     setActionLoading(paymentId);
     try {
+      // Get payment request details
+      const { data: request, error: fetchError } = await supabase
+        .from('payment_requests')
+        .select('plan_type')
+        .eq('id', paymentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update payment request status
       const { error } = await supabase
         .from('payment_requests')
         .update({ 
@@ -252,31 +307,38 @@ export function usePlansManagement() {
 
       if (error) throw error;
 
-      // Update user's premium status based on payment status
-      let isPremium = false;
-      if (newStatus === 'approved') {
-        // Check if there's any other approved payment for this user
-        const { data: otherApprovedPayments } = await supabase
-          .from('payment_requests')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('status', 'approved')
-          .neq('id', paymentId);
-        
-        // User is premium if they have this approved payment OR other approved payments
-        isPremium = true;
+      // Map payment plan type to profile plan_type
+      let profilePlanType: PlanType = 'basic';
+      if (request.plan_type === 'student_premium' || request.plan_type === 'company_premium') {
+        profilePlanType = 'premium';
+      } else if (request.plan_type === 'company_basic') {
+        profilePlanType = 'basic';
       }
-      // If rejected, user loses premium status (unless they have other approved payments)
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          is_premium: isPremium,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
+      // Update user's profile plan_type and plan_status based on payment status
+      if (newStatus === 'approved') {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            plan_type: profilePlanType,
+            plan_status: 'active',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
 
-      if (updateError) throw updateError;
+        if (updateError) throw updateError;
+      } else {
+        // If rejected, set plan_status to rejected
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            plan_status: 'rejected',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+
+        if (updateError) throw updateError;
+      }
 
       toast.success(`Payment ${newStatus} for ${userName}`);
       await loadPremiumAccounts();
@@ -287,49 +349,26 @@ export function usePlansManagement() {
     }
   };
 
-  const revokePremium = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to revoke premium status from ${userName}?`)) return;
+  const updateUserPlan = async (userId: string, planType: PlanType, planStatus: PlanStatus, userName: string) => {
+    if (!confirm(`Are you sure you want to update ${userName}'s plan to ${planType} (${planStatus})?`)) return;
     
     setActionLoading(userId);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          is_premium: false,
+          plan_type: planType,
+          plan_status: planStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
 
       if (error) throw error;
 
-      toast.success(`Premium status revoked from ${userName}`);
+      toast.success(`Plan updated for ${userName}`);
       await loadPremiumAccounts();
     } catch (error: any) {
-      handleError(error, "Failed to revoke premium status");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const restorePremium = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to restore premium status for ${userName}?`)) return;
-    
-    setActionLoading(userId);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          is_premium: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast.success(`Premium status restored for ${userName}`);
-      await loadPremiumAccounts();
-    } catch (error: any) {
-      handleError(error, "Failed to restore premium status");
+      handleError(error, "Failed to update plan");
     } finally {
       setActionLoading(null);
     }
@@ -348,14 +387,15 @@ export function usePlansManagement() {
     setSearch,
     roleFilter,
     setRoleFilter,
-    statusFilter,
-    setStatusFilter,
+    planTypeFilter,
+    setPlanTypeFilter,
+    planStatusFilter,
+    setPlanStatusFilter,
     paymentStatusFilter,
     setPaymentStatusFilter,
     stats,
-    revokePremium,
-    restorePremium,
     updatePaymentStatus,
+    updateUserPlan,
     refresh,
   };
 }

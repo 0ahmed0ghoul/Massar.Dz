@@ -6,7 +6,7 @@ import { ArrowLeft, Home, Search, Compass, Wallet } from "lucide-react";
 
 const QUICK_LINKS = [
   { icon: Wallet,    label: "Pricing",    to: "/pricing" },
-  { icon: Search,  label: "Browse Jobs",  to: "/jobs" },
+  { icon: Search,  label: "Browse Jobs",  to: "/experience" },
   { icon: Compass, label: "Internships",  to: "/internships" },
 ];
 

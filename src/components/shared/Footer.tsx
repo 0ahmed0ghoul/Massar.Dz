@@ -61,7 +61,7 @@ const Footer = () => {
             <h4 className="mb-4 text-sm font-semibold text-foreground">For Students</h4>
             <nav className="flex flex-col gap-3">
               {[
-                { name: "Browse Jobs", href: "/jobs" },
+                { name: "Browse Jobs", href: "/experience" },
                 { name: "Create Profile", href: "/register/student" },
                 { name: "Career Resources", href: "/resources" },
                 { name: "Success Stories", href: "/stories" },

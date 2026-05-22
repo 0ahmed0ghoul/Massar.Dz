@@ -1,4 +1,5 @@
 // features/company/pages/ApplicationDetailPage.tsx
+
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -16,6 +17,8 @@ import {
   MapPin as MapPinIcon,
   FileText as NoteIcon,
   Brain,
+  Crown,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -74,6 +77,16 @@ export default function ApplicationDetailPage() {
   const { application, loading, updating, updateStatus, scheduleInterview } =
     useApplicationDetail();
   const { profile } = useAuth();
+
+  // Get plan information
+  const planType = profile?.plan_type || "free";
+  const planStatus = profile?.plan_status || "inactive";
+  const isActive = planStatus === "active";
+  const isPremium = planType === "premium" && isActive;
+  const isBasic = planType === "basic" && isActive;
+  const isPending = planStatus === "pending";
+  const isRejected = planStatus === "rejected";
+  const hasActivePlan = isActive && (isPremium || isBasic);
 
   // Document preview state
   const [previewDoc, setPreviewDoc] = useState<{
@@ -310,6 +323,61 @@ export default function ApplicationDetailPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Plan Status Banner for non-active plans */}
+      {!hasActivePlan && !isPending && !isRejected && (
+        <div className="mb-6 rounded-2xl border border-gray-400/30 bg-gray-400/10 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Shield className="h-5 w-5 text-gray-400" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-400">No Active Plan</p>
+              <p className="text-xs text-white/60">
+                You need an active plan to access AI features like Resume Parser.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="rounded-lg bg-[#639922] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#4f7a1a]"
+            >
+              Choose a Plan
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isPending && (
+        <div className="mb-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Clock className="h-5 w-5 text-amber-400" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-400">Payment Pending</p>
+              <p className="text-xs text-white/60">
+                Your payment is being reviewed. AI features will be available once approved.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRejected && (
+        <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-400/10 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Shield className="h-5 w-5 text-red-400" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-400">Payment Rejected</p>
+              <p className="text-xs text-white/60">
+                Your payment was rejected. Please submit a new payment request to access premium features.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="rounded-lg bg-[#639922] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#4f7a1a]"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Back button */}
       <button
         onClick={() => navigate("/company/dashboard/applications")}
@@ -485,21 +553,6 @@ export default function ApplicationDetailPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* AI Resume Parser (Premium) */}
-        {profile?.is_premium && candidate.resume_url && (
-          <Card className="border-white/10 bg-white/[0.03]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-[#639922]" />
-                AI Resume Parser (Premium)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* <ResumeParser resumeUrl={candidate.resume_url} /> */}Coming Soon
-            </CardContent>
-          </Card>
-        )}
 
         {/* Actions - Status Dropdown */}
         <div className="flex justify-end pt-4">

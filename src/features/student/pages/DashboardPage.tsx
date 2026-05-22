@@ -25,7 +25,7 @@ const DashboardPage = () => {
   }
 
   // Check if we should show the questionnaire banner
-  const shouldShowQuestionnaire = !qaLoading && !completed && profile.candidate_type=='graduated' && !profile.is_questioned;
+  const shouldShowQuestionnaire = !qaLoading && !completed && profile?.candidate_type=='graduated' && !profile.is_questioned;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">

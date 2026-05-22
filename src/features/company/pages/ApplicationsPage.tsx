@@ -1,4 +1,5 @@
 // pages/company/CompanyApplicationsPage.tsx
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +17,9 @@ import {
   ArrowUpDown,
   Mail,
   BarChart3,
+  Crown,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 
 import { useCompanyJobs } from "@/features/company/hooks/useCompanyJobs";
@@ -51,6 +55,69 @@ function formatDate(iso: string) {
     year: "numeric",
   });
 }
+
+// Get plan display info
+const getPlanDisplay = (planType: string, planStatus: string) => {
+  const isActive = planStatus === "active";
+  
+  if (planStatus === "pending") {
+    return {
+      label: "Pending Approval",
+      color: "text-amber-400",
+      bg: "bg-amber-400/10",
+      border: "border-amber-400/30",
+      icon: Clock,
+      canAccessPremium: false,
+      canAccessBasic: false,
+    };
+  }
+  
+  if (planStatus === "rejected") {
+    return {
+      label: "Payment Rejected",
+      color: "text-red-400",
+      bg: "bg-red-400/10",
+      border: "border-red-400/30",
+      icon: AlertCircle,
+      canAccessPremium: false,
+      canAccessBasic: false,
+    };
+  }
+  
+  if (!isActive) {
+    return {
+      label: "No Active Plan",
+      color: "text-gray-400",
+      bg: "bg-gray-400/10",
+      border: "border-gray-400/30",
+      icon: AlertCircle,
+      canAccessPremium: false,
+      canAccessBasic: false,
+    };
+  }
+  
+  if (planType === "premium") {
+    return {
+      label: "Premium",
+      color: "text-[#639922]",
+      bg: "bg-[#639922]/10",
+      border: "border-[#639922]/30",
+      icon: Crown,
+      canAccessPremium: true,
+      canAccessBasic: true,
+    };
+  }
+  
+  return {
+    label: "Basic",
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+    border: "border-blue-400/30",
+    icon: Crown,
+    canAccessPremium: false,
+    canAccessBasic: true,
+  };
+};
 
 function StatusSelect({
   value,
@@ -158,14 +225,14 @@ function StatCard({
 function AppCard({
   app,
   updating,
-  isPremium,
+  planDisplay,
   onView,
   onStatusChange,
   onRate,
 }: {
   app: any;
   updating: string | null;
-  isPremium: boolean;
+  planDisplay: any;
   onView: () => void;
   onStatusChange: (v: string) => void;
   onRate: (r: number) => void;
@@ -173,7 +240,9 @@ function AppCard({
   const name = `${app.student?.first_name ?? ""} ${app.student?.last_name ?? ""}`.trim();
   const initials = getInitials(name);
   const isUpdating = updating === app.id;
-  const isPremiumLocked = !isPremium;
+  const canAccessPremiumFeatures = planDisplay.canAccessPremium;
+  const canAccessBasicFeatures = planDisplay.canAccessBasic;
+  const showMatchScore = canAccessBasicFeatures || canAccessPremiumFeatures;
 
   return (
     <div
@@ -221,19 +290,21 @@ function AppCard({
             <p className="font-semibold text-[14px] text-white/90 truncate">{name || "—"}</p>
             <p className="text-[11px] text-white/35 truncate mt-0.5">{app.student?.email}</p>
           </div>
-          <div className="relative shrink-0 w-[70px] text-right">
-            <div className={`transition ${isPremiumLocked ? "opacity-40" : ""}`}>
+          {showMatchScore && (
+            <div className="relative shrink-0 w-[70px] text-right">
               <p className="text-[9px] uppercase text-white/25 tracking-widest">Match</p>
               <p className="text-sm font-bold text-[#639922]">
                 {Math.round(app.ai_match_score ?? 0)}%
               </p>
             </div>
-            {isPremiumLocked && (
-              <div className="absolute inset-0 rounded-lg backdrop-blur-sm bg-black/30 flex items-center justify-center">
-                <span className="text-[10px] text-white/70">🔒</span>
+          )}
+          {!showMatchScore && (
+            <div className="shrink-0 w-[70px] text-right">
+              <div className="rounded bg-white/5 px-2 py-1 text-[10px] text-white/30">
+                Locked
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <div className="h-px bg-white/[0.04]" />
         <div className="space-y-2">
@@ -290,7 +361,18 @@ export default function CompanyApplicationsPage() {
   const navigate = useNavigate();
   const { jobs, loading: jobsLoading } = useCompanyJobs();
   const { profile } = useAuth();
-  const isPremium = profile?.is_premium === true;
+
+  // Get plan information
+  const planType = profile?.plan_type || "free";
+  const planStatus = profile?.plan_status || "inactive";
+  const planDisplay = getPlanDisplay(planType, planStatus);
+  
+  const isActive = planStatus === "active";
+  const isPremium = planType === "premium" && isActive;
+  const isBasic = planType === "basic" && isActive;
+  const isPending = planStatus === "pending";
+  const isRejected = planStatus === "rejected";
+  const hasActivePlan = isActive && (isPremium || isBasic);
 
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -360,6 +442,33 @@ export default function CompanyApplicationsPage() {
           </p>
         </header>
 
+        {/* Plan Status Banner */}
+        {(!hasActivePlan || isPending || isRejected) && (
+          <div className={`rounded-2xl border ${planDisplay.border} ${planDisplay.bg} p-4 backdrop-blur-sm`}>
+            <div className="flex items-center gap-3 flex-wrap">
+              <planDisplay.icon className={`h-5 w-5 ${planDisplay.color}`} />
+              <div className="flex-1">
+                <p className={`text-sm font-semibold ${planDisplay.color}`}>
+                  {planDisplay.label} Plan
+                </p>
+                <p className="text-xs text-white/60">
+                  {isPending && "Your payment is being reviewed. Features will be activated once approved."}
+                  {isRejected && "Your payment was rejected. Please submit a new payment request."}
+                  {!hasActivePlan && !isPending && !isRejected && "You need an active plan to access premium features like sorting by match score, bulk messaging, and analytics."}
+                </p>
+              </div>
+              {!hasActivePlan && !isPending && !isRejected && (
+                <button
+                  onClick={() => navigate("/pricing")}
+                  className="rounded-lg bg-[#639922] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#4f7a1a]"
+                >
+                  Choose a Plan
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Job Selector + Premium Actions */}
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -420,6 +529,15 @@ export default function CompanyApplicationsPage() {
                   <BarChart3 className="h-3.5 w-3.5" />
                   Analytics
                 </button>
+              </div>
+            )}
+
+            {applications.length > 0 && isBasic && (
+              <div className="flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-xs text-white/40">
+                  <Crown className="h-3.5 w-3.5" />
+                  Upgrade to Premium for sorting, bulk messaging & analytics
+                </div>
               </div>
             )}
           </div>
@@ -510,7 +628,7 @@ export default function CompanyApplicationsPage() {
                 key={app.id}
                 app={app}
                 updating={updating}
-                isPremium={isPremium}
+                planDisplay={planDisplay}
                 onView={() =>
                   navigate(`/company/dashboard/application?job=${app.job_id}&candidate=${app.student_id}`)
                 }
@@ -522,7 +640,7 @@ export default function CompanyApplicationsPage() {
         )}
       </div>
 
-      {/* Premium Modals */}
+      {/* Premium Modals - Only for Premium users */}
       {isPremium && (
         <>
           <BulkMessageModal
